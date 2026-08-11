@@ -161,3 +161,26 @@ This project follows a simple versioning approach:
   `gwb diff`/`gwb repair` outright. Confirmed the crash and the fix
   both for real (not just in Pester) with a scratch snapshot missing
   `modules.txt`.
+- The repository went public. See `docs/PROJECT.md`'s Release Strategy
+  for the full record — a pre-release content audit (commit
+  authorship, secrets/keys, hardcoded IPs/paths, tracked `snapshots/`
+  data) came back clean, so no fixes were needed first, unlike GLB's
+  own pre-public cleanup.
+- Added `install.ps1`, a curl/`irm`-style one-liner installer
+  (`irm https://raw.githubusercontent.com/ggregoro/GWB/master/
+  install.ps1 | iex`), mirroring GLB's `install.sh`. Two real platform
+  forks, both driven by `irm | iex` running in the caller's live
+  session rather than a disposable subshell the way `curl | bash`
+  does: the whole script is wrapped in `& { ... }` so its variables
+  don't leak into the interactive session, and it never calls `exit`
+  (which would close the whole PowerShell window under `iex`) —
+  error paths use non-terminating `Write-Error` plus an explicit
+  `return` instead. Installs to `$env:LOCALAPPDATA\GWB`, the
+  Windows-idiomatic per-user app-data location, rather than a literal
+  port of GLB's `~/.local/share/glb`. See
+  `docs/design/installer.md` for the full reasoning. Added
+  `tests/Install.Tests.ps1` (6 tests: git-not-found, fresh clone,
+  update-in-place, refuses to clobber an unrelated directory, failed
+  pull/clone reporting cleanly, and the scope-isolation property
+  itself). **Not yet verified on real Windows hardware** — built in a
+  cloud session with no `pwsh`/Pester available.

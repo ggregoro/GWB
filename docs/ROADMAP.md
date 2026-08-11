@@ -229,12 +229,17 @@ Deliver the first stable version of GWB.
   paths/IPs, or personal git identity found — see
   [`docs/PROJECT.md`](../docs/PROJECT.md)'s Release Strategy for the
   full record)
-- Not yet: `restore --from-manifest` port of GLB's manifest feature is
-  done, but a real curl/`irm`-style one-liner installer (mirroring
-  GLB's `install.sh`) isn't built — see `docs/ARCHITECTURE.md`'s "The
-  installer" section. Now that the repo is public, this is buildable
-  and testable end-to-end the way GLB's `install.sh` needed a public
-  repo before it could be verified on a fresh machine.
+- `install.ps1` ✅ (2026-08-11) — a real curl/`irm`-style one-liner
+  installer, mirroring GLB's `install.sh`. Built once the repo went
+  public (a fresh machine has no credentials to clone a private repo,
+  the same blocker GLB's own installer had). See
+  [`docs/design/installer.md`](design/installer.md) for two genuine
+  platform forks from GLB's version (an `& { }` scope wrapper and no
+  `exit` calls anywhere, both because `irm | iex` runs in the caller's
+  live session rather than a disposable subshell the way `curl | bash`
+  does). **Not yet verified on real Windows hardware** — built in a
+  cloud session with no `pwsh`/Pester available; needs a real run
+  before being considered fully done.
 
 ---
 

@@ -43,15 +43,29 @@ ends with an explicit `exit 0` so a caller's `if ($LASTEXITCODE -eq 0)`
 reflects the command's own outcome, not a stray exit code from an
 internal `winget list` query several calls back.
 
-## The installer
+## The installer (`install.ps1`)
 
-GLB has a standalone `install.sh` that clones the repo onto a fresh
-machine before GLB itself exists there (`curl | bash`). GWB doesn't have
-an equivalent yet — for now, getting GWB onto a machine means `git
-clone` (see the README's Installation section). A PowerShell
-`irm | iex`-style one-liner installer is a plausible future addition
-(tracked informally, not yet in `docs/ROADMAP.md`) but hasn't been
-scoped.
+A standalone bootstrap script, independent of everything above — it
+runs *before* GWB exists on a machine, so it can't dot-source `lib/` or
+depend on `$GwbRoot`. `irm <url>/install.ps1 | iex` clones the repo into
+`$env:LOCALAPPDATA\GWB` (or `git pull`s it if already there), then
+prints the next command to run. It deliberately does not invoke
+`gwb restore` itself — that's a separate, interactive, opinionated step
+(package installs, `$PROFILE` changes), not something that should
+happen as a side effect of "get GWB onto my machine." Requires the
+source repo to be publicly reachable, since a fresh machine has no
+GitHub credentials to clone a private one — this is why the installer
+wasn't built until after the repo went public (see
+[`docs/PROJECT.md`](PROJECT.md)'s Release Strategy).
+
+Two real platform differences from GLB's `install.sh`, both driven by
+`irm | iex` having no subshell isolation the way `curl | bash` does —
+see [`docs/design/installer.md`](design/installer.md) for the full
+reasoning: the entire script body is wrapped in `& { ... }` so its
+variables don't leak into the caller's interactive session, and it
+never calls `exit` (which would close the whole PowerShell window under
+`iex`, not just the script) — error paths use non-terminating
+`Write-Error` plus an explicit `return` instead.
 
 ## Library modules (`lib/`)
 

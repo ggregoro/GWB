@@ -92,16 +92,19 @@ breakdown — this section is a snapshot, that file is the source of truth.
 
 See `docs/ROADMAP.md` for the full versioned plan — kept up to date
 after every feature this session, so it's the accurate source of
-truth, not a summary to re-derive from here. Short version: **Versions
-0.1 through 1.0's stated goals are all done, including public-release
-readiness** — the repo went public 2026-08-11 (see `docs/PROJECT.md`'s
-Release Strategy). The only thing still open is lower-priority: a real
-curl/`irm`-style one-liner installer (GLB's `install.sh` equivalent —
-see `docs/ARCHITECTURE.md`'s "The installer" section, not yet even a
-`docs/design/` entry). Going public actually unblocks this — GLB's own
-`install.sh` couldn't be verified end-to-end on a fresh machine until
-its repo was public either, since a fresh clone needs credentials for
-a private repo.
+truth, not a summary to re-derive from here. Short version: **every
+stated Version 0.1–1.0 goal is now done**, including public-release
+readiness (repo went public 2026-08-11, see `docs/PROJECT.md`'s
+Release Strategy) and the curl/`irm`-style one-liner installer
+(`install.ps1`, built the same day right after — see
+`docs/design/installer.md`). **The one thing left before either can be
+called fully verified: `install.ps1` hasn't been run on real Windows
+hardware yet** — it was built and Pester-tested from the repo alone in
+a cloud session with no `pwsh` available. Next session on the real
+Windows 11 machine should run `irm https://raw.githubusercontent.com/
+ggregoro/GWB/master/install.ps1 | iex` for real and
+`Invoke-Pester -Path tests/Install.Tests.ps1` before this is
+considered done, not just built.
 
 ## Conventions
 
@@ -124,6 +127,69 @@ a private repo.
 
 ## Working notes
 
+- **`install.ps1` built (2026-08-11, cloud session, immediately after
+  the going-public decision below).** The one remaining Version 1.0
+  item once the repo went public — a fresh machine has no credentials
+  to clone a private repo, the same blocker GLB's own `install.sh` had
+  before *its* repo went public.
+  - Two genuine platform forks from GLB's `install.sh`, not just a
+    syntax port, both stemming from one real difference: `curl | bash`
+    runs the piped script in a disposable subshell, but PowerShell's
+    `irm <url> | iex` evaluates the fetched text in the *caller's own
+    live session* (the same as dot-sourcing) — there is no subshell to
+    contain it. Worked through the consequences carefully rather than
+    porting `install.sh`'s structure directly:
+    1. The entire script body is wrapped in one `& { ... }`
+       scriptblock, so its variables (`$InstallDir`, `$RepoUrl`) get
+       their own child scope instead of leaking into the user's
+       interactive session once the one-liner finishes.
+    2. **No `exit` call appears anywhere in the file** — under `iex`,
+       `exit` would close the user's entire PowerShell window, not
+       just the installer, unlike `bash`'s subshell-scoped `exit 1`.
+       Error paths use plain, non-terminating `Write-Error` (stderr)
+       plus an explicit `return`, which only unwinds the `& { }`
+       block regardless of whether the file is piped through `iex` or
+       run directly. Deliberately did **not** set
+       `$ErrorActionPreference = "Stop"` either, despite that being
+       `gwb.ps1`'s own dispatcher convention — doing so would turn
+       `Write-Error` into a terminating exception carrying the same
+       kind of escape risk. Documented as an intentional, explained
+       exception to that convention (which `docs/CODING_STANDARDS.md`
+       itself allows), not an oversight.
+  - Installs to `$env:LOCALAPPDATA\GWB` — the Windows-idiomatic
+    per-user app-data location — rather than literally porting GLB's
+    `~/.local/share/glb` path structure onto Windows. Same category of
+    platform-appropriate divergence already made for the `gwb` command
+    itself (`lib/completions.ps1`), which couldn't be a `PATH` symlink
+    the way GLB's `glb` is. `$env:GWB_INSTALL_DIR`/`$env:GWB_REPO_URL`
+    overrides mirror GLB's `GLB_INSTALL_DIR`/`GLB_REPO_URL` exactly.
+    Deliberately does not run `gwb restore` itself, same reasoning as
+    GLB's `install.sh`.
+  - Full writeup, including the reasoning trail for both forks, in
+    `docs/design/installer.md`.
+  - Added `tests/Install.Tests.ps1` (6 tests, mirroring GLB's
+    `tests/install.bats` one-for-one plus an explicit scope-isolation
+    test for the `& { }` wrapper). Since `install.ps1` has no
+    dot-sourceable functions (deliberately — it must work before
+    GWB/`lib/` exists on a machine), tests re-evaluate its raw text via
+    `Invoke-Expression` in each case, exactly how the real one-liner
+    invokes it — this keeps Pester's `Mock` working through normal
+    dynamic scoping, the same mechanism `Packages.Tests.ps1` already
+    relies on for `winget`.
+  - **Not yet verified on real Windows hardware, and the new Pester
+    tests have never actually been run** — this cloud session has no
+    `pwsh` at all (`pwsh --version` fails), so nothing here could be
+    executed, only carefully reasoned through and written. This is a
+    real gap, not a minor caveat: every other GWB feature built so far
+    was verified for real (parse-check, then actually run, per this
+    project's own standing discipline) before being called done. This
+    one hasn't cleared that bar yet. Flagging clearly rather than
+    calling it finished: next session on the real Windows 11 machine
+    needs to (1) run `Invoke-Pester -Path tests/Install.Tests.ps1` and
+    fix whatever the (untested) PowerShell syntax/logic gets wrong,
+    and (2) actually run the real one-liner against the now-public
+    repo and confirm it clones, updates in place on a second run, and
+    prints working instructions.
 - **Going-public decision made (2026-08-11, cloud session, follow-up to
   the feature-completion session earlier the same day).** Before
   deciding, audited the repo for anything that would become

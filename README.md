@@ -62,14 +62,32 @@ the full module breakdown.
 
 ## Installation
 
+The quickest way — a one-line installer that clones GWB into
+`$env:LOCALAPPDATA\GWB` (or updates it in place if already there):
+
+```powershell
+irm https://raw.githubusercontent.com/ggregoro/GWB/master/install.ps1 | iex
+```
+
+It only sets up the checkout — it deliberately doesn't run
+`gwb restore` itself, since that's an opinionated, interactive step
+(package installs, `$PROFILE` changes) that shouldn't happen as a side
+effect of "get GWB onto my machine." Once it's done, run:
+
+```powershell
+& "$env:LOCALAPPDATA\GWB\gwb.ps1" restore
+```
+
+Alternatively, clone it yourself and run `gwb` directly:
+
 ```powershell
 git clone https://github.com/ggregoro/GWB.git
 cd GWB
 .\gwb.ps1 restore default
 ```
 
-After the first restore, open a new PowerShell window and just use
-`gwb` directly — no more `.\gwb.ps1`.
+After the first restore (either way), open a new PowerShell window and
+just use `gwb` directly — no more `.\gwb.ps1`.
 
 Running `restore` with no profile name shows an interactive picker
 instead of assuming `default`.
