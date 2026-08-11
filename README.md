@@ -14,6 +14,9 @@ fast search (`ripgrep`, `fd`), a terminal file manager (`lf`), and a
 clean prompt (Starship), applied in one pass as a reusable **profile**: a
 package list plus a `$PROFILE` snippet.
 
+GWB enhances the terminal you already have — it doesn't install or
+replace it. See [`docs/PHILOSOPHY.md`](docs/PHILOSOPHY.md) for why.
+
 ## Architecture
 
 GWB mirrors GLB's shape directly: a `gwb.ps1` dispatcher sources focused
