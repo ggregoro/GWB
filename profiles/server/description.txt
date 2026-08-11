@@ -1,1 +1,1 @@
-Server toolkit: default's CLI tools + restic (backups). No firewall tool (Windows Firewall already covers it), no fail2ban equivalent (no real winget-installable option, documented gap), no resource monitor (Task Manager covers it).
+Server toolkit: default's CLI tools + restic (backups), Far Manager (dual-pane file manager). No firewall tool (Windows Firewall already covers it), no fail2ban equivalent (no real winget-installable option, documented gap), no resource monitor (Task Manager covers it).

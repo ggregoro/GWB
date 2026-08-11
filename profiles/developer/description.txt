@@ -1,1 +1,1 @@
-Developer toolkit: default's CLI tools + git, jq, gh, mise, Fresh editor, MinGW/gcc build toolchain. No container tooling (Docker/Podman both need WSL2).
+Developer toolkit: default's CLI tools + git, jq, gh, mise, Fresh editor, MinGW/gcc build toolchain, Far Manager (dual-pane file manager). No container tooling (Docker/Podman both need WSL2).

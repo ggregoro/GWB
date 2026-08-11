@@ -77,10 +77,14 @@ under GWB's "runs inside the terminal, not its own window" rule (see
 
 `profiles/developer/packages.txt`: the same shared foundation as
 `default` (`git`, `eza`, `fzf`, `lf`, `ripgrep`, `fd`, `bat`,
-`starship`) plus `jq`, `gh`, `mise`, `fresh`, `mingw`. Every one of
-these has a real winget package — unlike GLB, GWB's `developer` needed
-no extras/non-package-manager install mechanism at all, since winget
-happened to carry everything decided on directly.
+`starship`) plus `jq`, `gh`, `mise`, `fresh`, `mingw`, `farmanager`
+(2026-08-11, Greg's ask — Far Manager, a dual-pane console file
+manager, real winget package `FarManager.FarManager`; the closer
+Midnight Commander analogue, alongside `lf`'s Ranger-equivalent role
+already in the shared foundation). Every one of these has a real
+winget package — unlike GLB, GWB's `developer` needed no extras/
+non-package-manager install mechanism at all, since winget happened to
+carry everything decided on directly.
 
 `profile-snippet.ps1`: same eza/bat/fzf/starship setup as `default`,
 plus a guarded `mise activate pwsh` block.

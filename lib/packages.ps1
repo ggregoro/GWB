@@ -22,6 +22,7 @@ $Script:_GWB_PACKAGE_OVERRIDES = @{
     "mingw"    = "BrechtSanders.WinLibs.POSIX.UCRT"
     "restic"   = "restic.restic"
     "btop"     = "aristocratos.btop4win"
+    "farmanager" = "FarManager.FarManager"
 }
 
 function Resolve-GwbPackageId {

@@ -13,3 +13,4 @@ gh
 mise
 fresh
 mingw
+farmanager

@@ -74,8 +74,8 @@ gwb profiles                List available profiles
 | Profile | Installs |
 |---|---|
 | `default` | `eza`, `fzf`, `lf`, `ripgrep`, `fd`, `bat`, `starship` + a `$PROFILE` snippet (eza aliases, `bat` as `cat`, fzf options, Starship prompt init). |
-| `developer` | `default`'s foundation + `git`, `jq`, `gh`, `mise`, Fresh (editor), MinGW/gcc (build toolchain). No container tooling — see [`docs/design/developer-profile.md`](docs/design/developer-profile.md). |
-| `server` | `default`'s foundation + `restic` (backups). No firewall/fail2ban/resource-monitor tooling — see [`docs/design/server-profile.md`](docs/design/server-profile.md). |
+| `developer` | `default`'s foundation + `git`, `jq`, `gh`, `mise`, Fresh (editor), MinGW/gcc (build toolchain), Far Manager (file manager). No container tooling — see [`docs/design/developer-profile.md`](docs/design/developer-profile.md). |
+| `server` | `default`'s foundation + `restic` (backups), Far Manager (file manager). No firewall/fail2ban/resource-monitor tooling — see [`docs/design/server-profile.md`](docs/design/server-profile.md). |
 
 ## Requirements
 

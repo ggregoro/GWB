@@ -75,9 +75,12 @@ consistency across profiles.
 
 `profiles/server/packages.txt`: the same shared foundation as `default`
 (`git`, `eza`, `fzf`, `lf`, `ripgrep`, `fd`, `bat`, `starship`) plus
-`restic`. Notably smaller than GLB's `server` — three of GLB's four
-server-specific picks (`ufw`, `rsync`, `fail2ban`) don't carry over,
-each for a documented reason above, not by oversight.
+`restic` and `farmanager` (2026-08-11, Greg's ask — Far Manager,
+`FarManager.FarManager` via winget; genuinely useful on a server profile
+for browsing a remote/headless machine's filesystem without leaving the
+terminal). Otherwise notably smaller than GLB's `server` — three of
+GLB's four server-specific picks (`ufw`, `rsync`, `fail2ban`) don't
+carry over, each for a documented reason above, not by oversight.
 
 `profile-snippet.ps1`: identical to `default`'s (eza/bat/fzf/starship) —
 `restic` needs no shell activation, so there's nothing server-specific

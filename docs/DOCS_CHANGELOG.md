@@ -7,7 +7,14 @@ feature/code changes. Mirrors GLB's own `docs/DOCS_CHANGELOG.md`.
 
 ## [Unreleased]
 
-(none since the `server` profile build below)
+### Added
+
+- Added Far Manager to `developer` and `server` (Greg's ask, following
+  a question about Ranger/Midnight-Commander equivalents on Windows —
+  `lf` already covered the Ranger role in every profile; Far Manager
+  fills the closer Midnight Commander/dual-pane role). Updated both
+  design docs' Final package list sections, `CHANGELOG.md`, and both
+  profiles' `description.txt`.
 
 ---
 

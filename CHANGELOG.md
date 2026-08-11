@@ -61,3 +61,8 @@ This project follows a simple versioning approach:
   `docs/design/server-profile.md` for the full reasoning. Verified
   end-to-end on real hardware: idempotent restore, `restic version`
   confirmed functional.
+- Added Far Manager (`farmanager` → `FarManager.FarManager`) to both
+  `developer` and `server` — a dual-pane console file manager, the
+  closer Midnight Commander analogue alongside `lf`'s existing
+  Ranger-equivalent role. Verified installed for real and idempotent
+  across both profiles.
