@@ -1,0 +1,23 @@
+# $PROFILE backups created by gwb.ps1 (machine-specific, never tracked)
+*.gwb-backup
+
+# Snapshots (future `gwb export`, mirrors GLB's snapshots/)
+snapshots/
+
+# Temporary/backup files
+*.bak
+*.old
+*.orig
+*~
+*.tmp
+
+# Editors
+.vscode/
+.*.sw?
+
+# Windows
+Thumbs.db
+desktop.ini
+
+# macOS (in case this repo is ever cloned there)
+.DS_Store
