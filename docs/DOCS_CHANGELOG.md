@@ -7,7 +7,13 @@ feature/code changes. Mirrors GLB's own `docs/DOCS_CHANGELOG.md`.
 
 ## [Unreleased]
 
-(none since the initial build below)
+### Added
+
+- Added `docs/design/developer-profile.md` — scopes the real forks in
+  porting GLB's `developer` profile to Windows (containers vs. the WSL
+  constraint, gcc/MinGW vs. MSVC, `mise`'s Windows support, whether a
+  resource monitor is needed alongside Task Manager, Fresh's Windows
+  availability). Proposed, not yet decided or built.
 
 ---
 

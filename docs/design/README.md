@@ -12,10 +12,16 @@ single feature, gets resolved (often via a direct question to Greg
 before building), and then stays as a record of *why* the feature ended
 up shaped the way it did, even after the feature ships.
 
-Nothing has been scoped this way for GWB yet — everything built so far
-(packages, `restore`/`--dry-run`/`--undo`, the interactive picker) was
-small enough to build directly. The next candidates likely to need a
-real design doc, per [`docs/ROADMAP.md`](../ROADMAP.md): `developer`/
-`server` profiles (Windows equivalents of GLB's picks need their own
-scoping pass, not a blind port) and the `export`/`diff`/`repair`
+## Current docs
+
+- [`developer-profile.md`](developer-profile.md) — **Proposed, not yet
+  decided.** Scopes the real forks in porting GLB's `developer` profile
+  to Windows (containers, build toolchain, `mise`'s Windows support,
+  whether a resource monitor is even needed alongside Task Manager,
+  whether Fresh has a Windows build) rather than guessing at answers.
+
+Everything else built so far (packages, `restore`/`--dry-run`/`--undo`,
+the interactive picker) was small enough to build directly, without a
+design doc. The next candidate likely to need one, per
+[`docs/ROADMAP.md`](../ROADMAP.md): the `export`/`diff`/`repair`
 configuration-management trio (Version 0.6).
