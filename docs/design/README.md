@@ -56,6 +56,16 @@ up shaped the way it did, even after the feature ships.
   and fixed (`-ErrorAction SilentlyContinue` didn't actually suppress
   a PSReadLine console message the way `try`/`catch` does).
 
+- [`pester-test-suite.md`](pester-test-suite.md) — **Built.** Modern
+  Pester 6.x (the only version present was the ancient bundled 3.4.0),
+  `Mock` for `winget`/`Install-Module` (a proxy-function model, not
+  GLB's `PATH`-shadowing), and real dispatcher-level coverage via
+  dot-sourcing `gwb.ps1` itself with `Mock` still active. 81/81 tests
+  pass, including a real bug the suite caught on its first run (a
+  `Mandatory` array parameter silently rejecting a legitimate empty
+  array — `gwb diff`/`repair` would have crashed on any
+  `modules.txt`-less profile).
+
 Everything else built so far (packages, `restore`/`--dry-run`/`--undo`,
 the interactive picker) was small enough to build directly, without a
 design doc. **Versions 0.4, 0.5, and 0.6 are all now fully complete** —

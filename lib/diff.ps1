@@ -40,9 +40,14 @@ function Get-GwbFlatListSet {
 function Write-GwbSetDiff {
     param(
         [Parameter(Mandatory)][string]$Label,
-        [Parameter(Mandatory)][string[]]$SetA,
+        # AllowEmptyCollection: Mandatory + [string[]] alone rejects a real,
+        # meaningful empty array (e.g. a profile with no modules.txt) as if
+        # no value were passed at all - confirmed directly, a real bug that
+        # never surfaced manually since every real profile has always had a
+        # non-empty modules.txt.
+        [Parameter(Mandatory)][AllowEmptyCollection()][string[]]$SetA,
         [Parameter(Mandatory)][string]$A,
-        [Parameter(Mandatory)][string[]]$SetB,
+        [Parameter(Mandatory)][AllowEmptyCollection()][string[]]$SetB,
         [Parameter(Mandatory)][string]$B
     )
 

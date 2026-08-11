@@ -108,6 +108,20 @@ gwb repair <profile>        Check this machine against a profile
 - [winget](https://learn.microsoft.com/en-us/windows/package-manager/winget/)
   (`App Installer` from the Microsoft Store)
 
+## Testing
+
+```powershell
+Import-Module Pester -MinimumVersion 5.0
+Invoke-Pester -Path tests/
+```
+
+A [Pester](https://pester.dev/) suite (GWB's analogue of GLB's `bats`
+suite) — `winget`/`Install-Module` are mocked and `$PROFILE` is
+overridden to a temp path, so it's safe to run; nothing real gets
+touched. 81 tests, one file roughly per `lib/` module plus
+`Dispatcher.Tests.ps1` for real end-to-end command coverage. See
+[`docs/design/pester-test-suite.md`](docs/design/pester-test-suite.md).
+
 ## Status
 
 Early — v0.1.0. The dispatcher, package installs, PowerShell Gallery
@@ -115,14 +129,14 @@ modules, `$PROFILE` management, all three profiles
 (`default`/`developer`/`server`), the full configuration-management set
 (`export`/`diff`/`repair`/`restore --from-snapshot`/`restore
 --from-manifest`, tracking both `packages.txt` and `modules.txt`
-drift), and the `gwb` command + tab-completion are all built and
-verified with real restores on a real machine (including idempotency,
-the backup/undo round-trip, real drift detection, and real
-`TabExpansion2` results). All of GLB's own Version 0.1–0.6 equivalents
-are now ported. **One deliberate, permanent non-goal**: IPBan
-(`server`'s fail2ban equivalent) needs Administrator elevation and
-installs a persistent firewall-blocking service with real lockout
-risk — decided not to automate at all, see
+drift), the `gwb` command + tab-completion, and a Pester test suite are
+all built and verified — real restores on a real machine (idempotency,
+the backup/undo round-trip, real drift detection, real
+`TabExpansion2` results) plus 81 automated tests. All of GLB's own
+Version 0.1–0.6 equivalents are now ported. **One deliberate, permanent
+non-goal**: IPBan (`server`'s fail2ban equivalent) needs Administrator
+elevation and installs a persistent firewall-blocking service with real
+lockout risk — decided not to automate at all, see
 [`docs/reference/ipban-manual-install.md`](docs/reference/ipban-manual-install.md)
 for the manual install instead.
 

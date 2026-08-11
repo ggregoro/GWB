@@ -16,6 +16,7 @@ GWB/
 ├── profiles/               # named profiles: packages.txt, modules.txt,
 │                           #   profile-snippet.ps1, description.txt
 ├── snapshots/               # gwb export output (machine-state snapshots), when present
+├── tests/                   # Pester test suite (see Testing below)
 ├── docs/                   # this documentation, including docs/design/ for
 │                           #   feature design docs and docs/reference/ for
 │                           #   cheat sheets
@@ -110,11 +111,30 @@ one under `profiles/`.
 
 ## Testing
 
-No automated test suite yet (GLB's equivalent is a `bats` suite under
-`tests/`). Every feature so far has instead been verified by actually
-running `gwb.ps1` for real on a Windows 11 machine — real installs,
-repeated restores to confirm idempotency, and the backup/undo round-trip
-exercised against real `$PROFILE` content. See `CHANGELOG.md` and the
-commit history for what's been verified this way. A Pester-based suite
-(PowerShell's bats equivalent) is a reasonable future addition once the
-module surface is large enough to be worth it.
+A [Pester](https://pester.dev/) suite under `tests/`, GWB's analogue of
+GLB's `bats` suite — one file roughly per `lib/` module
+(`Packages`/`Modules`/`Profile`/`Diff`/`Export`/`Repair`/`Detect`) plus
+`Dispatcher.Tests.ps1` for real end-to-end command coverage (dot-sources
+the actual `gwb.ps1` with real arguments — `Mock`/`$PROFILE` overrides
+both stay active across the dot-source, and `gwb.ps1`'s own `exit 0`
+doesn't kill the test process, confirmed directly). `tests/TestHelpers.ps1`
+provides shared setup, mirroring `test_helper.bash`. `winget`/
+`Install-Module` calls are mocked via Pester's `Mock` (a proxy-function
+model, not GLB's `PATH`-shadowing); `$PROFILE` is safely overridden to a
+temp path per test. Run with:
+
+```powershell
+Import-Module Pester -MinimumVersion 5.0
+Invoke-Pester -Path tests/
+```
+
+See [`docs/design/pester-test-suite.md`](design/pester-test-suite.md)
+for the real technical questions verified before building this (which
+Pester version, whether `Mock` can intercept an external `.exe`, whether
+dispatcher-level dot-sourcing actually works) and a real bug the suite
+caught on its first run (a `Mandatory` PowerShell array parameter
+silently rejecting a legitimate empty array). Every feature before this
+suite existed was verified by actually running `gwb.ps1` for real on a
+Windows 11 machine — that real-machine verification discipline continues
+alongside the test suite, not instead of it; see `CHANGELOG.md` and the
+commit history.

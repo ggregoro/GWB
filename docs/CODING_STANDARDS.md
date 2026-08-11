@@ -37,12 +37,16 @@ When in doubt:
 
 ```
 GWB/
-├── docs/            # documentation, including future docs/design/ for
-│                     #   feature design docs
+├── docs/            # documentation, including docs/design/ for feature
+│                     #   design docs and docs/reference/ for cheat sheets
 ├── lib/              # library modules, dot-sourced by the gwb.ps1 dispatcher
-├── profiles/         # named profiles (default, ...), each with
-│                     #   packages.txt/profile-snippet.ps1/description.txt
+├── profiles/         # named profiles (default, developer, server), each
+│                     #   with packages.txt/modules.txt/profile-snippet.ps1/
+│                     #   description.txt
+├── snapshots/         # gwb export output, when present
+├── tests/             # Pester test suite
 ├── gwb.ps1
+├── CLAUDE.md
 ├── README.md
 ├── CHANGELOG.md
 ├── CONTRIBUTING.md
@@ -220,7 +224,8 @@ Every development session follows the same pattern:
 2. Select one milestone (see `docs/ROADMAP.md`).
 3. Implement one module or feature.
 4. Verify it for real (parse-check, then actually run it — twice, if
-   it should be idempotent).
+   it should be idempotent) and run the Pester suite (`Invoke-Pester
+   -Path tests/`) if the change touches `lib/`.
 5. Commit.
 6. Update `CHANGELOG.md`.
 

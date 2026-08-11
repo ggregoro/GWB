@@ -7,7 +7,33 @@ feature/code changes. Mirrors GLB's own `docs/DOCS_CHANGELOG.md`.
 
 ## [Unreleased]
 
-(none since the IPBan decision below)
+(none since the Pester test suite build below)
+
+---
+
+## 2026-08-11 (continued once more again)
+
+### Documentation
+
+- Added `docs/design/pester-test-suite.md` — documents the real
+  technical questions verified before building (which Pester version,
+  whether `Mock` can intercept an external `.exe`, whether
+  dispatcher-level dot-sourcing actually works) and the real bug the
+  suite caught on its first run. Updated `docs/ARCHITECTURE.md`'s
+  Testing section (previously "no automated test suite yet") and its
+  project-tree diagram, `docs/CODING_STANDARDS.md`'s stale project
+  tree and Git Workflow step, `CONTRIBUTING.md` with how to run the
+  suite, `docs/ROADMAP.md`'s Version 1.0 goals (most were already done
+  but unmarked), and `README.md`/`CHANGELOG.md` with the actual
+  addition.
+
+### Development Environment
+
+- Verified Pester's real mocking mechanics (external-command `Mock`,
+  `$PROFILE` override safety, dispatcher-level dot-sourcing with
+  `Mock` still active) in isolated scratch probe scripts before
+  writing any real test file, same discipline used for
+  `TabExpansion2`/`Register-ArgumentCompleter` earlier this project.
 
 ---
 

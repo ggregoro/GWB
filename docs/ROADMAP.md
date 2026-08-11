@@ -215,12 +215,22 @@ Deliver the first stable version of GWB.
 
 ### Goals
 
-- Stable installation engine (done)
-- Profile system beyond `default`
-- PowerShell-native "extras" (PSFzf/PSReadLine/Terminal-Icons)
-- Shell completions for `gwb` itself
-- Configuration management (export/diff/repair)
-- Comprehensive documentation
+- Stable installation engine ✅
+- Profile system beyond `default` ✅ (`developer`, `server`)
+- PowerShell-native "extras" (PSFzf/PSReadLine/Terminal-Icons) ✅
+- Shell completions for `gwb` itself ✅
+- Configuration management (export/diff/repair) ✅
+- Automated test suite ✅ — Pester, see
+  [`docs/design/pester-test-suite.md`](design/pester-test-suite.md)
+- Comprehensive documentation ✅ (README through this roadmap,
+  `docs/design/`, `docs/reference/`)
+- Not yet: `restore --from-manifest` port of GLB's manifest feature is
+  done, but a real curl/`irm`-style one-liner installer (mirroring
+  GLB's `install.sh`) isn't built — see `docs/ARCHITECTURE.md`'s "The
+  installer" section
+- Not a goal: public-release readiness isn't scoped yet — no explicit
+  decision has been made about this repo's visibility the way GLB's
+  `docs/PROJECT.md` documents for GLB
 
 ---
 

@@ -30,6 +30,20 @@ mind in case that changes later.
   for the kind of real-machine verification expected before something
   is considered done.
 
+## Running the tests
+
+```powershell
+Import-Module Pester -MinimumVersion 5.0
+Invoke-Pester -Path tests/
+```
+
+The suite mocks `winget`/`Install-Module` and overrides `$PROFILE` to a
+temp path, so it's safe to run — nothing real gets touched. See
+[`docs/design/pester-test-suite.md`](docs/design/pester-test-suite.md).
+Real-machine verification (above) still matters for anything the suite
+can't meaningfully cover — actual package installs, actual PowerShell
+profile behavior in a live shell.
+
 See [`docs/CODING_STANDARDS.md`](docs/CODING_STANDARDS.md) for the full
 style guide (naming conventions, error handling, module design).
 

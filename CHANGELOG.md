@@ -141,3 +141,23 @@ This project follows a simple versioning approach:
   `docs/reference/ipban-manual-install.md` (install/verify/uninstall
   commands, plus the lockout-risk caution) and updated
   `profiles/server/description.txt` to point at it.
+- Added a Pester test suite under `tests/` — GWB's analogue of GLB's
+  `bats` suite. Installed modern Pester 6.0.1 (only the ancient
+  bundled 3.4.0 was present). One file roughly per `lib/` module
+  (`Packages`, `Modules`, `Profile`, `Diff`, `Export`, `Repair`,
+  `Detect`) plus `Dispatcher.Tests.ps1` for real end-to-end coverage —
+  dot-sources the actual `gwb.ps1` with `Mock`/`$PROFILE` overrides
+  still active, confirmed directly that `gwb.ps1`'s own `exit 0`
+  doesn't kill the Pester process when dot-sourced this way. 81/81
+  tests pass, verified together (no cross-file interference) and
+  confirmed the real repo/`$PROFILE` stay untouched after a full run.
+- Fixed a real bug the new test suite caught on its first run:
+  `Write-GwbSetDiff`'s `-SetA`/`-SetB` parameters (`lib/diff.ps1`) were
+  `Mandatory` `[string[]]` with no `[AllowEmptyCollection()]` —
+  PowerShell rejects an empty array passed to a mandatory array
+  parameter as if no value were given at all. Every real profile has
+  always had a non-empty `modules.txt`, so this never surfaced
+  manually, but any profile-shaped directory without one would crash
+  `gwb diff`/`gwb repair` outright. Confirmed the crash and the fix
+  both for real (not just in Pester) with a scratch snapshot missing
+  `modules.txt`.
