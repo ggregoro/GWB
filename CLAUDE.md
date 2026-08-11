@@ -12,12 +12,9 @@ diverging from it.
 - License: MIT
 - Language: PowerShell 7+
 
-**Note on this file's location**: GLB's own `CLAUDE.md` lives at its
-repo root, where Claude Code auto-loads it at the start of every session
-in that repo. This file was placed at `docs/CLAUDE.md` per explicit
-request — it won't be auto-loaded the same way from here. If GWB should
-get the same auto-load behavior GLB has, this file (or a copy of it)
-belongs at the repo root instead.
+This file lives at the repo root, matching GLB's own `CLAUDE.md` — so
+Claude Code auto-loads it at the start of every session in this repo,
+same as it does for GLB.
 
 ## Why it exists
 
