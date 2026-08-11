@@ -89,6 +89,11 @@ curl/Flatpak/font equivalent — likely `Install-Module`-based tools like
 PSFzf/PSReadLine/Terminal-Icons on Windows), shell completions for `gwb`
 itself, and additional profiles.
 
+## Roadmap
+
+GWB's direction and current progress are tracked in
+[`docs/ROADMAP.md`](docs/ROADMAP.md).
+
 ## Related
 
 - [GLB](https://github.com/ggregoro/GLB) — the Linux original this
