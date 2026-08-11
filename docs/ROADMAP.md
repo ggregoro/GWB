@@ -224,13 +224,17 @@ Deliver the first stable version of GWB.
   [`docs/design/pester-test-suite.md`](design/pester-test-suite.md)
 - Comprehensive documentation ✅ (README through this roadmap,
   `docs/design/`, `docs/reference/`)
+- Public release ✅ (2026-08-11) — repo visibility flipped to public
+  after a clean pre-release content audit (no secrets, hardcoded
+  paths/IPs, or personal git identity found — see
+  [`docs/PROJECT.md`](../docs/PROJECT.md)'s Release Strategy for the
+  full record)
 - Not yet: `restore --from-manifest` port of GLB's manifest feature is
   done, but a real curl/`irm`-style one-liner installer (mirroring
   GLB's `install.sh`) isn't built — see `docs/ARCHITECTURE.md`'s "The
-  installer" section
-- Not a goal: public-release readiness isn't scoped yet — no explicit
-  decision has been made about this repo's visibility the way GLB's
-  `docs/PROJECT.md` documents for GLB
+  installer" section. Now that the repo is public, this is buildable
+  and testable end-to-end the way GLB's `install.sh` needed a public
+  repo before it could be verified on a fresh machine.
 
 ---
 

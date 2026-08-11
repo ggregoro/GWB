@@ -8,7 +8,7 @@ terminal tools via winget and wires them into `$PROFILE` in one pass,
 mirroring GLB's dispatcher + `lib/` architecture directly rather than
 diverging from it.
 
-- Repo: https://github.com/ggregoro/GWB (private)
+- Repo: https://github.com/ggregoro/GWB (public as of 2026-08-11)
 - License: MIT
 - Language: PowerShell 7+
 
@@ -93,14 +93,15 @@ breakdown — this section is a snapshot, that file is the source of truth.
 See `docs/ROADMAP.md` for the full versioned plan — kept up to date
 after every feature this session, so it's the accurate source of
 truth, not a summary to re-derive from here. Short version: **Versions
-0.1 through 1.0's stated goals are all done** except one thing
-`docs/ROADMAP.md`'s Version 1.0 section flags explicitly:
-public-release readiness (repo visibility) hasn't been scoped or
-decided — no equivalent yet of GLB's own explicit "stays private until
-vetted" decision recorded in `docs/PROJECT.md`. Also still open,
-lower-priority: a real curl/`irm`-style one-liner installer (GLB's
-`install.sh` equivalent — see `docs/ARCHITECTURE.md`'s "The installer"
-section, not yet even a `docs/design/` entry).
+0.1 through 1.0's stated goals are all done, including public-release
+readiness** — the repo went public 2026-08-11 (see `docs/PROJECT.md`'s
+Release Strategy). The only thing still open is lower-priority: a real
+curl/`irm`-style one-liner installer (GLB's `install.sh` equivalent —
+see `docs/ARCHITECTURE.md`'s "The installer" section, not yet even a
+`docs/design/` entry). Going public actually unblocks this — GLB's own
+`install.sh` couldn't be verified end-to-end on a fresh machine until
+its repo was public either, since a fresh clone needs credentials for
+a private repo.
 
 ## Conventions
 
@@ -123,6 +124,33 @@ section, not yet even a `docs/design/` entry).
 
 ## Working notes
 
+- **Going-public decision made (2026-08-11, cloud session, follow-up to
+  the feature-completion session earlier the same day).** Before
+  deciding, audited the repo for anything that would become
+  permanently, publicly exposed on visibility change: commit
+  authorship (all `Gregory Gregorowicz <ggregoro@gmail.com>`, same as
+  GLB — Greg already accepted this being public there), secrets/keys/
+  tokens/passwords (none — grep hits were just prose mentioning
+  "password"/"secrets" conceptually in design docs), hardcoded IPs or
+  `C:\Users\<name>`/`/home/<name>` paths (none), and whether any real
+  `snapshots/` export data was accidentally tracked (none — the
+  directory is deliberately un-gitignored by design, matching GLB, but
+  nothing's actually been exported into it yet). **Unlike GLB's own
+  pre-public audit** (which found and had to fix a hardcoded personal
+  git identity in `.gitconfig` and a leaked home-server IP in a
+  reference doc), GWB's scan came back completely clean — no edits
+  were needed before flipping visibility. Greg made the call to go
+  public immediately after hearing the clean result, without waiting
+  for GLB's own more cautious "vetted across multiple real machines"
+  bar — GWB has only ever been tested on Greg's one Windows 11 machine.
+  Updated `docs/PROJECT.md`'s Release Strategy (now records the actual
+  public date and the audit outcome, instead of the old "stays
+  private" stance) and `docs/ROADMAP.md`'s Version 1.0 goals (public
+  release now marked done; noted that this actually unblocks the
+  still-open curl/`irm`-installer item, the same way GLB's own
+  `install.sh` needed a public repo before it could be verified
+  end-to-end on a fresh machine). No code changed this session —
+  docs-only.
 - **Session (2026-08-11): took GWB from `default`-only to
   feature-complete against GLB's Version 0.1–0.6, plus a test suite.**
   Long session, one feature per round, each verified for real and

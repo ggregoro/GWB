@@ -119,10 +119,16 @@ Development happens directly against `master`, with features tracked in
 `docs/ROADMAP.md` and itemized as they ship in `CHANGELOG.md`'s
 `[Unreleased]` section.
 
-**The repository stays private**, matching GLB's own stance — no fixed
-date attached, an open timetable rather than a deferred-indefinitely
-non-decision. The bar for going public is the same as GLB's: real
-confidence from actual use, not a version number.
+**The repository went public on 2026-08-11**, Greg's own decision once
+GWB reached feature parity with GLB's Version 0.1–0.6 equivalents and a
+pre-release content audit (commit authorship, secrets/keys, hardcoded
+IPs/paths/usernames, tracked `snapshots/` data) came back clean — no
+edits were needed before flipping visibility, unlike GLB, which had two
+real findings (a hardcoded personal git identity, a leaked home-server
+IP) to fix first. Unlike GLB's own "stays private until vetted" stance,
+GWB didn't wait for real-hardware verification beyond Greg's single
+Windows 11 machine — the bar he applied here was feature completeness
+plus a clean audit, not GLB's more cautious multi-machine track record.
 
 ## Long-Term Vision
 
