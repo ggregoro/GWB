@@ -100,6 +100,11 @@ dot-sourcing focused library modules from `lib/`, driven by per-profile
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the full module
 breakdown.
 
+## Project
+
+Vision, target audience, goals, non-goals, and release strategy are
+tracked in [`docs/PROJECT.md`](docs/PROJECT.md).
+
 ## Roadmap
 
 GWB's direction and current progress are tracked in
