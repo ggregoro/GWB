@@ -1,0 +1,1 @@
+Core CLI toolkit: eza, fzf, lf, ripgrep, fd, bat + Starship prompt

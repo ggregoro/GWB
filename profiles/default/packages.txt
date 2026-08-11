@@ -1,0 +1,9 @@
+# One package per line - logical names resolved to winget package IDs
+# via _GWB_PACKAGE_OVERRIDES in lib/packages.ps1.
+eza
+fzf
+lf
+ripgrep
+fd
+bat
+starship
