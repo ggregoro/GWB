@@ -172,6 +172,11 @@ feature set.
   against a profile, offers to re-run `restore` if drift is found.
 - **`gwb restore --from-snapshot <name>`** (2026-08-11) — applies a
   snapshot by reusing `Invoke-GwbApplyProfile` directly.
+- **`gwb restore --from-manifest <path>`** (2026-08-11) — applies a
+  profile-shaped directory from anywhere on disk. Turned out to need no
+  new logic at all — `Invoke-GwbApplyProfile` already accepted an
+  arbitrary path, the same trick `--from-snapshot` already used. See
+  [`docs/design/from-manifest.md`](design/from-manifest.md).
 
 See [`docs/design/export-diff-repair.md`](design/export-diff-repair.md)
 for the full scoping and real-machine verification, including two real
@@ -180,10 +185,7 @@ bugs caught and fixed (a mixed-line-endings false-positive diff, and
 
 ### Planned
 
-- **`gwb restore --from-manifest <path>`** — apply a profile-shaped
-  directory from anywhere on disk, without adding it to the repo. Not
-  bundled into the round above; GLB's `docs/design/
-  installation-manifests.md` is the reference to scope from.
+(none — Version 0.6 is now fully complete)
 
 ---
 

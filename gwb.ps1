@@ -46,6 +46,7 @@ function Show-GwbHelp {
     Write-Host "  restore --dry-run             Preview what a restore would do"
     Write-Host "  restore --undo                Undo the last restore's `$PROFILE changes"
     Write-Host "  restore --from-snapshot <name> Apply a snapshot captured by 'gwb export'"
+    Write-Host "  restore --from-manifest <path> Apply a profile-shaped directory from anywhere on disk"
     Write-Host "  profiles                      List available profiles"
     Write-Host "  export                        Snapshot this machine's known packages + `$PROFILE"
     Write-Host "  diff <a> <b>                  Compare two profiles/snapshots for drift"
@@ -108,6 +109,7 @@ switch ($Command) {
         $undo = $false
         $profileName = $null
         $snapshotName = $null
+        $manifestPath = $null
 
         $i = 0
         while ($i -lt $Rest.Count) {
@@ -119,6 +121,10 @@ switch ($Command) {
                     $i++
                     $snapshotName = $Rest[$i]
                 }
+                '^--from-manifest$' {
+                    $i++
+                    $manifestPath = $Rest[$i]
+                }
                 default       { $profileName = $arg }
             }
             $i++
@@ -126,6 +132,12 @@ switch ($Command) {
 
         if ($undo) {
             Undo-GwbRestore
+        } elseif ($manifestPath) {
+            if (-not (Test-Path $manifestPath)) {
+                Write-Fail "Manifest path not found: $manifestPath"
+            } else {
+                Invoke-GwbApplyProfile -ProfileDir $manifestPath -ProfileName $manifestPath -WhatIf:$dryRun
+            }
         } elseif ($snapshotName) {
             $dir = Join-Path $SnapshotsRoot $snapshotName
             if (-not (Test-Path $dir)) {

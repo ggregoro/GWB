@@ -86,3 +86,10 @@ This project follows a simple versioning approach:
 - Fixed `.gitignore`: it excluded `snapshots/` from an earlier round,
   directly contradicting the (inherited-from-GLB) decision to track
   snapshots in-repo for cross-machine diffing.
+- Added `gwb restore --from-manifest <path>` — applies a profile-shaped
+  directory from anywhere on disk. No new logic needed:
+  `Invoke-GwbApplyProfile` already accepted an arbitrary directory
+  path, the same trick `--from-snapshot` already used. Verified for
+  real with a scratch manifest directory outside the repo, both
+  `--dry-run` and applied for real; a nonexistent path errors cleanly.
+  Version 0.6 (Configuration Management) is now fully complete.

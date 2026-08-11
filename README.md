@@ -72,6 +72,7 @@ gwb restore [profile]       Apply a profile (packages + $PROFILE)
 gwb restore --dry-run       Preview a restore without changing anything
 gwb restore --undo          Undo the last restore's $PROFILE changes
 gwb restore --from-snapshot <name>  Apply a snapshot captured by 'gwb export'
+gwb restore --from-manifest <path>  Apply a profile-shaped directory from anywhere on disk
 gwb profiles                List available profiles
 gwb export                  Snapshot this machine's known packages + $PROFILE
 gwb diff <a> <b>            Compare two profiles/snapshots for drift
@@ -96,13 +97,15 @@ gwb repair <profile>        Check this machine against a profile
 
 Early — v0.1.0. The dispatcher, package installs, `$PROFILE`
 management, all three profiles (`default`/`developer`/`server`), and
-`export`/`diff`/`repair`/`restore --from-snapshot` are all built and
-verified with real restores on a real machine (including idempotency,
-the backup/undo round-trip, and real drift detection). Not yet ported
-from GLB: `restore --from-manifest`, non-winget "extras" installs
-(GLB's curl/Flatpak/font equivalent — likely `Install-Module`-based
-tools like PSFzf/PSReadLine/Terminal-Icons on Windows, plus IPBan for
-`server` once this exists), and shell completions for `gwb` itself.
+the full configuration-management set
+(`export`/`diff`/`repair`/`restore --from-snapshot`/`restore
+--from-manifest`) are all built and verified with real restores on a
+real machine (including idempotency, the backup/undo round-trip, and
+real drift detection). Not yet ported from GLB: non-winget "extras"
+installs (GLB's curl/Flatpak/font equivalent — likely
+`Install-Module`-based tools like PSFzf/PSReadLine/Terminal-Icons on
+Windows, plus IPBan for `server` once this exists), and shell
+completions for `gwb` itself.
 
 ## Project
 

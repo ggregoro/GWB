@@ -7,7 +7,19 @@ feature/code changes. Mirrors GLB's own `docs/DOCS_CHANGELOG.md`.
 
 ## [Unreleased]
 
-(none since the export/diff/repair build below)
+(none since the from-manifest build below)
+
+---
+
+## 2026-08-11 (continued further)
+
+### Documentation
+
+- Added `docs/design/from-manifest.md` — found and documented that
+  `restore --from-manifest <path>` needed no new logic at all,
+  `Invoke-GwbApplyProfile` already accepted an arbitrary path. Updated
+  `docs/ROADMAP.md`'s Version 0.6 to fully complete and `CHANGELOG.md`
+  with the actual feature addition.
 
 ---
 

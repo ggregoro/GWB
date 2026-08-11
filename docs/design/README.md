@@ -34,8 +34,12 @@ up shaped the way it did, even after the feature ships.
   real hardware, including two real bugs caught and fixed (a
   mixed-line-endings false-positive diff, `Read-Host` crashing instead
   of failing gracefully with no input).
+- [`from-manifest.md`](from-manifest.md) — **Decided and built, no real
+  fork found.** `Invoke-GwbApplyProfile` already accepted an arbitrary
+  path, so `--from-manifest <path>` needed only argument parsing, no
+  new logic. Verified end-to-end with a real scratch manifest.
 
 Everything else built so far (packages, `restore`/`--dry-run`/`--undo`,
 the interactive picker) was small enough to build directly, without a
-design doc. The next candidate, per [`docs/ROADMAP.md`](../ROADMAP.md):
-`restore --from-manifest <path>`.
+design doc. **Version 0.6 (Configuration Management) is now fully
+complete** — see [`docs/ROADMAP.md`](../ROADMAP.md) for what's next.
