@@ -64,8 +64,8 @@ scoped.
 | `profile.ps1` | Applies a profile: packages, modules, then the `$PROFILE` snippet and self-registration block (both via the shared `Set-GwbManagedBlock` helper — backup-on-first-touch + marked-block injection/replacement), the interactive profile picker, and `--undo` rollback. |
 | `completions.ps1` | Puts `gwb` on the command line — a wrapper function in `$PROFILE` (`.ps1` scripts aren't callable by bare name on Windows) — plus `Register-ArgumentCompleter` for commands, profile/snapshot names, and package names, all read live from disk. Installed automatically on every restore via its own managed block, separate from the profile-snippet block. |
 | `terminal.ps1` | Opt-in Windows Terminal `settings.json` merge (`Install-GwbWindowsTerminalSettings`). Not wired into any shipped profile — see `docs/ROADMAP.md` Version 0.4 for why this stays a stub rather than being built out. |
-| `export.ps1` | `Export-GwbSnapshot` captures the installed subset of every profile's *known* packages (winget has no manual-vs-dependency tracking, so tracking is scoped to what some profile already lists) plus the current `$PROFILE`'s GWB-managed block, into `snapshots/<hostname>-<date>/`. |
-| `diff.ps1` | `Invoke-GwbDiff` compares two profile-shaped directories (a profile, a snapshot, or either against the other) for package and `profile-snippet.ps1` drift, exit 0/1 matching `diff`'s own convention. |
+| `export.ps1` | `Export-GwbSnapshot` captures the installed subset of every profile's *known* packages and modules (winget has no manual-vs-dependency tracking, so tracking is scoped to what some profile already lists) plus the current `$PROFILE`'s GWB-managed block, into `snapshots/<hostname>-<date>/`. |
+| `diff.ps1` | `Invoke-GwbDiff` compares two profile-shaped directories (a profile, a snapshot, or either against the other) for package, module, and `profile-snippet.ps1` drift, exit 0/1 matching `diff`'s own convention. |
 | `repair.ps1` | `Invoke-GwbRepair` does an ephemeral export + diff against a profile (nothing saved to disk), offering to re-run `restore` if drift is found. |
 
 Every module is dot-sourced by `gwb.ps1` before the dispatcher's

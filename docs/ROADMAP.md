@@ -178,8 +178,11 @@ feature set.
   any GLB package manager faced) plus the current `$PROFILE`'s
   GWB-managed block, into `snapshots/<hostname>-<date>/`.
 - **`gwb diff <a> <b>`** (2026-08-11) — compares two profiles/snapshots
-  for package and `profile-snippet.ps1` drift, exit 0/1 matching
-  `diff`'s convention.
+  for package, module, and `profile-snippet.ps1` drift, exit 0/1
+  matching `diff`'s convention. Module tracking (`modules.txt`) was
+  added the same day as a follow-up once `lib/modules.ps1` existed —
+  the same flat-list scan/diff logic, generalized to a second file, no
+  new mechanism needed.
 - **`gwb repair <profile>`** (2026-08-11) — ephemeral export + diff
   against a profile, offers to re-run `restore` if drift is found.
 - **`gwb restore --from-snapshot <name>`** (2026-08-11) — applies a

@@ -123,3 +123,12 @@ This project follows a simple versioning approach:
   and confirmed to suppress it completely; shipped that instead.
   Version 0.4 (PowerShell Environment Enhancements) is now fully
   complete.
+- Extended `gwb export`/`diff`/`repair` to also track `modules.txt`
+  drift, closing a gap flagged the same day. Generalized
+  `Get-GwbKnownPackageNames` into `Get-GwbKnownNames -FileName`
+  (`lib/export.ps1`) and `Get-GwbPackageSet` into `Get-GwbFlatListSet
+  -FileName` (`lib/diff.ps1`), used for both `packages.txt` and
+  `modules.txt` — no new detection mechanism. `gwb repair` needed zero
+  changes, since it already calls both functions directly. Verified
+  for real: a synthetic snapshot with `Terminal-Icons` deliberately
+  removed correctly reported the drift via `gwb diff`.

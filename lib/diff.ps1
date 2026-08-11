@@ -1,9 +1,9 @@
 # lib/diff.ps1
 # Mirrors GLB's lib/diff.sh: compares two profile-shaped directories
-# (a profile, a snapshot, or either against the other) for package and
-# $PROFILE-snippet drift. Simpler than GLB's dotfile diff since GWB has
-# exactly one managed file (profile-snippet.ps1) per profile/snapshot,
-# not a whole dotfiles/ tree.
+# (a profile, a snapshot, or either against the other) for package,
+# module, and $PROFILE-snippet drift. Simpler than GLB's dotfile diff
+# since GWB has exactly one managed file (profile-snippet.ps1) per
+# profile/snapshot, not a whole dotfiles/ tree.
 
 function Resolve-GwbDiffDir {
     param(
@@ -21,14 +21,41 @@ function Resolve-GwbDiffDir {
     return $null
 }
 
-function Get-GwbPackageSet {
-    param([Parameter(Mandatory)][string]$Dir)
+# Shared by packages.txt and modules.txt - same flat-list shape.
+function Get-GwbFlatListSet {
+    param(
+        [Parameter(Mandatory)][string]$Dir,
+        [Parameter(Mandatory)][string]$FileName
+    )
 
-    $pkgFile = Join-Path $Dir "packages.txt"
-    if (-not (Test-Path $pkgFile)) { return @() }
-    Get-Content $pkgFile | Where-Object {
+    $listFile = Join-Path $Dir $FileName
+    if (-not (Test-Path $listFile)) { return @() }
+    Get-Content $listFile | Where-Object {
         $_.Trim() -ne "" -and -not $_.Trim().StartsWith("#")
     } | ForEach-Object { $_.Trim() }
+}
+
+# Reports one "<Label>:" drift section (packages or modules) between two
+# sets. Returns $true if any drift was found.
+function Write-GwbSetDiff {
+    param(
+        [Parameter(Mandatory)][string]$Label,
+        [Parameter(Mandatory)][string[]]$SetA,
+        [Parameter(Mandatory)][string]$A,
+        [Parameter(Mandatory)][string[]]$SetB,
+        [Parameter(Mandatory)][string]$B
+    )
+
+    $onlyA = @($SetA | Where-Object { $SetB -notcontains $_ })
+    $onlyB = @($SetB | Where-Object { $SetA -notcontains $_ })
+
+    if ($onlyA.Count -eq 0 -and $onlyB.Count -eq 0) { return $false }
+
+    Write-Host ""
+    Write-Host "${Label}:"
+    if ($onlyA.Count -gt 0) { Write-Host "  - $($onlyA -join ', ')  (only in $A)" -ForegroundColor Red }
+    if ($onlyB.Count -gt 0) { Write-Host "  + $($onlyB -join ', ')  (only in $B)" -ForegroundColor Green }
+    return $true
 }
 
 function Invoke-GwbDiff {
@@ -58,18 +85,13 @@ function Invoke-GwbDiffDirs {
 
     $found = $false
 
-    $setA = @(Get-GwbPackageSet -Dir $DirA)
-    $setB = @(Get-GwbPackageSet -Dir $DirB)
-    $onlyA = @($setA | Where-Object { $setB -notcontains $_ })
-    $onlyB = @($setB | Where-Object { $setA -notcontains $_ })
+    $pkgSetA = @(Get-GwbFlatListSet -Dir $DirA -FileName "packages.txt")
+    $pkgSetB = @(Get-GwbFlatListSet -Dir $DirB -FileName "packages.txt")
+    if (Write-GwbSetDiff -Label "Packages" -SetA $pkgSetA -A $A -SetB $pkgSetB -B $B) { $found = $true }
 
-    if ($onlyA.Count -gt 0 -or $onlyB.Count -gt 0) {
-        $found = $true
-        Write-Host ""
-        Write-Host "Packages:"
-        if ($onlyA.Count -gt 0) { Write-Host "  - $($onlyA -join ', ')  (only in $A)" -ForegroundColor Red }
-        if ($onlyB.Count -gt 0) { Write-Host "  + $($onlyB -join ', ')  (only in $B)" -ForegroundColor Green }
-    }
+    $modSetA = @(Get-GwbFlatListSet -Dir $DirA -FileName "modules.txt")
+    $modSetB = @(Get-GwbFlatListSet -Dir $DirB -FileName "modules.txt")
+    if (Write-GwbSetDiff -Label "Modules" -SetA $modSetA -A $A -SetB $modSetB -B $B) { $found = $true }
 
     $snippetA = Join-Path $DirA "profile-snippet.ps1"
     $snippetB = Join-Path $DirB "profile-snippet.ps1"

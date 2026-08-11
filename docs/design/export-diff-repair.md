@@ -113,16 +113,36 @@ machines/sessions, same as on the GLB side). `snapshots/<hostname>-
   it to specific wording, so there's no equivalent reason to duplicate
   here; reuse is the simpler, more maintainable choice).
 
+## Update (2026-08-11): `modules.txt` drift now tracked too
+
+Closes the gap `docs/design/psgallery-extras.md`'s own "Not in scope
+for this round" section flagged when `lib/modules.ps1` was built — the
+same way GLB closes its own documented gaps, as a real follow-up, not
+forgotten. `Get-GwbKnownPackageNames`
+was generalized into `Get-GwbKnownNames -FileName` (used for both
+`packages.txt` and `modules.txt`) and `Get-GwbPackageSet` into
+`Get-GwbFlatListSet -FileName` likewise — no new detection mechanism,
+the exact same flat-list scan/diff logic applied to a second file.
+`Export-GwbSnapshotContent` now writes both; `Invoke-GwbDiffDirs` now
+reports a separate "Modules:" section alongside "Packages:". `gwb
+repair` needed zero changes — it already calls both functions
+directly, so it inherited module-drift detection automatically, the
+same reuse payoff the original design leaned on. Verified for real: a
+synthetic snapshot with `Terminal-Icons` deliberately removed from
+`modules.txt` correctly reported `- Terminal-Icons (only in default)`
+via `gwb diff`.
+
 ## Verification
 
 Built and verified for real on Greg's Windows 11 machine: `gwb export`
-produces a real snapshot (verified `packages.txt`/`profile-snippet.ps1`/
-`metadata.yaml` content by hand); `gwb diff` correctly reports real
-package drift between `default`/`developer` and between a profile and a
-live snapshot, and correctly reports "no drift" for a profile diffed
-against itself; `gwb repair` correctly detects real drift against the
-machine's actual state and, when declined, leaves the machine
-untouched with the ephemeral scratch directory confirmed cleaned up;
+produces a real snapshot (verified `packages.txt`/`modules.txt`/
+`profile-snippet.ps1`/`metadata.yaml` content by hand); `gwb diff`
+correctly reports real package drift between `default`/`developer` and
+between a profile and a live snapshot, and correctly reports "no drift"
+for a profile diffed against itself; `gwb repair` correctly detects
+real drift against the machine's actual state and, when declined,
+leaves the machine untouched with the ephemeral scratch directory
+confirmed cleaned up;
 `restore --from-snapshot` correctly reuses `Invoke-GwbApplyProfile`
 (confirmed via `--dry-run`) and correctly errors on an unknown snapshot
 name.

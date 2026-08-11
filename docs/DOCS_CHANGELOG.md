@@ -7,7 +7,19 @@ feature/code changes. Mirrors GLB's own `docs/DOCS_CHANGELOG.md`.
 
 ## [Unreleased]
 
-(none since the PSGallery extras build below)
+(none since the modules.txt drift-tracking build below)
+
+---
+
+## 2026-08-11 (continued once more still)
+
+### Documentation
+
+- Updated `docs/design/export-diff-repair.md` and
+  `docs/design/psgallery-extras.md` to record the modules.txt
+  drift-tracking follow-up as closed, cross-linked between the two
+  docs. Updated `docs/ROADMAP.md` and `CHANGELOG.md` with the actual
+  feature addition.
 
 ---
 

@@ -62,15 +62,17 @@ PSRepository -InstallationPolicy Trusted` first.
   ListView` block (see the real bug below for why it's wrapped in
   `try`/`catch`).
 
-## Not in scope for this round
+## Follow-up: closed (2026-08-11)
 
-`export`/`diff`/`repair` currently only track packages known to some
-profile's `packages.txt` — they don't yet know about `modules.txt`.
-Module drift (a module present in `modules.txt` but missing from a
-machine, or vice versa) won't be caught by `gwb repair` today. A real,
-noted gap, not silently forgotten — worth extending
-`Get-GwbKnownPackageNames`-style tracking to modules too as a follow-up,
-not bundled into this round to avoid scope creep.
+`export`/`diff`/`repair` originally only tracked packages known to some
+profile's `packages.txt`, not `modules.txt` — flagged here as a real,
+noted gap rather than bundled into this round to avoid scope creep.
+Closed the same day: see the "Update" section in
+[`docs/design/export-diff-repair.md`](export-diff-repair.md) for the
+full writeup (generalized the existing package-scanning/diffing
+helpers to also cover `modules.txt`, no new mechanism needed; `gwb
+repair` needed zero changes since it already reuses those functions
+directly).
 
 ## Verification
 

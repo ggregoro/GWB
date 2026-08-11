@@ -114,14 +114,14 @@ Early — v0.1.0. The dispatcher, package installs, PowerShell Gallery
 modules, `$PROFILE` management, all three profiles
 (`default`/`developer`/`server`), the full configuration-management set
 (`export`/`diff`/`repair`/`restore --from-snapshot`/`restore
---from-manifest`), and the `gwb` command + tab-completion are all built
-and verified with real restores on a real machine (including
-idempotency, the backup/undo round-trip, real drift detection, and
-real `TabExpansion2` results). All of GLB's own Version 0.1–0.6
-equivalents are now ported. Known gap, documented rather than silently
-missing: `gwb repair`/`diff` don't yet track `modules.txt` drift, only
-`packages.txt`; IPBan (`server`'s fail2ban equivalent) has no winget
-package and isn't installed by anything yet.
+--from-manifest`, tracking both `packages.txt` and `modules.txt`
+drift), and the `gwb` command + tab-completion are all built and
+verified with real restores on a real machine (including idempotency,
+the backup/undo round-trip, real drift detection, and real
+`TabExpansion2` results). All of GLB's own Version 0.1–0.6 equivalents
+are now ported. Known gap, documented rather than silently missing:
+IPBan (`server`'s fail2ban equivalent) has no winget package and isn't
+installed by anything yet.
 
 ## Project
 
