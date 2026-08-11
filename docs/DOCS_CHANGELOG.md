@@ -10,10 +10,17 @@ feature/code changes. Mirrors GLB's own `docs/DOCS_CHANGELOG.md`.
 ### Added
 
 - Added `docs/design/developer-profile.md` — scopes the real forks in
-  porting GLB's `developer` profile to Windows (containers vs. the WSL
-  constraint, gcc/MinGW vs. MSVC, `mise`'s Windows support, whether a
-  resource monitor is needed alongside Task Manager, Fresh's Windows
-  availability). Proposed, not yet decided or built.
+  porting GLB's `developer` profile to Windows (containers, gcc/MinGW
+  vs. MSVC, `mise`'s Windows support, whether a resource monitor is
+  needed alongside Task Manager, Fresh's Windows availability).
+
+### Changed
+
+- Resolved `docs/design/developer-profile.md`'s containers question:
+  no container tooling in `developer` at all, since Docker Desktop/
+  Podman Desktop both need WSL2 (or Hyper-V) and Greg has a hard
+  "never install WSL2" constraint (breaks his VirtualBox VMs). Updated
+  `docs/ROADMAP.md`'s `developer` bullet to match.
 
 ---
 

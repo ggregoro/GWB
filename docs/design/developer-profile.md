@@ -1,6 +1,8 @@
 # Design: `developer` profile
 
-**Status:** Proposed — not yet decided or built.
+**Status:** Partially decided (containers, 2026-08-10) — remaining
+questions (build toolchain, `mise`, resource monitor, Fresh) still
+open; not yet built.
 
 ## Purpose
 
@@ -29,29 +31,37 @@ prompt setup every GLB profile ships.
   port, same as GLB.
 - **`jq`** — winget has `jqlang.jq`. Direct port.
 
-## Open questions — real forks, not yet decided
+## Decided
 
-### 1. Containers: what replaces Podman?
+### 1. Containers: dropped from scope entirely (2026-08-10)
 
 GLB picked Podman over Docker deliberately (daemonless/rootless, fits
-GLB's philosophy). On Windows, both Docker Desktop and Podman Desktop
-exist, but:
+GLB's philosophy). On Windows, the mainstream options don't have a
+non-WSL2 path:
 
-- **Docker Desktop** typically requires the WSL2 backend (or
-  Hyper-V). Greg avoids WSL on at least one machine specifically
-  because it breaks VirtualBox there — a hard constraint any container
-  choice needs to respect, not just a preference.
-- **Podman Desktop** on Windows also generally runs containers inside a
-  WSL2 machine under the hood (`podman machine init`), so it may not
-  actually sidestep the WSL constraint just by being Podman.
-- A genuinely rootless/daemonless, non-WSL container story on Windows
-  may not exist in the same way it does on Linux — worth confirming
-  before assuming either option is viable everywhere GWB might run.
+- **Docker Desktop** requires the WSL2 backend (or Hyper-V) for Linux
+  containers.
+- **Podman Desktop** on Windows also runs containers inside a WSL2
+  machine under the hood (`podman machine init`) — same dependency,
+  different name.
+- **Native Windows Containers** (process-isolated, no VM/WSL2 required)
+  only run Windows Server Core/Nano Server-based images — not useful
+  for the Linux-container workflows most dev tooling actually assumes.
 
-**Not decided.** Needs a direct answer from Greg on whether requiring
-WSL for containers specifically (as opposed to as a general dev
-environment) is acceptable, since that changes which option is even in
-play.
+**Ruled out per a hard constraint (Greg, 2026-08-10): no WSL2, and no
+tooling that requires it.** WSL2 takes over the machine's virtualization
+and breaks his existing VirtualBox VMs — this isn't a preference to
+weigh against convenience, it's a standing "never install this"
+constraint across GWB (and Windows tooling generally, see this
+project's `CLAUDE.md`/memory). Since every mainstream Windows container
+tool needs WSL2 (or Hyper-V, which has the same virtualization-takeover
+problem), **no container tool is included in `developer`.** This is the
+same category of decision as GLB leaving unattended security updates
+out of `server` — a real gap with no clean answer, documented rather
+than forced. Revisit only if a genuinely WSL2-free/Hyper-V-free Windows
+container story emerges.
+
+## Open questions — real forks, not yet decided
 
 ### 2. Build toolchain: what replaces gcc+make?
 

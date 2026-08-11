@@ -72,12 +72,13 @@ developer/server split.
 
 - **`developer`** — GLB's equivalent picked Podman, gcc+make, jq, `gh`,
   htop, mise, Fresh. Windows equivalents need their own pass rather
-  than a blind port. **Scoped, not yet decided or built**: see
-  [`docs/design/developer-profile.md`](design/developer-profile.md) for
-  the real open forks (containers vs. the WSL constraint, gcc/MinGW vs.
-  MSVC, whether `mise` even supports Windows, whether a resource
-  monitor is needed alongside Task Manager, whether Fresh has a Windows
-  build).
+  than a blind port. **Scoped, partially decided, not yet built**: see
+  [`docs/design/developer-profile.md`](design/developer-profile.md).
+  **No container tooling** — Docker Desktop/Podman Desktop both need
+  WSL2 (or Hyper-V), which is a hard "never install" constraint on
+  Greg's machines (breaks VirtualBox). Still open: gcc/MinGW vs. MSVC,
+  whether `mise` even supports Windows, whether a resource monitor is
+  needed alongside Task Manager, whether Fresh has a Windows build.
 - **`server`** — GLB's equivalent picked ufw, rsync+restic, fail2ban,
   htop. Windows Server has a very different security/firewall/backup
   model (Windows Firewall, Windows Backup, etc.) — needs its own
