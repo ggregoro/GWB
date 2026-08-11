@@ -15,7 +15,8 @@ GWB/
 ├── lib/                   # library modules (see below)
 ├── profiles/               # named profiles: packages.txt, profile-snippet.ps1, description.txt
 ├── docs/                   # this documentation, including docs/design/ for
-│                           #   feature design docs
+│                           #   feature design docs and docs/reference/ for
+│                           #   cheat sheets
 ├── CLAUDE.md               # session-continuity notes, auto-loaded by Claude Code
 └── README.md, LICENSE, CHANGELOG.md, CONTRIBUTING.md, CODE_OF_CONDUCT.md
 ```
