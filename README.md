@@ -25,7 +25,9 @@ modules from `lib/` (`banner`, `log`, `detect`, `packages`, `profile`,
 under `profiles/`. Packages are winget IDs resolved from logical names via
 an override table (e.g. `fd` → `sharkdp.fd`); the snippet is injected into
 `$PROFILE` between marked `# >>> GWB managed block >>>` / `<<<` lines so a
-re-apply replaces it cleanly instead of duplicating it.
+re-apply replaces it cleanly instead of duplicating it. See
+[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the full module
+breakdown.
 
 ## Features
 
@@ -92,14 +94,6 @@ curl/Flatpak/font equivalent — likely `Install-Module`-based tools like
 PSFzf/PSReadLine/Terminal-Icons on Windows), shell completions for `gwb`
 itself, and additional profiles.
 
-## Architecture
-
-GWB is a PowerShell CLI — a single `gwb.ps1` dispatcher script
-dot-sourcing focused library modules from `lib/`, driven by per-profile
-`packages.txt`/`profile-snippet.ps1` under `profiles/`. See
-[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the full module
-breakdown.
-
 ## Project
 
 Vision, target audience, goals, non-goals, and release strategy are
@@ -109,6 +103,13 @@ tracked in [`docs/PROJECT.md`](docs/PROJECT.md).
 
 GWB's direction and current progress are tracked in
 [`docs/ROADMAP.md`](docs/ROADMAP.md).
+
+## Contributing
+
+GWB is currently a personal project (private repository) built and
+tested by its author on a real Windows 11 machine, documented in detail
+in [`CLAUDE.md`](CLAUDE.md). See [`CONTRIBUTING.md`](CONTRIBUTING.md)
+for conventions and [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md).
 
 ## Related
 
