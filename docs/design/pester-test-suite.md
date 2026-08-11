@@ -1,7 +1,10 @@
 # Design: Pester test suite
 
-**Status:** Built (2026-08-11). Verified for real — 81/81 tests pass,
-including a real bug the suite caught on its very first run.
+**Status:** Built (2026-08-11). Verified for real — 81/81 tests pass at
+initial build, including a real bug the suite caught on its very first
+run. Grew to 88/88 the same day with `tests/Install.Tests.ps1` (see
+`docs/design/installer.md`) — that round caught a second real bug, this
+time in the test technique itself, not the code under test.
 
 ## Purpose
 

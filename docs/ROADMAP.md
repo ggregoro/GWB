@@ -229,17 +229,21 @@ Deliver the first stable version of GWB.
   paths/IPs, or personal git identity found — see
   [`docs/PROJECT.md`](../docs/PROJECT.md)'s Release Strategy for the
   full record)
-- `install.ps1` ✅ (2026-08-11) — a real curl/`irm`-style one-liner
-  installer, mirroring GLB's `install.sh`. Built once the repo went
-  public (a fresh machine has no credentials to clone a private repo,
-  the same blocker GLB's own installer had). See
-  [`docs/design/installer.md`](design/installer.md) for two genuine
-  platform forks from GLB's version (an `& { }` scope wrapper and no
-  `exit` calls anywhere, both because `irm | iex` runs in the caller's
-  live session rather than a disposable subshell the way `curl | bash`
-  does). **Not yet verified on real Windows hardware** — built in a
-  cloud session with no `pwsh`/Pester available; needs a real run
-  before being considered fully done.
+- `install.ps1` ✅ (2026-08-11, verified for real the same day) — a
+  real curl/`irm`-style one-liner installer, mirroring GLB's
+  `install.sh`. Built once the repo went public (a fresh machine has
+  no credentials to clone a private repo, the same blocker GLB's own
+  installer had). See [`docs/design/installer.md`](design/installer.md)
+  for two genuine platform forks from GLB's version (an `& { }` scope
+  wrapper and no `exit` calls anywhere, both because `irm | iex` runs
+  in the caller's live session rather than a disposable subshell the
+  way `curl | bash` does) and the full real-hardware verification,
+  including a real Pester-test-technique bug (not an `install.ps1` bug)
+  caught on the suite's first-ever run.
+
+**Version 1.0 is now fully complete** — every stated goal is done and
+verified for real. Next: nothing queued. GWB is feature-complete
+against GLB's Version 0.1–0.6 and publicly released.
 
 ---
 

@@ -182,5 +182,18 @@ This project follows a simple versioning approach:
   `tests/Install.Tests.ps1` (6 tests: git-not-found, fresh clone,
   update-in-place, refuses to clobber an unrelated directory, failed
   pull/clone reporting cleanly, and the scope-isolation property
-  itself). **Not yet verified on real Windows hardware** — built in a
-  cloud session with no `pwsh`/Pester available.
+  itself). See `docs/design/installer.md` for the full reasoning.
+- Verified `install.ps1` for real on Windows hardware, closing the one
+  gap left from the cloud session that built it (no `pwsh` there to
+  run anything). `Invoke-Pester -Path tests/Install.Tests.ps1`, run for
+  the very first time, found a real bug — in the test file, not
+  `install.ps1`: `*>&1`/`2>&1` applied directly to an
+  `Invoke-Expression` call doesn't capture that call's own
+  `Write-Error` output; wrapping the call in its own scriptblock and
+  redirecting *that* does. Isolated with a minimal repro before fixing
+  all 6 affected assertions. 7/7 pass now, 88/88 across the full suite.
+  Then ran the real one-liner twice against the live public repo
+  (fresh clone, then confirmed update-in-place instead of re-cloning),
+  confirmed the fresh checkout resolves its own paths correctly from
+  its new location, and completed the full chain with a real
+  `gwb.ps1 restore default` from it. Version 1.0 is now fully complete.

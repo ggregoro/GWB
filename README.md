@@ -136,25 +136,29 @@ Invoke-Pester -Path tests/
 A [Pester](https://pester.dev/) suite (GWB's analogue of GLB's `bats`
 suite) — `winget`/`Install-Module` are mocked and `$PROFILE` is
 overridden to a temp path, so it's safe to run; nothing real gets
-touched. 81 tests, one file roughly per `lib/` module plus
-`Dispatcher.Tests.ps1` for real end-to-end command coverage. See
+touched. 88 tests, one file roughly per `lib/` module plus
+`Dispatcher.Tests.ps1` for real end-to-end command coverage and
+`Install.Tests.ps1` for `install.ps1`. See
 [`docs/design/pester-test-suite.md`](docs/design/pester-test-suite.md).
 
 ## Status
 
-Early — v0.1.0. The dispatcher, package installs, PowerShell Gallery
-modules, `$PROFILE` management, all three profiles
-(`default`/`developer`/`server`), the full configuration-management set
+v0.1.0, Version 1.0 (Stable Release) complete. The dispatcher, package
+installs, PowerShell Gallery modules, `$PROFILE` management, all three
+profiles (`default`/`developer`/`server`), the full
+configuration-management set
 (`export`/`diff`/`repair`/`restore --from-snapshot`/`restore
 --from-manifest`, tracking both `packages.txt` and `modules.txt`
-drift), the `gwb` command + tab-completion, and a Pester test suite are
-all built and verified — real restores on a real machine (idempotency,
-the backup/undo round-trip, real drift detection, real
-`TabExpansion2` results) plus 81 automated tests. All of GLB's own
-Version 0.1–0.6 equivalents are now ported. **One deliberate, permanent
-non-goal**: IPBan (`server`'s fail2ban equivalent) needs Administrator
-elevation and installs a persistent firewall-blocking service with real
-lockout risk — decided not to automate at all, see
+drift), the `gwb` command + tab-completion, the `install.ps1`
+one-liner, and a Pester test suite are all built and verified — real
+restores on a real machine (idempotency, the backup/undo round-trip,
+real drift detection, real `TabExpansion2` results, a real fresh
+install + update-in-place against the live public repo) plus 88
+automated tests. All of GLB's own Version 0.1–0.6 equivalents are now
+ported, and the repo is public. **One deliberate, permanent non-goal**:
+IPBan (`server`'s fail2ban equivalent) needs Administrator elevation
+and installs a persistent firewall-blocking service with real lockout
+risk — decided not to automate at all, see
 [`docs/reference/ipban-manual-install.md`](docs/reference/ipban-manual-install.md)
 for the manual install instead.
 

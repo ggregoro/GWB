@@ -7,7 +7,27 @@ feature/code changes. Mirrors GLB's own `docs/DOCS_CHANGELOG.md`.
 
 ## [Unreleased]
 
-(none since the Pester test suite build below)
+(none since the installer verification below)
+
+---
+
+## 2026-08-11 (real-hardware installer verification)
+
+### Documentation
+
+- Updated `docs/design/installer.md`'s Status/Verification sections to
+  record the real Windows-hardware run (a cloud session had built
+  `install.ps1` and `docs/design/installer.md`/`b125063`/`3d1727c`/
+  `a4e5ad7` without ever executing anything — no `pwsh` there at all).
+  Updated `docs/ROADMAP.md`'s Version 1.0 to mark it verified and
+  `CHANGELOG.md` with the real bug found and fixed.
+
+### Development Environment
+
+- Isolated a real `Invoke-Expression`/`*>&1` capture gotcha with a
+  minimal repro before touching the test file — confirmed it doesn't
+  affect real interactive `irm | iex` usage, only the test's own
+  output-capture technique.
 
 ---
 

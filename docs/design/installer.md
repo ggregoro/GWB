@@ -1,10 +1,9 @@
 # Design: `install.ps1` (the curl/`irm`-style one-liner installer)
 
-**Status:** Built (2026-08-11), **not yet verified on real Windows
-hardware** — built and tested from the repo alone in a cloud session
-with no `pwsh`/Pester available. Needs a real run on Greg's Windows
-machine before being considered fully done, per this project's own
-"verify for real" standard (`docs/CODING_STANDARDS.md`).
+**Status:** Built (2026-08-11) and now fully verified for real
+(2026-08-11, same day, on Greg's real Windows 11 machine) — including a
+real bug the first-ever run of its Pester suite caught, not present in
+`install.ps1` itself. See "Verification" below.
 
 ## Purpose
 
@@ -113,15 +112,48 @@ Covers: git-not-found, fresh clone, update-in-place, refuses to
 clobber an unrelated existing directory, a failed `git pull`/`git
 clone` reporting cleanly, and the scope-isolation property itself.
 
-**Not yet run** — this cloud session has no `pwsh`/Pester available to
-execute against. Needs `Invoke-Pester -Path tests/Install.Tests.ps1`
-on Greg's real Windows machine before this feature is considered
-verified, per the project's own standing "verify for real" discipline.
+## Verification
 
-## Not done here
+Run for real on Greg's Windows 11 machine, both the automated suite and
+the live one-liner against the now-public repo:
 
-- No real end-to-end run of `irm https://raw.githubusercontent.com/
-  ggregoro/GWB/master/install.ps1 | iex` against the live public repo —
-  needs a real Windows machine (ideally a fresh one, the way GLB's
-  `install.sh` was verified on fresh VMs for each package manager, not
-  just the one machine GWB has been tested on so far).
+- **`Invoke-Pester -Path tests/Install.Tests.ps1`**, executed for the
+  first time ever. 4 of 7 tests failed on the first real run — **a
+  real bug, but in the test file, not `install.ps1`**: every
+  `$output = Invoke-Expression $Script:InstallScriptText *>&1 |
+  Out-String` capture came back empty wherever `install.ps1` hit a
+  `Write-Error` path. Isolated with a minimal repro rather than
+  guessed at: `*>&1`/`2>&1` applied directly to an `Invoke-Expression`
+  call does **not** capture that call's own error-stream writes, but
+  wrapping the call in its own scriptblock and redirecting *that*
+  (`& { Invoke-Expression $text } *>&1`) does. Confirmed this doesn't
+  affect real interactive `irm | iex` usage — nothing redirects those
+  streams there, so a real user always sees `Write-Error` output
+  normally; it's purely a test-capture-technique gap. Fixed all 6
+  affected assertions; 7/7 pass now, and the full suite (88 tests) still
+  passes together with no cross-file interference.
+- **The real one-liner**, run twice against the live public repo:
+  `irm https://raw.githubusercontent.com/ggregoro/GWB/master/
+  install.ps1 | iex`. First run: real fresh clone to
+  `$env:LOCALAPPDATA\GWB`, confirmed via `Test-Path`. Second run:
+  correctly reported "already installed... updating..." /
+  "Already up to date" instead of re-cloning.
+- **The fresh checkout's own path resolution**, confirmed from its new
+  location (not the dev checkout at `Projects\GWB`): `gwb.ps1
+  help`/`profiles` both work correctly, listing all three real
+  profiles.
+- **The full chain, completed end to end**: ran `gwb.ps1 restore
+  default` from the fresh `$env:LOCALAPPDATA\GWB` checkout for real —
+  packages/modules already installed, `$PROFILE` updated successfully.
+  One real, expected consequence worth knowing: this makes the `gwb`
+  function in `$PROFILE` point at the `$env:LOCALAPPDATA\GWB` copy
+  going forward (the real "installed" copy `install.ps1` exists to
+  provide), not the `Projects\GWB` dev checkout — correct, intended
+  behavior, not a bug, but a visible change from earlier sessions where
+  `gwb` pointed at the dev checkout.
+- Not done: a genuinely fresh/clean machine (GLB's own install.sh was
+  eventually verified on fresh VMs per package manager) — this was
+  verified on Greg's one existing Windows 11 machine, which already had
+  git and every dependency `install.ps1` needs. Consistent with GWB's
+  overall single-machine testing history so far, not a new gap specific
+  to this feature.

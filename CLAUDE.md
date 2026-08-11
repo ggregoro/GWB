@@ -66,10 +66,17 @@ breakdown — this section is a snapshot, that file is the source of truth.
   install documented in `docs/reference/ipban-manual-install.md`.
   Recorded as a durable principle in `docs/PROJECT.md`'s Non-Goals, not
   just a one-off note.
-- A Pester test suite (`tests/`, 81 tests) mocks `winget`/
+- A Pester test suite (`tests/`, 88 tests) mocks `winget`/
   `Install-Module` and overrides `$PROFILE`, including real
   dispatcher-level coverage (dot-sources `gwb.ps1` itself with `Mock`
   still active). Run with `Invoke-Pester -Path tests/`.
+- `install.ps1` — a curl/`irm`-style one-liner installer
+  (`irm https://raw.githubusercontent.com/ggregoro/GWB/master/
+  install.ps1 | iex`), mirroring GLB's `install.sh`. Built once the
+  repo went public; verified for real the same day (fresh clone,
+  update-in-place, `gwb.ps1 restore` from the fresh checkout, all
+  confirmed working against the live repo). See
+  `docs/design/installer.md`.
 - **Verified for real on the Windows 11 machine above** throughout —
   every feature above was actually run (not just parsed) before being
   considered done, including idempotency checks and, for anything
@@ -91,20 +98,18 @@ breakdown — this section is a snapshot, that file is the source of truth.
 ## Roadmap / in progress
 
 See `docs/ROADMAP.md` for the full versioned plan — kept up to date
-after every feature this session, so it's the accurate source of
-truth, not a summary to re-derive from here. Short version: **every
-stated Version 0.1–1.0 goal is now done**, including public-release
-readiness (repo went public 2026-08-11, see `docs/PROJECT.md`'s
-Release Strategy) and the curl/`irm`-style one-liner installer
-(`install.ps1`, built the same day right after — see
-`docs/design/installer.md`). **The one thing left before either can be
-called fully verified: `install.ps1` hasn't been run on real Windows
-hardware yet** — it was built and Pester-tested from the repo alone in
-a cloud session with no `pwsh` available. Next session on the real
-Windows 11 machine should run `irm https://raw.githubusercontent.com/
-ggregoro/GWB/master/install.ps1 | iex` for real and
-`Invoke-Pester -Path tests/Install.Tests.ps1` before this is
-considered done, not just built.
+after every feature, so it's the accurate source of truth, not a
+summary to re-derive from here. **Version 1.0 (Stable Release) is now
+fully complete and verified for real** — every stated goal is done,
+including public-release readiness (repo went public 2026-08-11, see
+`docs/PROJECT.md`'s Release Strategy) and the curl/`irm`-style
+one-liner installer (`install.ps1` — built in a cloud session with no
+`pwsh` at all, genuinely never executed there; verified for real the
+same day on Greg's Windows 11 machine, see `docs/design/installer.md`
+and the Working notes entry below for what that surfaced). **Nothing
+is currently queued.** GWB is feature-complete against GLB's Version
+0.1–0.6, publicly released, and its own installer is confirmed working
+end to end on real hardware.
 
 ## Conventions
 
@@ -126,6 +131,52 @@ considered done, not just built.
   re-derive context.
 
 ## Working notes
+
+- **Session (2026-08-11, real Windows 11 machine): verified
+  `install.ps1` for real, closing the one gap the previous cloud
+  session flagged.** Started by fetching/pulling — found 3 commits on
+  `origin/master` not yet local (`b125063`/`3d1727c`/`a4e5ad7`, all
+  from a cloud session with no `pwsh` available): the public-release
+  decision and `install.ps1` itself, built but never executed. Did
+  exactly what that session's own Working notes entry asked for:
+  1. `Invoke-Pester -Path tests/Install.Tests.ps1`, run for the very
+     first time — 4 of 7 tests failed immediately. **Real bug, but in
+     the test file, not `install.ps1`**: every assertion capturing
+     `install.ps1`'s `Write-Error` output via `Invoke-Expression $text
+     *>&1 | Out-String` came back empty. Isolated with a minimal repro
+     rather than guessed at: `*>&1`/`2>&1` applied directly to an
+     `Invoke-Expression` call does not capture that call's own
+     error-stream writes; wrapping the call in its own scriptblock and
+     redirecting *that* (`& { Invoke-Expression $text } *>&1`) does.
+     Confirmed this doesn't affect real interactive `irm | iex` usage
+     at all (nothing redirects those streams there) — purely a
+     test-capture-technique gap. Fixed all 6 affected assertions; 7/7
+     pass now, 88/88 across the full suite, run together.
+  2. The real one-liner, run twice against the live public repo: fresh
+     clone to `$env:LOCALAPPDATA\GWB` (confirmed via `Test-Path`), then
+     correct update-in-place behavior on a second run ("already
+     installed... Already up to date" instead of re-cloning). Confirmed
+     the fresh checkout resolves its own paths correctly from its new
+     location (`gwb.ps1 help`/`profiles` both work), then completed the
+     full chain with a real `gwb.ps1 restore default` from it.
+  - **Real, expected consequence worth knowing**: that last `restore`
+    means the `gwb` function in `$PROFILE` now points at
+    `$env:LOCALAPPDATA\GWB\gwb.ps1` (the fresh install), not
+    `C:\Users\ggreg\Projects\GWB\gwb.ps1` (the dev checkout this
+    project has always been built from). Identical code right now
+    (same commit), but new terminal windows run the installed copy
+    going forward unless `restore` is re-run from the dev checkout.
+    This is correct, intended behavior — `install.ps1` exists
+    specifically to be the real end-user install path — not a bug.
+  - Updated `docs/design/installer.md`/`pester-test-suite.md`,
+    `docs/design/README.md`, `docs/ROADMAP.md`, `CHANGELOG.md`, and
+    `docs/DOCS_CHANGELOG.md` to record the verification (the cloud
+    session hadn't touched `docs/design/README.md` or
+    `docs/DOCS_CHANGELOG.md` at all, so those needed real content
+    added, not just a status flip).
+  - **Version 1.0 (Stable Release) is now fully complete and verified
+    for real.** Nothing queued. Working tree clean, everything pushed
+    to `master` as of this note.
 
 - **Session wrap-up (2026-08-11, cloud session) — pausing here by
   Greg's choice; next session picks up on his real Windows 11

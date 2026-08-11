@@ -61,12 +61,23 @@ up shaped the way it did, even after the feature ships.
   `Mock` for `winget`/`Install-Module` (a proxy-function model, not
   GLB's `PATH`-shadowing), and real dispatcher-level coverage via
   dot-sourcing `gwb.ps1` itself with `Mock` still active. 81/81 tests
-  pass, including a real bug the suite caught on its first run (a
-  `Mandatory` array parameter silently rejecting a legitimate empty
-  array — `gwb diff`/`repair` would have crashed on any
-  `modules.txt`-less profile).
+  at initial build (grew to 88/88 with `installer.md`'s tests), each
+  round catching a real bug on its first run — first in `lib/diff.ps1`
+  (a `Mandatory` array parameter silently rejecting a legitimate empty
+  array), later in the test technique itself (see `installer.md`).
+- [`installer.md`](installer.md) — **Built and verified for real.**
+  `install.ps1`, the curl/`irm`-style one-liner installer, mirroring
+  GLB's `install.sh`. Two genuine platform forks, both from `irm | iex`
+  running in the caller's live session rather than a disposable
+  subshell: no `exit` calls anywhere, and the whole script wrapped in
+  `& { ... }` so its variables don't leak into the interactive session.
+  Built in a cloud session with no `pwsh` at all, so genuinely never
+  executed until verified for real afterward on Greg's Windows
+  machine — which is where a real `Invoke-Expression`/`*>&1`
+  capture bug in the test file (not `install.ps1` itself) was found
+  and fixed.
 
 Everything else built so far (packages, `restore`/`--dry-run`/`--undo`,
 the interactive picker) was small enough to build directly, without a
-design doc. **Versions 0.4, 0.5, and 0.6 are all now fully complete** —
-see [`docs/ROADMAP.md`](../ROADMAP.md) for what's next.
+design doc. **Version 1.0 (Stable Release) is now fully complete** —
+see [`docs/ROADMAP.md`](../ROADMAP.md).

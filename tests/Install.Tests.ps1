@@ -8,6 +8,15 @@
 # `& { ... }` wrapper is a child scope of wherever it's evaluated, so a
 # Mock defined in this file's It block is still visible inside it - the
 # same mechanism Packages.Tests.ps1 relies on to Mock winget.
+#
+# Every capture below wraps the Invoke-Expression call itself in its own
+# `& { }` before applying `*>&1` - confirmed directly (minimal repro)
+# that Invoke-Expression's own error-stream writes (install.ps1's
+# Write-Error calls) are NOT captured by `*>&1`/`2>&1` applied straight
+# to the Invoke-Expression call, only when wrapping the call in a
+# scriptblock and redirecting that instead. This only affects capturing
+# output for assertions here - real interactive `irm | iex` usage is
+# unaffected, since nothing redirects its streams.
 
 BeforeAll {
     . (Join-Path $PSScriptRoot "TestHelpers.ps1")
@@ -30,7 +39,7 @@ Describe "install.ps1" {
     It "errors cleanly when git is not available" {
         Mock Get-Command { $null } -ParameterFilter { $Name -eq "git" }
 
-        $output = Invoke-Expression $Script:InstallScriptText *>&1 | Out-String
+        $output = & { Invoke-Expression $Script:InstallScriptText } *>&1 | Out-String
 
         $output | Should -Match "git is required"
         Test-Path $Script:TestInstallDir | Should -Be $false
@@ -44,7 +53,7 @@ Describe "install.ps1" {
             $global:LASTEXITCODE = 0
         }
 
-        $output = Invoke-Expression $Script:InstallScriptText *>&1 | Out-String
+        $output = & { Invoke-Expression $Script:InstallScriptText } *>&1 | Out-String
 
         Should -Invoke git -ParameterFilter { $args[0] -eq "clone" }
         $output | Should -Match "gwb\.ps1.*restore"
@@ -54,7 +63,7 @@ Describe "install.ps1" {
         New-Item -ItemType Directory -Path (Join-Path $Script:TestInstallDir ".git") -Force | Out-Null
         Mock git { $global:LASTEXITCODE = 0 }
 
-        $output = Invoke-Expression $Script:InstallScriptText *>&1 | Out-String
+        $output = & { Invoke-Expression $Script:InstallScriptText } *>&1 | Out-String
 
         $output | Should -Match "already installed"
         Should -Invoke git -ParameterFilter { $args -contains "pull" }
@@ -65,7 +74,7 @@ Describe "install.ps1" {
         New-Item -ItemType Directory -Path (Join-Path $Script:TestInstallDir ".git") -Force | Out-Null
         Mock git { $global:LASTEXITCODE = 1 }
 
-        $output = Invoke-Expression $Script:InstallScriptText *>&1 | Out-String
+        $output = & { Invoke-Expression $Script:InstallScriptText } *>&1 | Out-String
 
         $output | Should -Match "git pull failed"
     }
@@ -75,7 +84,7 @@ Describe "install.ps1" {
         Set-Content -Path (Join-Path $Script:TestInstallDir "some-file.txt") -Value "unrelated"
         Mock git { $global:LASTEXITCODE = 0 }
 
-        $output = Invoke-Expression $Script:InstallScriptText *>&1 | Out-String
+        $output = & { Invoke-Expression $Script:InstallScriptText } *>&1 | Out-String
 
         $output | Should -Match "isn't a GWB checkout"
         Should -Not -Invoke git
@@ -84,7 +93,7 @@ Describe "install.ps1" {
     It "reports a clear error when git clone fails" {
         Mock git { $global:LASTEXITCODE = 1 }
 
-        $output = Invoke-Expression $Script:InstallScriptText *>&1 | Out-String
+        $output = & { Invoke-Expression $Script:InstallScriptText } *>&1 | Out-String
 
         $output | Should -Match "git clone failed"
         Test-Path (Join-Path $Script:TestInstallDir ".git") | Should -Be $false
