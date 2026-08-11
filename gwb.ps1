@@ -23,6 +23,7 @@ $LibDir      = Join-Path $GwbRoot "lib"
 . (Join-Path $LibDir "banner.ps1")
 . (Join-Path $LibDir "detect.ps1")
 . (Join-Path $LibDir "packages.ps1")
+. (Join-Path $LibDir "modules.ps1")
 . (Join-Path $LibDir "profile.ps1")
 . (Join-Path $LibDir "completions.ps1")
 . (Join-Path $LibDir "terminal.ps1")

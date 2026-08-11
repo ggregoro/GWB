@@ -13,7 +13,9 @@ GWB/
 ├── gwb.ps1                # dispatcher: parses the command, dot-sources lib/*.ps1, dispatches
 ├── VERSION                # current GWB version
 ├── lib/                   # library modules (see below)
-├── profiles/               # named profiles: packages.txt, profile-snippet.ps1, description.txt
+├── profiles/               # named profiles: packages.txt, modules.txt,
+│                           #   profile-snippet.ps1, description.txt
+├── snapshots/               # gwb export output (machine-state snapshots), when present
 ├── docs/                   # this documentation, including docs/design/ for
 │                           #   feature design docs and docs/reference/ for
 │                           #   cheat sheets
@@ -27,11 +29,12 @@ GWB/
 built-in equivalent of GLB's `readlink -f "${BASH_SOURCE[0]}"`
 resolution), reads `VERSION`, dot-sources every `lib/*.ps1` module, then
 dispatches on the first positional argument (`help`, `version`, `info`,
-`install`, `remove`, `update`, `restore`, `profiles`). Each branch is a
-thin wrapper calling into the relevant `lib/` function — the dispatcher
-itself has no business logic beyond argument parsing (e.g. `restore`'s
-`--dry-run`/`--undo` flags, parsed from `$Rest` via
-`ValueFromRemainingArguments`).
+`install`, `remove`, `update`, `restore`, `profiles`, `export`, `diff`,
+`repair`). Each branch is a thin wrapper calling into the relevant
+`lib/` function — the dispatcher itself has no business logic beyond
+argument parsing (e.g. `restore`'s `--dry-run`/`--undo`/`--from-
+snapshot <name>`/`--from-manifest <path>` flags, parsed from `$Rest`
+via `ValueFromRemainingArguments`).
 
 Scripts that end without an explicit `exit` inherit `$LASTEXITCODE` from
 whatever native command (e.g. `winget`) last ran internally — `gwb.ps1`
@@ -57,8 +60,13 @@ scoped.
 | `log.ps1` | `Write-Step`/`Write-Ok`/`Write-Info`/`Write-Fail` — consistent output; all user-facing messages go through here, not raw `Write-Host` elsewhere. |
 | `detect.ps1` | Detects the OS version/name, whether `winget` is available, and the running PowerShell version. |
 | `packages.ps1` | Package management: `Install-GwbPackage`/`Remove-GwbPackage`/`Install-GwbPackageList`, logical-name → winget-ID resolution (`_GWB_PACKAGE_OVERRIDES`), idempotent "already installed" checks (`Test-GwbPackageInstalled`, via `winget list --id <id> -e`), and `Update-GwbPackages` (`winget upgrade --all`). |
-| `profile.ps1` | Applies a profile: packages, then the `$PROFILE` snippet (backup-on-first-touch + marked-block injection/replacement), the interactive profile picker, and `--undo` rollback. |
+| `modules.ps1` | PowerShell Gallery module installs (`Install-GwbModule`/`Install-GwbModuleList`), the `Install-Module`-based analogue of `packages.ps1` for things winget doesn't carry (PSFzf, Terminal-Icons). `-Force` suppresses PSGallery's untrusted-repository prompt. |
+| `profile.ps1` | Applies a profile: packages, modules, then the `$PROFILE` snippet and self-registration block (both via the shared `Set-GwbManagedBlock` helper — backup-on-first-touch + marked-block injection/replacement), the interactive profile picker, and `--undo` rollback. |
+| `completions.ps1` | Puts `gwb` on the command line — a wrapper function in `$PROFILE` (`.ps1` scripts aren't callable by bare name on Windows) — plus `Register-ArgumentCompleter` for commands, profile/snapshot names, and package names, all read live from disk. Installed automatically on every restore via its own managed block, separate from the profile-snippet block. |
 | `terminal.ps1` | Opt-in Windows Terminal `settings.json` merge (`Install-GwbWindowsTerminalSettings`). Not wired into any shipped profile — see `docs/ROADMAP.md` Version 0.4 for why this stays a stub rather than being built out. |
+| `export.ps1` | `Export-GwbSnapshot` captures the installed subset of every profile's *known* packages (winget has no manual-vs-dependency tracking, so tracking is scoped to what some profile already lists) plus the current `$PROFILE`'s GWB-managed block, into `snapshots/<hostname>-<date>/`. |
+| `diff.ps1` | `Invoke-GwbDiff` compares two profile-shaped directories (a profile, a snapshot, or either against the other) for package and `profile-snippet.ps1` drift, exit 0/1 matching `diff`'s own convention. |
+| `repair.ps1` | `Invoke-GwbRepair` does an ephemeral export + diff against a profile (nothing saved to disk), offering to re-run `restore` if drift is found. |
 
 Every module is dot-sourced by `gwb.ps1` before the dispatcher's
 `switch` block runs, so any module's functions are available to every
@@ -70,6 +78,10 @@ A profile is a directory containing:
 
 - **`packages.txt`** — one package per line (logical names; winget-ID
   overrides are resolved via `lib/packages.ps1`).
+- **`modules.txt`** *(optional)* — one PowerShell Gallery module name
+  per line, installed via `lib/modules.ps1`. Mirrors `packages.txt`
+  exactly; not every profile-shaped directory has one (snapshots and
+  manifests don't).
 - **`profile-snippet.ps1`** — PowerShell injected into `$PROFILE`
   between `# >>> GWB managed block >>>` / `# <<< GWB managed block <<<`
   markers. The PowerShell/single-file analogue of GLB's `dotfiles/`
@@ -78,16 +90,23 @@ A profile is a directory containing:
 - **`description.txt`** *(optional)* — one line shown by the
   interactive picker.
 
-`gwb restore <profile>` runs, in order: packages → `$PROFILE` snippet →
+`gwb restore <profile>` runs, in order: packages → modules (if
+`modules.txt` exists) → `$PROFILE` snippet → `gwb` self-registration
+(command + tab-completion, its own separate managed block) →
 (optional) Windows Terminal settings, if the profile ships a
 `windows-terminal-settings.json` (none do yet). `--dry-run` short-
 circuits every actual install/write with a "Would ..." log line;
 `--undo` restores `$PROFILE` from `$PROFILE.gwb-backup`, which is
-written once on first touch and never overwritten by a later restore —
-the PowerShell port of a real bug GLB hit (a second profile switch
-silently destroyed the first restore's backup) and fixed by the same
-"only back up if no backup already exists" rule applied here from the
-start.
+written once on first touch (by whichever managed block is first to
+need it) and never overwritten by a later restore — the PowerShell
+port of a real bug GLB hit (a second profile switch silently destroyed
+the first restore's backup) and fixed by the same "only back up if no
+backup already exists" rule applied here from the start.
+
+`--from-snapshot <name>` and `--from-manifest <path>` both reuse
+`Invoke-GwbApplyProfile` directly rather than duplicating it — the
+function was always written to accept an arbitrary directory, not just
+one under `profiles/`.
 
 ## Testing
 

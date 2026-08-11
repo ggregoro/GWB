@@ -1,0 +1,7 @@
+# PowerShell Gallery modules (installed via Install-Module, not winget).
+# See docs/design/psgallery-extras.md for how each of these was decided.
+# PSReadLine deliberately not listed here - it already ships with
+# PowerShell 7, so there's nothing to install; it's configured directly
+# in profile-snippet.ps1 instead.
+PSFzf
+Terminal-Icons

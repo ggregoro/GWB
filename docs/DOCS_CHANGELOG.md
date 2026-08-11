@@ -7,7 +7,27 @@ feature/code changes. Mirrors GLB's own `docs/DOCS_CHANGELOG.md`.
 
 ## [Unreleased]
 
-(none since the shell-completions build below)
+(none since the PSGallery extras build below)
+
+---
+
+## 2026-08-11 (continued yet again)
+
+### Documentation
+
+- Added `docs/design/psgallery-extras.md` — documents the real
+  PSGallery-untrusted-repository risk (verified `-Force` suppresses
+  it), the three decisions made directly with Greg (scope to all
+  profiles, PSReadLine config-only, flat `modules.txt`), and the real
+  `-ErrorAction SilentlyContinue` bug caught during verification.
+  Updated `docs/ROADMAP.md`'s Version 0.4 to fully complete and
+  `CHANGELOG.md` with the actual feature addition.
+
+### Development Environment
+
+- Verified `Set-PsFzfOption`'s exact parameter names via `(Get-Command
+  Set-PsFzfOption).Parameters` before writing the profile-snippet
+  config, rather than guessing from memory.
 
 ---
 

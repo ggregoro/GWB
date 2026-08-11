@@ -106,3 +106,20 @@ This project follows a simple versioning approach:
   baked-in list. Verified end-to-end on real hardware, including
   idempotency and real tab-completion results (`TabExpansion2`).
   Version 0.5 (User Experience) is now fully complete.
+- Added `lib/modules.ps1` (`Install-Module`-based extras, the
+  PowerShell analogue of GLB's `lib/extras.sh`) and `modules.txt`
+  (PSFzf, Terminal-Icons) to all three profiles. PSReadLine gets no
+  install step (already ships with PowerShell 7) but is configured in
+  `profile-snippet.ps1` (predictive IntelliSense) alongside the new
+  PSFzf/Terminal-Icons activation. Verified `-Force` suppresses
+  PSGallery's untrusted-repository prompt for real before relying on
+  it. Verified end-to-end on real hardware: idempotent installs, both
+  modules load correctly after dot-sourcing `$PROFILE`.
+- Fixed a real bug: the PSReadLine config's `-ErrorAction
+  SilentlyContinue` did not actually suppress a console message this
+  harness's non-VT-capable console produces — confirmed directly by
+  dot-sourcing the real `$PROFILE` and seeing the error text still
+  print. `try`/`catch` with `-ErrorAction Stop` was tested side-by-side
+  and confirmed to suppress it completely; shipped that instead.
+  Version 0.4 (PowerShell Environment Enhancements) is now fully
+  complete.

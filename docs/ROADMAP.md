@@ -93,25 +93,34 @@ for the same reason it would be here — no concrete scope behind it)
 
 ---
 
-# Version 0.4 — PowerShell Environment Enhancements
+# Version 0.4 — PowerShell Environment Enhancements ✅
 
 GLB's Version 0.4 covered shell frameworks (bash/zsh/fish) and vendored
-zsh plugins framework-free. GWB's equivalent gap is PowerShell-native
+zsh plugins framework-free. GWB's equivalent gap was PowerShell-native
 modules that aren't installed via winget at all.
 
-### Planned
+### Completed
 
-- A `lib/extras.ps1` module (the PowerShell/`Install-Module` analogue of
-  GLB's `lib/extras.sh` curl/Flatpak/font methods) for things winget
-  doesn't carry:
-  - **PSReadLine** — better line editing (usually already present in
-    PowerShell 7, but pin/upgrade explicitly).
-  - **PSFzf** — wires `fzf` into `Ctrl+R` history search and tab
-    completion, the PowerShell equivalent of fzf shell integration.
+- **`lib/modules.ps1`** (2026-08-11) — the PowerShell/`Install-Module`
+  analogue of GLB's `lib/extras.sh`, scoped to a flat `modules.txt`
+  (one module per line, mirroring `packages.txt`) since every extra
+  right now is the same method. Installed in all three profiles:
+  - **PSFzf** — wires `fzf` into `Ctrl+R`/`Ctrl+F` history search and
+    provider completion.
   - **Terminal-Icons** — file-type icons in `Get-ChildItem`, alongside
-    (not a replacement for) the `eza`-based `ll`/`la` aliases already
-    in `profile-snippet.ps1`.
-- Deliberately **not planned**: managing a terminal emulator (Windows
+    (not a replacement for) the `eza`-based `ll`/`la` aliases.
+  - **PSReadLine** — already ships with PowerShell 7, so no install
+    step; configured directly in `profile-snippet.ps1` (predictive
+    IntelliSense) instead.
+
+  See [`docs/design/psgallery-extras.md`](design/psgallery-extras.md)
+  for the full scoping and real-machine verification, including a real
+  bug caught and fixed (`-ErrorAction SilentlyContinue` didn't actually
+  suppress a PSReadLine console message the way `try`/`catch` does).
+
+### Deliberately not planned
+
+- Managing a terminal emulator (Windows
   Terminal, WezTerm, etc.). `lib/terminal.ps1` exists as an unused stub
   only. GLB tried managing WezTerm, hit enough real trouble (Flatpak
   sandbox permissions, a shadowing config file, hard-to-diagnose

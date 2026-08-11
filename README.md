@@ -20,14 +20,16 @@ replace it. See [`docs/PHILOSOPHY.md`](docs/PHILOSOPHY.md) for why.
 ## Architecture
 
 GWB mirrors GLB's shape directly: a `gwb.ps1` dispatcher sources focused
-modules from `lib/` (`banner`, `log`, `detect`, `packages`, `profile`,
-`terminal`) and applies per-profile `packages.txt` + `profile-snippet.ps1`
-under `profiles/`. Packages are winget IDs resolved from logical names via
-an override table (e.g. `fd` → `sharkdp.fd`); the snippet is injected into
-`$PROFILE` between marked `# >>> GWB managed block >>>` / `<<<` lines so a
-re-apply replaces it cleanly instead of duplicating it. See
-[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the full module
-breakdown.
+modules from `lib/` (`banner`, `log`, `detect`, `packages`, `modules`,
+`profile`, `completions`, `terminal`, `export`, `diff`, `repair`) and
+applies per-profile `packages.txt` + `modules.txt` + `profile-
+snippet.ps1` under `profiles/`. Packages are winget IDs resolved from
+logical names via an override table (e.g. `fd` → `sharkdp.fd`);
+PowerShell Gallery modules go through `Install-Module` instead; the
+snippet is injected into `$PROFILE` between marked `# >>> GWB managed
+block >>>` / `<<<` lines so a re-apply replaces it cleanly instead of
+duplicating it. See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for
+the full module breakdown.
 
 ## Features
 
@@ -52,6 +54,11 @@ breakdown.
 - **A `gwb` command + tab-completion**, installed into `$PROFILE`
   automatically on every restore — commands, profile/snapshot names,
   and package names all complete, reading live from disk.
+- **PowerShell Gallery modules** (`modules.txt`, `Install-Module`-based)
+  for things winget doesn't carry: PSFzf (fzf keybindings), Terminal-
+  Icons (file-type icons in `Get-ChildItem`). PSReadLine's predictive
+  IntelliSense is configured directly since it already ships with
+  PowerShell 7.
 
 ## Installation
 
@@ -91,7 +98,7 @@ gwb repair <profile>        Check this machine against a profile
 
 | Profile | Installs |
 |---|---|
-| `default` | `eza`, `fzf`, `lf`, `ripgrep`, `fd`, `bat`, `starship` + a `$PROFILE` snippet (eza aliases, `bat` as `cat`, fzf options, Starship prompt init). |
+| `default` | `eza`, `fzf`, `lf`, `ripgrep`, `fd`, `bat`, `starship` + PSFzf/Terminal-Icons + a `$PROFILE` snippet (eza aliases, `bat` as `cat`, fzf options, PSFzf/Terminal-Icons/PSReadLine activation, Starship prompt init). |
 | `developer` | `default`'s foundation + `git`, `jq`, `gh`, `mise`, Fresh (editor), MinGW/gcc (build toolchain), Far Manager (file manager). No container tooling — see [`docs/design/developer-profile.md`](docs/design/developer-profile.md). |
 | `server` | `default`'s foundation + `restic` (backups), Far Manager (file manager). No firewall/fail2ban/resource-monitor tooling — see [`docs/design/server-profile.md`](docs/design/server-profile.md). |
 
@@ -103,17 +110,18 @@ gwb repair <profile>        Check this machine against a profile
 
 ## Status
 
-Early — v0.1.0. The dispatcher, package installs, `$PROFILE`
-management, all three profiles (`default`/`developer`/`server`), the
-full configuration-management set
+Early — v0.1.0. The dispatcher, package installs, PowerShell Gallery
+modules, `$PROFILE` management, all three profiles
+(`default`/`developer`/`server`), the full configuration-management set
 (`export`/`diff`/`repair`/`restore --from-snapshot`/`restore
 --from-manifest`), and the `gwb` command + tab-completion are all built
 and verified with real restores on a real machine (including
 idempotency, the backup/undo round-trip, real drift detection, and
-real `TabExpansion2` results). Not yet ported from GLB: non-winget
-"extras" installs (GLB's curl/Flatpak/font equivalent — likely
-`Install-Module`-based tools like PSFzf/PSReadLine/Terminal-Icons on
-Windows, plus IPBan for `server` once this exists).
+real `TabExpansion2` results). All of GLB's own Version 0.1–0.6
+equivalents are now ported. Known gap, documented rather than silently
+missing: `gwb repair`/`diff` don't yet track `modules.txt` drift, only
+`packages.txt`; IPBan (`server`'s fail2ban equivalent) has no winget
+package and isn't installed by anything yet.
 
 ## Project
 

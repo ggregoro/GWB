@@ -116,6 +116,12 @@ function Invoke-GwbApplyProfile {
     Write-Step "Installing packages from profile '$ProfileName'"
     Install-GwbPackageList -Path (Join-Path $ProfileDir "packages.txt") -WhatIf:$WhatIf
 
+    $modulesFile = Join-Path $ProfileDir "modules.txt"
+    if (Test-Path $modulesFile) {
+        Write-Step "Installing PowerShell modules from profile '$ProfileName'"
+        Install-GwbModuleList -Path $modulesFile -WhatIf:$WhatIf
+    }
+
     Write-Step "Wiring up PowerShell profile"
     $snippet = Join-Path $ProfileDir "profile-snippet.ps1"
     Install-GwbProfileSnippet -SnippetPath $snippet -WhatIf:$WhatIf

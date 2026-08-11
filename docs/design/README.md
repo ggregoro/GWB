@@ -45,8 +45,15 @@ up shaped the way it did, even after the feature ships.
   plain wrapper function via position-based AST inspection and
   `.GetNewClosure()`. Wired into every restore automatically. Verified
   end-to-end on real hardware, including real `TabExpansion2` results.
+- [`psgallery-extras.md`](psgallery-extras.md) — **Decided and built.**
+  PSFzf + Terminal-Icons in all three profiles; PSReadLine gets no
+  install step (already ships with PowerShell 7), just configuration.
+  Verified `-Force` suppresses PSGallery's untrusted-repository prompt.
+  Verified end-to-end on real hardware, including a real bug caught
+  and fixed (`-ErrorAction SilentlyContinue` didn't actually suppress
+  a PSReadLine console message the way `try`/`catch` does).
 
 Everything else built so far (packages, `restore`/`--dry-run`/`--undo`,
 the interactive picker) was small enough to build directly, without a
-design doc. **Versions 0.5 and 0.6 are both now fully complete** — see
-[`docs/ROADMAP.md`](../ROADMAP.md) for what's next.
+design doc. **Versions 0.4, 0.5, and 0.6 are all now fully complete** —
+see [`docs/ROADMAP.md`](../ROADMAP.md) for what's next.
