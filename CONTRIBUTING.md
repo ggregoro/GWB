@@ -30,6 +30,9 @@ mind in case that changes later.
   for the kind of real-machine verification expected before something
   is considered done.
 
+See [`docs/CODING_STANDARDS.md`](docs/CODING_STANDARDS.md) for the full
+style guide (naming conventions, error handling, module design).
+
 ## Reporting issues
 
 Since this repository is currently private, issues and changes go
