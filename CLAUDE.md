@@ -127,6 +127,32 @@ considered done, not just built.
 
 ## Working notes
 
+- **Session wrap-up (2026-08-11, cloud session) — pausing here by
+  Greg's choice; next session picks up on his real Windows 11
+  machine.** Everything is committed and pushed to `master` —
+  `3d1727c` is the latest commit as of this note, working tree clean.
+  This session made the public-release decision (`b125063`) and built
+  `install.ps1`, the curl/`irm` one-liner installer (`3d1727c`) — see
+  the two entries directly below for full detail.
+  - **Next session's first job, before anything else: verify
+    `install.ps1` for real.** It was built and Pester-tested from the
+    repo alone in this cloud session, which has no `pwsh` at all —
+    genuinely never executed, not just "not run against real
+    hardware." Two concrete things to run, both already called out in
+    `docs/design/installer.md`:
+    1. `Invoke-Pester -Path tests/Install.Tests.ps1` — the 6 new tests
+       may well surface real PowerShell syntax/logic mistakes, since
+       nothing in this file has been parsed by an actual PowerShell
+       engine yet.
+    2. `irm https://raw.githubusercontent.com/ggregoro/GWB/master/
+       install.ps1 | iex` for real, confirming it clones to
+       `$env:LOCALAPPDATA\GWB`, then running it a second time to
+       confirm the update-in-place path works, then following its own
+       printed instructions (`& "$env:LOCALAPPDATA\GWB\gwb.ps1"
+       restore`) to confirm the whole chain actually works end to end
+       on a real machine.
+  - Nothing else outstanding needs a specific machine — this is the
+    only open item anywhere in the project right now.
 - **`install.ps1` built (2026-08-11, cloud session, immediately after
   the going-public decision below).** The one remaining Version 1.0
   item once the repo went public — a fresh machine has no credentials
