@@ -20,6 +20,12 @@ up shaped the way it did, even after the feature ships.
   constraint), MinGW/gcc over MSVC, `mise` and Fresh both confirmed to
   have real Windows support, no resource monitor (Task Manager already
   covers it). Verified end-to-end on real hardware.
+- [`server-profile.md`](server-profile.md) — **Decided and built.**
+  No firewall tool (Windows Firewall already covers it), `restic` alone
+  for backups (real, native, no WSL — `robocopy` already covers
+  `rsync`'s role), no fail2ban equivalent (IPBan is real but has no
+  winget package — a genuine gap, documented rather than forced), no
+  resource monitor. Verified end-to-end on real hardware.
 
 Everything else built so far (packages, `restore`/`--dry-run`/`--undo`,
 the interactive picker) was small enough to build directly, without a

@@ -1,0 +1,11 @@
+# Same shared CLI foundation as `default`, plus server-specific tools.
+# See docs/design/server-profile.md for how each of these was decided.
+git
+eza
+fzf
+lf
+ripgrep
+fd
+bat
+starship
+restic

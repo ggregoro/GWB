@@ -75,8 +75,7 @@ gwb profiles                List available profiles
 |---|---|
 | `default` | `eza`, `fzf`, `lf`, `ripgrep`, `fd`, `bat`, `starship` + a `$PROFILE` snippet (eza aliases, `bat` as `cat`, fzf options, Starship prompt init). |
 | `developer` | `default`'s foundation + `git`, `jq`, `gh`, `mise`, Fresh (editor), MinGW/gcc (build toolchain). No container tooling — see [`docs/design/developer-profile.md`](docs/design/developer-profile.md). |
-
-A `server`-style profile (see GLB's equivalent) hasn't been ported yet.
+| `server` | `default`'s foundation + `restic` (backups). No firewall/fail2ban/resource-monitor tooling — see [`docs/design/server-profile.md`](docs/design/server-profile.md). |
 
 ## Requirements
 
@@ -87,13 +86,13 @@ A `server`-style profile (see GLB's equivalent) hasn't been ported yet.
 ## Status
 
 Early — v0.1.0. The dispatcher, package installs, `$PROFILE`
-management, and both `default`/`developer` profiles are built and
-verified with real restores on a real machine (including idempotency
-and the backup/undo round-trip). Not yet ported from GLB:
+management, and all three profiles (`default`/`developer`/`server`) are
+built and verified with real restores on a real machine (including
+idempotency and the backup/undo round-trip). Not yet ported from GLB:
 `export`/`diff`/`repair`, non-winget "extras" installs (GLB's
 curl/Flatpak/font equivalent — likely `Install-Module`-based tools like
-PSFzf/PSReadLine/Terminal-Icons on Windows), shell completions for `gwb`
-itself, and a `server` profile.
+PSFzf/PSReadLine/Terminal-Icons on Windows, plus IPBan for `server` once
+this exists), and shell completions for `gwb` itself.
 
 ## Project
 

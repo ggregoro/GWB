@@ -20,6 +20,7 @@ $Script:_GWB_PACKAGE_OVERRIDES = @{
     "mise"     = "jdx.mise"
     "fresh"    = "sinelaw.fresh-editor"
     "mingw"    = "BrechtSanders.WinLibs.POSIX.UCRT"
+    "restic"   = "restic.restic"
     "btop"     = "aristocratos.btop4win"
 }
 

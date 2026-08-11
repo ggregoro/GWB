@@ -77,13 +77,19 @@ developer/server split.
   for the full scoping and real-machine verification, including a real
   `mise activate`/`Invoke-Expression` array-binding bug caught and
   fixed.
+- **`server`** (2026-08-11) — same foundation as `default` plus
+  `restic` (backups). No firewall tool (Windows Firewall already
+  covers it), no fail2ban equivalent (IPBan is the real one, but has no
+  winget package — documented gap, revisit once `lib/extras.ps1` exists
+  for real reasons), no resource monitor. See
+  [`docs/design/server-profile.md`](design/server-profile.md) for the
+  full scoping and real-machine verification.
 
 ### Planned
 
-- **`server`** — GLB's equivalent picked ufw, rsync+restic, fail2ban,
-  htop. Windows Server has a very different security/firewall/backup
-  model (Windows Firewall, Windows Backup, etc.) — needs its own
-  scoping pass, not a direct port.
+(none — both planned profiles for this version are now built; a
+`Minimal`/`Custom` profile concept was considered and dropped by GLB
+for the same reason it would be here — no concrete scope behind it)
 
 ---
 

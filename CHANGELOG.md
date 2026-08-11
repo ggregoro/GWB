@@ -53,3 +53,11 @@ This project follows a simple versioning approach:
 - Verified end-to-end on real hardware: all 5 new packages install
   cleanly and idempotently via `restore developer`, and `gcc`/`gh`/
   `jq`/`mise` are all confirmed functional afterward.
+- Added the `server` profile: same foundation as `default` plus
+  `restic` (backups, real native-Windows winget package, no WSL). No
+  firewall tool (Windows Firewall already covers it), no fail2ban
+  equivalent (IPBan is the real one but has no winget package —
+  documented gap), no resource monitor (Task Manager covers it) — see
+  `docs/design/server-profile.md` for the full reasoning. Verified
+  end-to-end on real hardware: idempotent restore, `restic version`
+  confirmed functional.

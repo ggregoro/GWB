@@ -7,7 +7,7 @@ feature/code changes. Mirrors GLB's own `docs/DOCS_CHANGELOG.md`.
 
 ## [Unreleased]
 
-(none since the `developer` profile build below)
+(none since the `server` profile build below)
 
 ---
 
@@ -21,6 +21,16 @@ feature/code changes. Mirrors GLB's own `docs/DOCS_CHANGELOG.md`.
   `winget search`) and marked it Decided/Built. Updated
   `docs/ROADMAP.md`'s `developer` bullet from Planned to Completed and
   `CHANGELOG.md` with the actual feature addition.
+- Added `docs/design/server-profile.md`, scoped and resolved in one
+  pass: no firewall tool (Windows Firewall covers it), `restic` alone
+  for backups (verified real, native Windows, no WSL; `robocopy`
+  already covers `rsync`'s role), no fail2ban equivalent (IPBan is
+  real but has no winget package — a genuine gap, documented rather
+  than forced after Greg chose that option directly over building a
+  minimal extras mechanism early or documenting a manual step), no
+  resource monitor. Updated `docs/ROADMAP.md`'s `server` bullet from
+  Planned to Completed and `CHANGELOG.md` with the actual feature
+  addition.
 
 ### Development Environment
 
@@ -28,6 +38,9 @@ feature/code changes. Mirrors GLB's own `docs/DOCS_CHANGELOG.md`.
   on this machine (`jdx.mise`, `sinelaw.fresh-editor`,
   `BrechtSanders.WinLibs.POSIX.UCRT`) rather than assuming from the
   earlier design doc's placeholders.
+- Verified `restic`'s real winget package ID (`restic.restic`) and
+  confirmed `robocopy` is already present in `C:\WINDOWS\system32`
+  before ruling out a separate `rsync`-equivalent install.
 
 ---
 
