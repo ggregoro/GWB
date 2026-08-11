@@ -19,10 +19,10 @@ this is adapted from.
 - [`CODING_STANDARDS.md`](CODING_STANDARDS.md) — naming/style conventions for `lib/` modules
 - [`design/`](design/) — design docs for individual features, once any get scoped this way
 - [`reference/`](reference/) — quick tool/config cheat sheets, once any get written
+- [`DOCS_CHANGELOG.md`](DOCS_CHANGELOG.md) — documentation/dev-environment milestones (see the root [`CHANGELOG.md`](../CHANGELOG.md) for `gwb`'s actual feature changes)
 
 See also the root [`CLAUDE.md`](../CLAUDE.md) for session-by-session
-working notes, and [`CHANGELOG.md`](../CHANGELOG.md) for `gwb`'s actual
-feature changes.
+working notes.
 
 ---
 
