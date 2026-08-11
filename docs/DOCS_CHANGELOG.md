@@ -7,14 +7,38 @@ feature/code changes. Mirrors GLB's own `docs/DOCS_CHANGELOG.md`.
 
 ## [Unreleased]
 
-### Added
+(none since the export/diff/repair build below)
 
+---
+
+## 2026-08-11 (continued)
+
+### Documentation
+
+- Added `docs/design/export-diff-repair.md`, scoped and built in one
+  pass: `export`/`diff`/`repair`/`restore --from-snapshot`, scoped to
+  packages known to some profile (winget has no manual-vs-dependency
+  tracking at all — a harder real gap than any GLB package manager
+  faced, confirmed by checking `winget list --help` directly and
+  seeing 80 unfiltered entries mixing OEM bloat with real tools).
+  Updated `docs/ROADMAP.md`'s Version 0.6 from Planned to Completed
+  and `CHANGELOG.md` with the actual feature addition.
 - Added Far Manager to `developer` and `server` (Greg's ask, following
   a question about Ranger/Midnight-Commander equivalents on Windows —
   `lf` already covered the Ranger role in every profile; Far Manager
   fills the closer Midnight Commander/dual-pane role). Updated both
   design docs' Final package list sections, `CHANGELOG.md`, and both
   profiles' `description.txt`.
+
+### Development Environment
+
+- Root-caused a real mixed-line-endings bug by direct byte inspection
+  (`cat -A` on the live `$PROFILE`) rather than guessing — confirmed
+  `Set-Content`'s platform-default trailing newline was the cause, not
+  assumed.
+- Fixed a real `.gitignore` contradiction (`snapshots/` was excluded
+  despite the in-repo-tracking design decision) found while cleaning
+  up a real test snapshot before committing.
 
 ---
 

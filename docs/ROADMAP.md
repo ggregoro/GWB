@@ -158,23 +158,32 @@ Improve the installation experience.
 Improve reproducibility, mirroring GLB's export/diff/repair/manifest
 feature set.
 
+### Completed
+
+- **`gwb export`** (2026-08-11) — snapshots the machine's installed
+  subset of every profile's *known* packages (not a full inventory —
+  winget has no manual-vs-dependency tracking at all, a harder gap than
+  any GLB package manager faced) plus the current `$PROFILE`'s
+  GWB-managed block, into `snapshots/<hostname>-<date>/`.
+- **`gwb diff <a> <b>`** (2026-08-11) — compares two profiles/snapshots
+  for package and `profile-snippet.ps1` drift, exit 0/1 matching
+  `diff`'s convention.
+- **`gwb repair <profile>`** (2026-08-11) — ephemeral export + diff
+  against a profile, offers to re-run `restore` if drift is found.
+- **`gwb restore --from-snapshot <name>`** (2026-08-11) — applies a
+  snapshot by reusing `Invoke-GwbApplyProfile` directly.
+
+See [`docs/design/export-diff-repair.md`](design/export-diff-repair.md)
+for the full scoping and real-machine verification, including two real
+bugs caught and fixed (a mixed-line-endings false-positive diff, and
+`Read-Host` crashing instead of failing gracefully with no input).
+
 ### Planned
 
-- **`gwb export`** — snapshot the current machine's explicitly-installed
-  winget packages (reverse-mapped through
-  `_GWB_PACKAGE_OVERRIDES`) and `$PROFILE` content into a profile-shaped
-  directory, the same role GLB's `glb export` plays.
-- **`gwb diff <a> <b>`** — compare two profiles/snapshots for package
-  and `$PROFILE`-content drift.
-- **`gwb repair <profile>`** — ephemeral export + diff against a
-  profile, offering to re-run `restore` if drift is found.
 - **`gwb restore --from-manifest <path>`** — apply a profile-shaped
-  directory from anywhere on disk, without adding it to the repo.
-
-None of this is built yet — GLB's own design docs
-(`docs/design/state-export-import.md`, `repair.md`,
-`installation-manifests.md` in the GLB repo) are the reference to scope
-from when this version is picked up.
+  directory from anywhere on disk, without adding it to the repo. Not
+  bundled into the round above; GLB's `docs/design/
+  installation-manifests.md` is the reference to scope from.
 
 ---
 

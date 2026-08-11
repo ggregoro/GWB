@@ -65,7 +65,13 @@ function Install-GwbProfileSnippet {
         $updated = "$prefix$marker`n$snippetContent`n$endMarker"
     }
 
-    Set-Content -Path $PROFILE -Value $updated
+    # -NoNewline plus an explicit trailing `n: Set-Content's own auto-appended
+    # newline uses the platform default (CRLF on Windows), which would mix
+    # with the LF line endings already built into $updated via `n - giving
+    # a file with inconsistent line endings (harmless to PowerShell, but a
+    # real mismatch for anything that compares file content byte-for-byte,
+    # like `gwb export`/`gwb diff`).
+    Set-Content -Path $PROFILE -Value "$updated`n" -NoNewline
     Write-Ok "Profile updated: $PROFILE"
 }
 
@@ -131,7 +137,12 @@ function Invoke-GwbRestoreInteractive {
     }
     Write-Host ""
 
-    $choice = Read-Host "Choose a profile"
+    try {
+        $choice = Read-Host "Choose a profile"
+    } catch {
+        Write-Fail "No input available - cancelled"
+        return
+    }
     if (-not ($choice -match '^\d+$') -or [int]$choice -lt 1 -or [int]$choice -gt $profiles.Count) {
         Write-Fail "Invalid choice: $choice"
         return

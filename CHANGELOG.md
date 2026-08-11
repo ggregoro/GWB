@@ -66,3 +66,23 @@ This project follows a simple versioning approach:
   closer Midnight Commander analogue alongside `lf`'s existing
   Ranger-equivalent role. Verified installed for real and idempotent
   across both profiles.
+- Added `gwb export`, `gwb diff <a> <b>`, `gwb repair <profile>`, and
+  `gwb restore --from-snapshot <name>` (new `lib/export.ps1`,
+  `lib/diff.ps1`, `lib/repair.ps1`) — scoped to packages known to some
+  profile (winget has no manual-vs-dependency tracking at all, unlike
+  every GLB-supported package manager) plus the current `$PROFILE`'s
+  GWB-managed block. See `docs/design/export-diff-repair.md` for the
+  full design and real-machine verification.
+- Fixed a real bug: `Set-Content`'s platform-default trailing newline
+  (CRLF on Windows) mixing with the LF endings already built into
+  `$PROFILE`/snapshot content caused a false-positive `gwb diff`. Fixed
+  at both write sites (`lib/profile.ps1`, `lib/export.ps1`) and
+  hardened `lib/diff.ps1`'s comparison to normalize line endings.
+- Fixed a real bug: `Read-Host` in `Invoke-GwbRestoreInteractive` and
+  `Invoke-GwbRepair` crashed with an uncaught exception in a
+  non-interactive session instead of failing gracefully. Both now
+  treat "no input available" as a clean decline, matching GLB's own
+  documented convention for this exact situation.
+- Fixed `.gitignore`: it excluded `snapshots/` from an earlier round,
+  directly contradicting the (inherited-from-GLB) decision to track
+  snapshots in-repo for cross-machine diffing.

@@ -26,9 +26,16 @@ up shaped the way it did, even after the feature ships.
   `rsync`'s role), no fail2ban equivalent (IPBan is real but has no
   winget package — a genuine gap, documented rather than forced), no
   resource monitor. Verified end-to-end on real hardware.
+- [`export-diff-repair.md`](export-diff-repair.md) — **Decided and
+  built.** Scoped package tracking to packages known to some profile
+  (winget has no manual-vs-dependency tracking at all — a harder gap
+  than any GLB package manager faced). `$PROFILE` export captures only
+  the GWB-managed block, not the whole file. Verified end-to-end on
+  real hardware, including two real bugs caught and fixed (a
+  mixed-line-endings false-positive diff, `Read-Host` crashing instead
+  of failing gracefully with no input).
 
 Everything else built so far (packages, `restore`/`--dry-run`/`--undo`,
 the interactive picker) was small enough to build directly, without a
-design doc. The next candidate likely to need one, per
-[`docs/ROADMAP.md`](../ROADMAP.md): the `export`/`diff`/`repair`
-configuration-management trio (Version 0.6).
+design doc. The next candidate, per [`docs/ROADMAP.md`](../ROADMAP.md):
+`restore --from-manifest <path>`.

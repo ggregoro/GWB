@@ -1,8 +1,11 @@
 # $PROFILE backups created by gwb.ps1 (machine-specific, never tracked)
 *.gwb-backup
 
-# Snapshots (future `gwb export`, mirrors GLB's snapshots/)
-snapshots/
+# NOTE: snapshots/ (gwb export output) is deliberately NOT ignored -
+# it's tracked in-repo by design (docs/design/export-diff-repair.md),
+# mirroring GLB's own snapshots/, so cross-machine diffing rides the
+# existing `git fetch` workflow. Don't add it back without re-reading
+# that decision.
 
 # Temporary/backup files
 *.bak
