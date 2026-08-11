@@ -23,9 +23,12 @@ up shaped the way it did, even after the feature ships.
 - [`server-profile.md`](server-profile.md) — **Decided and built.**
   No firewall tool (Windows Firewall already covers it), `restic` alone
   for backups (real, native, no WSL — `robocopy` already covers
-  `rsync`'s role), no fail2ban equivalent (IPBan is real but has no
-  winget package — a genuine gap, documented rather than forced), no
-  resource monitor. Verified end-to-end on real hardware.
+  `rsync`'s role), no resource monitor. IPBan (fail2ban equivalent):
+  revisited 2026-08-11 and **decided permanently manual, not
+  automated** — needs Administrator elevation, installs a persistent
+  firewall-blocking service, real lockout risk. See
+  [`../reference/ipban-manual-install.md`](../reference/ipban-manual-install.md).
+  Verified end-to-end on real hardware.
 - [`export-diff-repair.md`](export-diff-repair.md) — **Decided and
   built.** Scoped package tracking to packages known to some profile
   (winget has no manual-vs-dependency tracking at all — a harder gap

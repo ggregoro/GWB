@@ -119,9 +119,12 @@ drift), and the `gwb` command + tab-completion are all built and
 verified with real restores on a real machine (including idempotency,
 the backup/undo round-trip, real drift detection, and real
 `TabExpansion2` results). All of GLB's own Version 0.1–0.6 equivalents
-are now ported. Known gap, documented rather than silently missing:
-IPBan (`server`'s fail2ban equivalent) has no winget package and isn't
-installed by anything yet.
+are now ported. **One deliberate, permanent non-goal**: IPBan
+(`server`'s fail2ban equivalent) needs Administrator elevation and
+installs a persistent firewall-blocking service with real lockout
+risk — decided not to automate at all, see
+[`docs/reference/ipban-manual-install.md`](docs/reference/ipban-manual-install.md)
+for the manual install instead.
 
 ## Project
 

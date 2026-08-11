@@ -79,9 +79,14 @@ developer/server split.
   fixed.
 - **`server`** (2026-08-11) — same foundation as `default` plus
   `restic` (backups). No firewall tool (Windows Firewall already
-  covers it), no fail2ban equivalent (IPBan is the real one, but has no
-  winget package — documented gap, revisit once `lib/extras.ps1` exists
-  for real reasons), no resource monitor. See
+  covers it), no resource monitor. **IPBan (fail2ban equivalent):
+  decided permanently manual, not automated** — revisited once
+  `lib/modules.ps1` existed as originally planned, but the real
+  blocker turned out to be its risk profile (needs Administrator
+  elevation, installs a persistent firewall-blocking service, real
+  lockout risk), not the lack of an extras mechanism. See
+  [`docs/reference/ipban-manual-install.md`](reference/ipban-manual-install.md)
+  for the manual install. See
   [`docs/design/server-profile.md`](design/server-profile.md) for the
   full scoping and real-machine verification.
 

@@ -132,3 +132,12 @@ This project follows a simple versioning approach:
   changes, since it already calls both functions directly. Verified
   for real: a synthetic snapshot with `Terminal-Icons` deliberately
   removed correctly reported the drift via `gwb diff`.
+- Decided, permanently, not to automate installing IPBan
+  (`server`'s fail2ban equivalent): fetched and read the real, current
+  install script directly rather than relying on earlier research, and
+  confirmed it needs Administrator elevation (a first for anything
+  GWB would install), sets up a persistent firewall-blocking Windows
+  Service, and carries a real account-lockout risk. Added
+  `docs/reference/ipban-manual-install.md` (install/verify/uninstall
+  commands, plus the lockout-risk caution) and updated
+  `profiles/server/description.txt` to point at it.

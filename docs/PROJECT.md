@@ -101,6 +101,16 @@ detection/abstraction layer to build.
   It") — this is inherited directly from a real lesson GLB learned
   (a WezTerm-management detour it built and then reversed), not
   something GWB needs to relearn on its own.
+- **Not an installer for Administrator-elevated, persistent background
+  services.** Every package/module `gwb restore` installs is
+  user-scoped and inert until invoked. Something that needs elevation
+  *and* runs continuously changing system behavior (the concrete case:
+  IPBan, `server`'s fail2ban equivalent, which also carries a real
+  account-lockout risk if misconfigured) is a different kind of thing
+  than what unattended `gwb restore` should be doing — decided
+  directly with Greg (2026-08-11) to keep as a documented manual step
+  permanently, not a scope gap to eventually close. See
+  `docs/reference/ipban-manual-install.md`.
 
 ## Release Strategy
 

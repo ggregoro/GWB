@@ -17,8 +17,8 @@ this is adapted from.
 - [`ARCHITECTURE.md`](ARCHITECTURE.md) — module breakdown and how a profile is applied
 - [`ROADMAP.md`](ROADMAP.md) — current progress and planned work, by version
 - [`CODING_STANDARDS.md`](CODING_STANDARDS.md) — naming/style conventions for `lib/` modules
-- [`design/`](design/) — design docs for individual features, once any get scoped this way
-- [`reference/`](reference/) — quick tool/config cheat sheets, once any get written
+- [`design/`](design/) — design docs for individual features
+- [`reference/`](reference/) — quick tool/config cheat sheets
 - [`DOCS_CHANGELOG.md`](DOCS_CHANGELOG.md) — documentation/dev-environment milestones (see the root [`CHANGELOG.md`](../CHANGELOG.md) for `gwb`'s actual feature changes)
 
 See also the root [`CLAUDE.md`](../CLAUDE.md) for session-by-session
@@ -41,8 +41,8 @@ Step-by-step guides. None written yet — candidate topics:
 
 # Reference
 
-Quick command references — see [`reference/`](reference/). None written
-yet; candidate topics listed there.
+Quick command references — see [`reference/`](reference/), including
+[`ipban-manual-install.md`](reference/ipban-manual-install.md).
 
 ---
 

@@ -43,7 +43,50 @@ Windows, `robocopy` (confirmed already present at
 nothing needs to be installed for it. **`restic` included; no separate
 sync tool added.**
 
-### 3. Intrusion prevention: no fail2ban equivalent — real gap, documented not forced (2026-08-11, Greg's choice)
+### 3. Intrusion prevention: no fail2ban equivalent — decided permanently manual (revisited and closed 2026-08-11)
+
+Originally left as a revisit-later gap (Version 0.4 didn't exist yet at
+the time — see history below). Revisited once `lib/modules.ps1`
+(Version 0.4) existed, which was the trigger condition this doc
+originally set for reconsidering it.
+
+**Real facts pulled directly from the current install script**
+(`https://raw.githubusercontent.com/DigitalRuby/IPBan/master/IPBanCore/Windows/Scripts/install_latest.ps1`,
+fetched and read in full, not summarized) rather than assumed from the
+earlier research:
+
+- **Requires Administrator elevation** — explicit in the script's own
+  header comment, confirmed by what it does: writes to `C:\Program
+  Files\IPBan`, registers/deletes a Windows Service via `sc.exe`,
+  modifies system audit policy via `auditpol.exe`. `gwb.ps1` has never
+  needed elevation for anything else — every package/module install so
+  far is user-scoped.
+- **Installs a persistent, always-running Windows Service** that
+  monitors event logs and modifies Windows Firewall rules to block
+  IPs — categorically different from every other extra GWB has
+  automated (PSFzf/Terminal-Icons/`mise`/Fresh are all inert tools you
+  invoke; this actively changes system behavior continuously).
+- **Real lockout risk**: bans IPs after repeated failed logins. If
+  misconfigured, or if the machine is administered remotely (RDP) and
+  a password gets mistyped a few times, this can lock out legitimate
+  access — the network-level equivalent of the `pam_faillock` lockout
+  GLB documented and fixed on the Linux side.
+
+**Decided directly with Greg, presented with the real elevation/
+service/lockout facts above: keep it a documented manual step,
+permanently, not automated by `gwb restore` at all** — not "revisit
+once a mechanism exists" anymore, since the blocker was never really
+"GWB lacks an extras mechanism" (that's since been built, see
+`docs/design/psgallery-extras.md`) — it's that this specific tool's
+risk profile (elevation + persistent security service + real lockout
+risk) is a genuinely different kind of thing than what `gwb restore`
+should be doing unattended, unlike PSFzf/Terminal-Icons/`mise`/Fresh.
+See [`docs/reference/ipban-manual-install.md`](../reference/ipban-manual-install.md)
+for the real install/verify/uninstall commands and the lockout-risk
+caution, and `profiles/server/description.txt` for the pointer to it.
+
+<details>
+<summary>Original entry (2026-08-11, before this revisit) — kept for history</summary>
 
 Researched properly before deciding: **IPBan**
 ([DigitalRuby/IPBan](https://github.com/digitalruby/ipban)) is a real,
@@ -64,6 +107,8 @@ answer *yet*, left honest rather than forced into a half-built
 mechanism for one tool. Revisit once `lib/extras.ps1` gets built for
 real reasons (see `docs/ROADMAP.md` Version 0.4) — IPBan should be
 reconsidered then, not before.
+
+</details>
 
 ### 4. Resource monitor: skipped, consistent with `developer` (2026-08-11)
 

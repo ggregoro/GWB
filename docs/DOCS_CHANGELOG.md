@@ -7,7 +7,29 @@ feature/code changes. Mirrors GLB's own `docs/DOCS_CHANGELOG.md`.
 
 ## [Unreleased]
 
-(none since the modules.txt drift-tracking build below)
+(none since the IPBan decision below)
+
+---
+
+## 2026-08-11 (continued still further)
+
+### Documentation
+
+- Added `docs/reference/ipban-manual-install.md` — the first real
+  content in `docs/reference/`. Updated `docs/design/server-profile.md`
+  to record the final, permanent "keep manual" decision (superseding
+  its original "revisit once an extras mechanism exists" note),
+  `docs/PROJECT.md`'s Non-Goals with a durable principle-level
+  statement (not just an IPBan-specific note), and
+  `docs/ROADMAP.md`/`README.md`/`CHANGELOG.md` to match.
+
+### Development Environment
+
+- Fetched and read IPBan's real, current install script directly
+  (`Invoke-WebRequest`, not an AI-summarized fetch) before deciding
+  anything — confirmed it needs Administrator elevation and installs a
+  persistent Windows Service, rather than relying on the earlier
+  research summary from the `server-profile.md` round.
 
 ---
 
