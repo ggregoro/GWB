@@ -24,6 +24,7 @@ $LibDir      = Join-Path $GwbRoot "lib"
 . (Join-Path $LibDir "detect.ps1")
 . (Join-Path $LibDir "packages.ps1")
 . (Join-Path $LibDir "profile.ps1")
+. (Join-Path $LibDir "completions.ps1")
 . (Join-Path $LibDir "terminal.ps1")
 . (Join-Path $LibDir "export.ps1")
 . (Join-Path $LibDir "diff.ps1")

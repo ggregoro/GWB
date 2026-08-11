@@ -46,7 +46,12 @@ breakdown.
   installed subset of known packages plus the current `$PROFILE` block;
   `gwb diff <a> <b>` compares two profiles/snapshots for drift; `gwb
   repair <profile>` checks the machine against a profile and offers to
-  fix it; `gwb restore --from-snapshot <name>` reapplies a snapshot.
+  fix it; `gwb restore --from-snapshot <name>` reapplies a snapshot;
+  `gwb restore --from-manifest <path>` applies a profile-shaped
+  directory from anywhere on disk.
+- **A `gwb` command + tab-completion**, installed into `$PROFILE`
+  automatically on every restore — commands, profile/snapshot names,
+  and package names all complete, reading live from disk.
 
 ## Installation
 
@@ -55,6 +60,9 @@ git clone https://github.com/ggregoro/GWB.git
 cd GWB
 .\gwb.ps1 restore default
 ```
+
+After the first restore, open a new PowerShell window and just use
+`gwb` directly — no more `.\gwb.ps1`.
 
 Running `restore` with no profile name shows an interactive picker
 instead of assuming `default`.
@@ -96,16 +104,16 @@ gwb repair <profile>        Check this machine against a profile
 ## Status
 
 Early — v0.1.0. The dispatcher, package installs, `$PROFILE`
-management, all three profiles (`default`/`developer`/`server`), and
-the full configuration-management set
+management, all three profiles (`default`/`developer`/`server`), the
+full configuration-management set
 (`export`/`diff`/`repair`/`restore --from-snapshot`/`restore
---from-manifest`) are all built and verified with real restores on a
-real machine (including idempotency, the backup/undo round-trip, and
-real drift detection). Not yet ported from GLB: non-winget "extras"
-installs (GLB's curl/Flatpak/font equivalent — likely
+--from-manifest`), and the `gwb` command + tab-completion are all built
+and verified with real restores on a real machine (including
+idempotency, the backup/undo round-trip, real drift detection, and
+real `TabExpansion2` results). Not yet ported from GLB: non-winget
+"extras" installs (GLB's curl/Flatpak/font equivalent — likely
 `Install-Module`-based tools like PSFzf/PSReadLine/Terminal-Icons on
-Windows, plus IPBan for `server` once this exists), and shell
-completions for `gwb` itself.
+Windows, plus IPBan for `server` once this exists).
 
 ## Project
 

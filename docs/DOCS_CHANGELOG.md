@@ -7,7 +7,30 @@ feature/code changes. Mirrors GLB's own `docs/DOCS_CHANGELOG.md`.
 
 ## [Unreleased]
 
-(none since the from-manifest build below)
+(none since the shell-completions build below)
+
+---
+
+## 2026-08-11 (continued once more)
+
+### Documentation
+
+- Added `docs/design/shell-completions.md` — documents three real
+  technical questions verified before building (how a `.ps1` script
+  becomes callable by bare name on Windows, whether
+  `Register-ArgumentCompleter` works for a plain wrapper function,
+  whether a completer scriptblock captures its enclosing function's
+  parameters without `.GetNewClosure()`), plus the decision to wire it
+  into every restore automatically. Updated `docs/ROADMAP.md`'s
+  Version 0.5 to fully complete and `CHANGELOG.md` with the actual
+  feature addition.
+
+### Development Environment
+
+- Verified `TabExpansion2`/`Register-ArgumentCompleter` mechanics
+  empirically (position-based AST completion, `.GetNewClosure()`
+  requirement) in isolated test sessions before writing any real code,
+  rather than assuming how PowerShell's completion engine behaves.
 
 ---
 

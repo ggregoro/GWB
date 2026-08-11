@@ -93,3 +93,16 @@ This project follows a simple versioning approach:
   real with a scratch manifest directory outside the repo, both
   `--dry-run` and applied for real; a nonexistent path errors cleanly.
   Version 0.6 (Configuration Management) is now fully complete.
+- Added a `gwb` command and tab-completion (new `lib/completions.ps1`),
+  installed automatically on every restore — the PowerShell-idiomatic
+  equivalent of GLB's `PATH` symlink + bash/zsh/fish completions
+  (`.ps1` scripts aren't callable by bare name on Windows the same
+  way). Refactored `Install-GwbProfileSnippet`'s backup/replace logic
+  into a shared `Set-GwbManagedBlock` helper (`lib/profile.ps1`) so
+  the new self-registration block and the existing profile-snippet
+  block both go through identical, tested logic instead of
+  duplicating it. Completes/tab-completes commands, profile/snapshot
+  names, and package names, all reading live from disk rather than a
+  baked-in list. Verified end-to-end on real hardware, including
+  idempotency and real tab-completion results (`TabExpansion2`).
+  Version 0.5 (User Experience) is now fully complete.

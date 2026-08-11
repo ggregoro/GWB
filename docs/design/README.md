@@ -38,8 +38,15 @@ up shaped the way it did, even after the feature ships.
   fork found.** `Invoke-GwbApplyProfile` already accepted an arbitrary
   path, so `--from-manifest <path>` needed only argument parsing, no
   new logic. Verified end-to-end with a real scratch manifest.
+- [`shell-completions.md`](shell-completions.md) — **Decided and
+  built.** A wrapper function in `$PROFILE` (not a `PATH` symlink —
+  `.ps1` scripts aren't callable by bare name on Windows) plus
+  `Register-ArgumentCompleter`, verified to work correctly with a
+  plain wrapper function via position-based AST inspection and
+  `.GetNewClosure()`. Wired into every restore automatically. Verified
+  end-to-end on real hardware, including real `TabExpansion2` results.
 
 Everything else built so far (packages, `restore`/`--dry-run`/`--undo`,
 the interactive picker) was small enough to build directly, without a
-design doc. **Version 0.6 (Configuration Management) is now fully
-complete** — see [`docs/ROADMAP.md`](../ROADMAP.md) for what's next.
+design doc. **Versions 0.5 and 0.6 are both now fully complete** — see
+[`docs/ROADMAP.md`](../ROADMAP.md) for what's next.

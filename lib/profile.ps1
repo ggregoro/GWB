@@ -17,30 +17,30 @@ function Get-GwbProfileDescription {
     return ""
 }
 
-function Install-GwbProfileSnippet {
+# Shared by Install-GwbProfileSnippet and (lib/completions.ps1's)
+# Install-GwbSelfRegistration - each owns its own marker pair so the
+# two concerns never collide, but both go through the same
+# backup-on-first-touch + idempotent replace-in-place logic. Whichever
+# one runs first creates $PROFILE.gwb-backup; the other sees it already
+# exists and correctly skips re-backing-up.
+function Set-GwbManagedBlock {
     param(
-        [Parameter(Mandatory)][string]$SnippetPath,
+        [Parameter(Mandatory)][string]$Marker,
+        [Parameter(Mandatory)][string]$EndMarker,
+        [Parameter(Mandatory)][string]$Content,
+        [Parameter(Mandatory)][string]$Label,
         [switch]$WhatIf
     )
 
-    if (-not (Test-Path $SnippetPath)) {
-        Write-Fail "Profile snippet not found: $SnippetPath"
-        return
-    }
-
-    $marker = "# >>> GWB managed block >>>"
-    $endMarker = "# <<< GWB managed block <<<"
-    $snippetContent = (Get-Content $SnippetPath -Raw).TrimEnd()
-
     $existing = if (Test-Path $PROFILE) { (Get-Content $PROFILE -Raw).TrimEnd() } else { "" }
     $backupPath = "$PROFILE.gwb-backup"
-    $hasMarker = $existing -match [regex]::Escape($marker)
+    $hasMarker = $existing -match [regex]::Escape($Marker)
 
     if ($WhatIf) {
         if ($hasMarker) {
-            Write-Info "[WhatIf] Would replace GWB managed block in `$PROFILE"
+            Write-Info "[WhatIf] Would replace $Label block in `$PROFILE"
         } else {
-            Write-Info "[WhatIf] Would back up `$PROFILE to $backupPath (if it has content) and append GWB managed block"
+            Write-Info "[WhatIf] Would back up `$PROFILE to $backupPath (if it has content) and append $Label block"
         }
         return
     }
@@ -57,12 +57,12 @@ function Install-GwbProfileSnippet {
     }
 
     if ($hasMarker) {
-        $pattern = "(?s)$([regex]::Escape($marker)).*?$([regex]::Escape($endMarker))"
-        $replacement = "$marker`n$snippetContent`n$endMarker"
+        $pattern = "(?s)$([regex]::Escape($Marker)).*?$([regex]::Escape($EndMarker))"
+        $replacement = "$Marker`n$Content`n$EndMarker"
         $updated = $existing -replace $pattern, $replacement
     } else {
         $prefix = if ($existing -eq "") { "" } else { "$existing`n`n" }
-        $updated = "$prefix$marker`n$snippetContent`n$endMarker"
+        $updated = "$prefix$Marker`n$Content`n$EndMarker"
     }
 
     # -NoNewline plus an explicit trailing `n: Set-Content's own auto-appended
@@ -72,7 +72,23 @@ function Install-GwbProfileSnippet {
     # real mismatch for anything that compares file content byte-for-byte,
     # like `gwb export`/`gwb diff`).
     Set-Content -Path $PROFILE -Value "$updated`n" -NoNewline
-    Write-Ok "Profile updated: $PROFILE"
+    Write-Ok "$Label updated: $PROFILE"
+}
+
+function Install-GwbProfileSnippet {
+    param(
+        [Parameter(Mandatory)][string]$SnippetPath,
+        [switch]$WhatIf
+    )
+
+    if (-not (Test-Path $SnippetPath)) {
+        Write-Fail "Profile snippet not found: $SnippetPath"
+        return
+    }
+
+    $snippetContent = (Get-Content $SnippetPath -Raw).TrimEnd()
+    Set-GwbManagedBlock -Marker "# >>> GWB managed block >>>" -EndMarker "# <<< GWB managed block <<<" `
+        -Content $snippetContent -Label "Profile" -WhatIf:$WhatIf
 }
 
 function Undo-GwbRestore {
@@ -103,6 +119,9 @@ function Invoke-GwbApplyProfile {
     Write-Step "Wiring up PowerShell profile"
     $snippet = Join-Path $ProfileDir "profile-snippet.ps1"
     Install-GwbProfileSnippet -SnippetPath $snippet -WhatIf:$WhatIf
+
+    Write-Step "Registering 'gwb' command + tab-completion"
+    Install-GwbSelfRegistration -GwbRoot $GwbRoot -WhatIf:$WhatIf
 
     $wtSettings = Join-Path $ProfileDir "windows-terminal-settings.json"
     if (Test-Path $wtSettings) {

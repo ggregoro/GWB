@@ -121,7 +121,7 @@ modules that aren't installed via winget at all.
 
 ---
 
-# Version 0.5 — User Experience ✅ (core), planned (completions)
+# Version 0.5 — User Experience ✅
 
 Improve the installation experience.
 
@@ -139,17 +139,20 @@ Improve the installation experience.
   `--undo`.
 - **Interactive profile picker** — `restore` with no profile name lists
   profiles with descriptions and applies whichever one is chosen.
+- **Shell completions + a `gwb` command (2026-08-11)** — GLB symlinks
+  `glb` onto `PATH` and installs bash/zsh/fish completions as part of
+  every restore. A `.ps1` script isn't callable by bare name on
+  Windows, so the PowerShell-idiomatic equivalent is a wrapper
+  `function gwb { & '<path>\gwb.ps1' @args }` plus a
+  `Register-ArgumentCompleter` block, both installed into `$PROFILE`
+  automatically on every restore (matching GLB's own precedent).
+  Commands, profile/snapshot names, and package names all tab-complete
+  correctly, verified for real. See
+  [`docs/design/shell-completions.md`](design/shell-completions.md).
 
 ### Planned
 
-- **Shell completions for `gwb` itself** — GLB ships bash/zsh/fish
-  completions (`completions/`, `lib/completions.sh`). PowerShell's
-  equivalent is a `Register-ArgumentCompleter` block, not yet built.
-- **Self-symlink / `PATH` setup** — GLB symlinks `glb` onto `PATH` and
-  wires it into the shell's own completion system as part of restore.
-  GWB currently has to be run via `.\gwb.ps1` from the repo directory;
-  putting it on `PATH` (or as a PowerShell function/alias in the
-  managed `$PROFILE` block) isn't built yet.
+(none — Version 0.5 is now fully complete)
 
 ---
 
