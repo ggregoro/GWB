@@ -14,11 +14,12 @@ up shaped the way it did, even after the feature ships.
 
 ## Current docs
 
-- [`developer-profile.md`](developer-profile.md) — **Proposed, not yet
-  decided.** Scopes the real forks in porting GLB's `developer` profile
-  to Windows (containers, build toolchain, `mise`'s Windows support,
-  whether a resource monitor is even needed alongside Task Manager,
-  whether Fresh has a Windows build) rather than guessing at answers.
+- [`developer-profile.md`](developer-profile.md) — **Decided and
+  built.** Scoped and resolved the real forks in porting GLB's
+  `developer` profile to Windows: no container tooling (WSL2
+  constraint), MinGW/gcc over MSVC, `mise` and Fresh both confirmed to
+  have real Windows support, no resource monitor (Task Manager already
+  covers it). Verified end-to-end on real hardware.
 
 Everything else built so far (packages, `restore`/`--dry-run`/`--undo`,
 the interactive picker) was small enough to build directly, without a

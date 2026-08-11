@@ -67,18 +67,19 @@ developer/server split.
 - `default` — core CLI toolkit: `eza`, `fzf`, `lf`, `ripgrep`, `fd`,
   `bat`, `starship`, plus a `$PROFILE` snippet (eza aliases, `bat` as
   `cat`, fzf options, Starship prompt init).
+- **`developer`** (2026-08-11) — same foundation as `default` plus
+  `git`, `jq`, `gh`, `mise`, Fresh (editor), MinGW/gcc (build
+  toolchain). **No container tooling** — Docker Desktop/Podman Desktop
+  both need WSL2 (or Hyper-V), a hard "never install" constraint on
+  Greg's machines (breaks VirtualBox). No resource monitor either —
+  Task Manager already covers it. See
+  [`docs/design/developer-profile.md`](design/developer-profile.md)
+  for the full scoping and real-machine verification, including a real
+  `mise activate`/`Invoke-Expression` array-binding bug caught and
+  fixed.
 
 ### Planned
 
-- **`developer`** — GLB's equivalent picked Podman, gcc+make, jq, `gh`,
-  htop, mise, Fresh. Windows equivalents need their own pass rather
-  than a blind port. **Scoped, partially decided, not yet built**: see
-  [`docs/design/developer-profile.md`](design/developer-profile.md).
-  **No container tooling** — Docker Desktop/Podman Desktop both need
-  WSL2 (or Hyper-V), which is a hard "never install" constraint on
-  Greg's machines (breaks VirtualBox). Still open: gcc/MinGW vs. MSVC,
-  whether `mise` even supports Windows, whether a resource monitor is
-  needed alongside Task Manager, whether Fresh has a Windows build.
 - **`server`** — GLB's equivalent picked ufw, rsync+restic, fail2ban,
   htop. Windows Server has a very different security/firewall/backup
   model (Windows Firewall, Windows Backup, etc.) — needs its own

@@ -15,6 +15,12 @@ $Script:_GWB_PACKAGE_OVERRIDES = @{
     "wezterm"  = "wez.wezterm"
     "ghostty"  = "ghostty.ghostty"
     "starship" = "Starship.Starship"
+    "jq"       = "jqlang.jq"
+    "gh"       = "GitHub.cli"
+    "mise"     = "jdx.mise"
+    "fresh"    = "sinelaw.fresh-editor"
+    "mingw"    = "BrechtSanders.WinLibs.POSIX.UCRT"
+    "btop"     = "aristocratos.btop4win"
 }
 
 function Resolve-GwbPackageId {

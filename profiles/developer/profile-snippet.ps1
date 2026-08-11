@@ -1,5 +1,5 @@
-# GWB default profile snippet - injected into $PROFILE between the
-# GWB managed-block markers. Keep this idempotent and side-effect-free
+# GWB developer profile snippet - same shared aliases as `default`,
+# plus mise activation. Keep this idempotent and side-effect-free
 # beyond function/alias/prompt definitions.
 
 if (Get-Command eza -ErrorAction SilentlyContinue) {
@@ -14,6 +14,10 @@ if (Get-Command bat -ErrorAction SilentlyContinue) {
 
 if (Get-Command fzf -ErrorAction SilentlyContinue) {
     $env:FZF_DEFAULT_OPTS = "--height 40% --layout=reverse --border"
+}
+
+if (Get-Command mise -ErrorAction SilentlyContinue) {
+    Invoke-Expression ((&mise activate pwsh) -join "`n")
 }
 
 if (Get-Command starship -ErrorAction SilentlyContinue) {

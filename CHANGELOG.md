@@ -37,3 +37,19 @@ This project follows a simple versioning approach:
   restores, and the backup/undo round-trip preserves real pre-existing
   `$PROFILE` content.
 - Added `README.md`, `LICENSE` (MIT, matching GLB), and `.gitignore`.
+- Added the `developer` profile: same foundation as `default` plus
+  `git`, `jq`, `gh`, `mise`, Fresh (editor), and MinGW/gcc (build
+  toolchain) — all resolved to real winget packages, added to
+  `_GWB_PACKAGE_OVERRIDES` in `lib/packages.ps1`. Deliberately excludes
+  container tooling (Docker Desktop/Podman Desktop both require WSL2)
+  and a resource monitor (Task Manager already covers it) — see
+  `docs/design/developer-profile.md` for the full reasoning.
+- Fixed a real bug in both `default` and `developer`'s
+  `profile-snippet.ps1`: `Invoke-Expression` can't bind a multi-line
+  string array (which `mise activate pwsh` returns), only a single
+  string — `starship init powershell`'s line happened to work by
+  coincidence of its own output shape. Both now join the array into a
+  single newline-joined string before passing it to `Invoke-Expression`.
+- Verified end-to-end on real hardware: all 5 new packages install
+  cleanly and idempotently via `restore developer`, and `gcc`/`gh`/
+  `jq`/`mise` are all confirmed functional afterward.

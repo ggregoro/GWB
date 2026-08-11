@@ -1,0 +1,15 @@
+# Same shared CLI foundation as `default`, plus developer-specific tools.
+# See docs/design/developer-profile.md for how each of these was decided.
+git
+eza
+fzf
+lf
+ripgrep
+fd
+bat
+starship
+jq
+gh
+mise
+fresh
+mingw

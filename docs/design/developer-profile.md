@@ -1,22 +1,21 @@
 # Design: `developer` profile
 
-**Status:** Partially decided (containers, 2026-08-10) — remaining
-questions (build toolchain, `mise`, resource monitor, Fresh) still
-open; not yet built.
+**Status:** Decided and built (2026-08-10/11). Verified for real —
+see "Verification" below.
 
 ## Purpose
 
 GLB's `docs/ROADMAP.md` Version 0.3 built a `developer` profile for
 "someone newer to development who wants a complete kit without
 researching every tool choice themselves." GWB's own `docs/ROADMAP.md`
-flags a Windows `developer` profile as planned but explicitly *not* a
+flagged a Windows `developer` profile as planned but explicitly *not* a
 blind port — several of GLB's picks don't have a clean 1:1 Windows
 equivalent, and porting them wrong would undercut the "solid default,
 no research needed" goal this profile exists for.
 
-This doc scopes those real forks before anything gets built, the same
-way GLB scoped Podman-vs-Docker, mise-vs-per-language-managers, etc.
-before building its own `developer` profile.
+This doc scoped those real forks before building, the same way GLB
+scoped Podman-vs-Docker, mise-vs-per-language-managers, etc. before
+building its own `developer` profile.
 
 ## What GLB's `developer` profile has
 
@@ -25,101 +24,88 @@ before building its own `developer` profile.
 manager), Fresh (terminal code editor). Plus the same shared shell/
 prompt setup every GLB profile ships.
 
-## Direct ports (no real fork)
-
-- **`gh`** — GitHub CLI has a winget package (`GitHub.cli`). Direct
-  port, same as GLB.
-- **`jq`** — winget has `jqlang.jq`. Direct port.
-
-## Decided
+## Decisions
 
 ### 1. Containers: dropped from scope entirely (2026-08-10)
 
-GLB picked Podman over Docker deliberately (daemonless/rootless, fits
-GLB's philosophy). On Windows, the mainstream options don't have a
-non-WSL2 path:
+Docker Desktop and Podman Desktop both need WSL2 (or Hyper-V, same
+underlying virtualization-takeover risk) for Linux containers on
+Windows; native Windows Containers only run Windows-based images, not
+useful for typical dev workflows. **Ruled out per a hard constraint
+(Greg, 2026-08-10): no WSL2, and no tooling that requires it** — it
+breaks his VirtualBox VMs. No container tool is included in
+`developer`, documented as a known gap rather than forced (same
+category as GLB leaving unattended security updates out of `server`).
 
-- **Docker Desktop** requires the WSL2 backend (or Hyper-V) for Linux
-  containers.
-- **Podman Desktop** on Windows also runs containers inside a WSL2
-  machine under the hood (`podman machine init`) — same dependency,
-  different name.
-- **Native Windows Containers** (process-isolated, no VM/WSL2 required)
-  only run Windows Server Core/Nano Server-based images — not useful
-  for the Linux-container workflows most dev tooling actually assumes.
+### 2. Build toolchain: MinGW/gcc, not MSVC (2026-08-10, Greg's choice)
 
-**Ruled out per a hard constraint (Greg, 2026-08-10): no WSL2, and no
-tooling that requires it.** WSL2 takes over the machine's virtualization
-and breaks his existing VirtualBox VMs — this isn't a preference to
-weigh against convenience, it's a standing "never install this"
-constraint across GWB (and Windows tooling generally, see this
-project's `CLAUDE.md`/memory). Since every mainstream Windows container
-tool needs WSL2 (or Hyper-V, which has the same virtualization-takeover
-problem), **no container tool is included in `developer`.** This is the
-same category of decision as GLB leaving unattended security updates
-out of `server` — a real gap with no clean answer, documented rather
-than forced. Revisit only if a genuinely WSL2-free/Hyper-V-free Windows
-container story emerges.
+Both real options exist on winget: `BrechtSanders.WinLibs.POSIX.UCRT`
+(MinGW/gcc) and `Microsoft.VisualStudio.2022.BuildTools` (MSVC). Greg
+chose **MinGW/gcc** — lighter install, mirrors GLB's actual gcc+make
+pick, POSIX-familiar. Someone who specifically needs MSVC (e.g. certain
+native Rust/Python/Node extension builds) can add it themselves; not
+worth the multi-GB default install for "someone newer to development."
 
-## Open questions — real forks, not yet decided
+### 3. Version manager: `mise` has real native Windows support (verified 2026-08-10)
 
-### 2. Build toolchain: what replaces gcc+make?
+Confirmed via web search and a direct `winget search`, not assumed:
+`mise` is Rust-based and ships real Windows builds (`jdx.mise`, winget,
+v2026.8.2 at verification time) — no WSL required. One narrow,
+documented limitation: it can't install tools that require asdf plugins
+on Windows, which doesn't affect mainstream languages (Node/Python/
+Rust/Go all have native mise backends). **Included, matching GLB.**
 
-GLB used plain `gcc`+`make` (real, unambiguous packages on every Linux
-package manager). Windows native development typically uses the MSVC
-toolchain instead, not gcc:
+### 4. Resource monitor: skipped (2026-08-10, Greg's choice)
 
-- **MinGW-w64/gcc** — winget has ports of gcc for Windows
-  (e.g. `BrechtSanders.WinLibs.POSIX.UCRT`), which would be the more
-  literal port of GLB's choice.
-- **Visual Studio Build Tools (MSVC)** — winget has
-  `Microsoft.VisualStudio.2022.BuildTools`, the more idiomatic "native
-  Windows C/C++ toolchain" choice, but a much heavier install and a
-  different toolchain than what any GLB-side project would be built
-  with.
+`aristocratos.btop4win` is a real, actively-maintained winget package
+(verified directly) — the option existed. Greg chose to **skip it**:
+Windows already ships Task Manager as a first-class, always-available
+GUI tool, so the gap `htop`/`btop` fills on Linux (no built-in monitor)
+doesn't really exist here. The override entry (`"btop" =
+"aristocratos.btop4win"`) stays in `lib/packages.ps1` regardless —
+harmless, reusable infrastructure if this gets reconsidered later, same
+pattern GLB used for keeping its unused `flatpak` extras method around.
 
-**Not decided.** Depends on what "someone newer to development on
-Windows" is actually likely to build — worth asking rather than
-guessing.
+### 5. Editor: Fresh confirmed available on Windows (verified 2026-08-10)
 
-### 3. Version manager: does `mise` even work on Windows?
+Confirmed via a direct `winget search fresh` on this machine: real
+package `sinelaw.fresh-editor` (v0.4.7 at verification time). In scope
+under GWB's "runs inside the terminal, not its own window" rule (see
+`docs/PHILOSOPHY.md`). **Included, matching GLB.**
 
-GLB chose `mise` over per-language managers (nvm/pyenv/rustup) for one
-universal tool/mental model. `mise`'s Windows support needs to be
-verified before assuming it ports directly — if it's limited or
-experimental there, the Windows-native alternative is probably just
-`rustup` (already Windows-native) plus per-language installers
-(`nvm-windows`, `pyenv-win`), which reintroduces the exact
-juggling-multiple-tools problem `mise` was chosen to avoid.
+## Final package list
 
-**Not decided. Not yet verified.**
+`profiles/developer/packages.txt`: the same shared foundation as
+`default` (`git`, `eza`, `fzf`, `lf`, `ripgrep`, `fd`, `bat`,
+`starship`) plus `jq`, `gh`, `mise`, `fresh`, `mingw`. Every one of
+these has a real winget package — unlike GLB, GWB's `developer` needed
+no extras/non-package-manager install mechanism at all, since winget
+happened to carry everything decided on directly.
 
-### 4. Resource monitor: does this profile need one at all?
+`profile-snippet.ps1`: same eza/bat/fzf/starship setup as `default`,
+plus a guarded `mise activate pwsh` block.
 
-GLB added `htop` to `default` (not `developer` specifically) because no
-profile had a live process monitor and Linux terminals don't have one
-built in. Windows already ships Task Manager as a first-class,
-always-available GUI tool — the gap `htop` fills on Linux may not exist
-the same way on Windows.
+## Verification
 
-**Not decided.** Options: skip it entirely (Task Manager already
-covers this), or add a terminal-based monitor anyway for
-terminal-only workflows (e.g. `btop4win`, if a real winget package for
-it exists) for parity with GLB's `default`.
+Built and verified for real on Greg's Windows 11 machine (not just
+parsed): all 5 new packages (`jq`, `gh`, `mise`, `fresh` — already
+present — and `mingw`) installed cleanly via `gwb.ps1 restore
+developer`, confirmed idempotent on a second restore, and `gcc`/`gh`/
+`jq`/`mise` all confirmed functional afterward.
 
-### 5. Editor: does Fresh support Windows?
+**Real bug found and fixed during this verification**: the initial
+`profile-snippet.ps1` used `Invoke-Expression (&mise activate pwsh)`,
+copying the pattern already used for Starship — but `mise activate
+pwsh` returns its output as a multi-line string *array*, not a single
+string, and `Invoke-Expression`'s `-Command` parameter can't bind an
+array (`Cannot convert 'System.Object[]' to the type 'System.String'`).
+Fixed by joining the array into one string first:
 
-GLB's `default`/`developer` profiles both include Fresh
-(getfresh.dev), a terminal-based code editor — in scope under GWB's own
-"runs inside the terminal, not its own window" rule (see
-`docs/PHILOSOPHY.md`) if it has a real Windows build.
+```powershell
+Invoke-Expression ((&mise activate pwsh) -join "`n")
+```
 
-**Not yet verified** whether Fresh ships a Windows binary/installer at
-all, or whether it's Linux/macOS-only.
-
-## Not in scope for this doc
-
-Deciding these — this doc exists to surface the real questions before
-anyone (Claude or Greg) picks an answer unilaterally, matching the
-project's own convention of confirming forks like this via a direct
-question rather than guessing. See `CONTRIBUTING.md`.
+Applied the same defensive join to the Starship line in **both**
+`default` and `developer`'s snippets — it happened to work unjoined
+only because Starship's init output comes back as a single string, not
+because the pattern was actually safe.

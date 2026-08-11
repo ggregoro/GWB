@@ -7,20 +7,42 @@ feature/code changes. Mirrors GLB's own `docs/DOCS_CHANGELOG.md`.
 
 ## [Unreleased]
 
-### Added
+(none since the `developer` profile build below)
 
-- Added `docs/design/developer-profile.md` — scopes the real forks in
+---
+
+## 2026-08-11
+
+### Documentation
+
+- Finished `docs/design/developer-profile.md`: resolved the remaining
+  open questions (build toolchain → MinGW/gcc, resource monitor →
+  skipped, `mise`/Fresh Windows support → both confirmed real via
+  `winget search`) and marked it Decided/Built. Updated
+  `docs/ROADMAP.md`'s `developer` bullet from Planned to Completed and
+  `CHANGELOG.md` with the actual feature addition.
+
+### Development Environment
+
+- Verified `mise`, Fresh, and MinGW's real winget package IDs directly
+  on this machine (`jdx.mise`, `sinelaw.fresh-editor`,
+  `BrechtSanders.WinLibs.POSIX.UCRT`) rather than assuming from the
+  earlier design doc's placeholders.
+
+---
+
+## 2026-08-10
+
+### Documentation
+
+- Added `docs/design/developer-profile.md` — scoped the real forks in
   porting GLB's `developer` profile to Windows (containers, gcc/MinGW
   vs. MSVC, `mise`'s Windows support, whether a resource monitor is
   needed alongside Task Manager, Fresh's Windows availability).
-
-### Changed
-
-- Resolved `docs/design/developer-profile.md`'s containers question:
-  no container tooling in `developer` at all, since Docker Desktop/
-  Podman Desktop both need WSL2 (or Hyper-V) and Greg has a hard
-  "never install WSL2" constraint (breaks his VirtualBox VMs). Updated
-  `docs/ROADMAP.md`'s `developer` bullet to match.
+- Resolved the containers question the same day: no container tooling
+  in `developer` at all, since Docker Desktop/Podman Desktop both need
+  WSL2 (or Hyper-V) and Greg has a hard "never install WSL2" constraint
+  (breaks his VirtualBox VMs).
 
 ---
 
