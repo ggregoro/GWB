@@ -89,6 +89,14 @@ curl/Flatpak/font equivalent — likely `Install-Module`-based tools like
 PSFzf/PSReadLine/Terminal-Icons on Windows), shell completions for `gwb`
 itself, and additional profiles.
 
+## Architecture
+
+GWB is a PowerShell CLI — a single `gwb.ps1` dispatcher script
+dot-sourcing focused library modules from `lib/`, driven by per-profile
+`packages.txt`/`profile-snippet.ps1` under `profiles/`. See
+[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the full module
+breakdown.
+
 ## Roadmap
 
 GWB's direction and current progress are tracked in
