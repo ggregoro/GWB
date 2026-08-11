@@ -48,18 +48,10 @@ yet; candidate topics listed there.
 
 # Troubleshooting
 
-Solutions to problems encountered during development. None written up
-yet — candidate topics, based on real snags hit while building GWB:
-
-- A newly-installed tool (e.g. `starship`) not found on `PATH` in an
-  already-running PowerShell session — a `PATH` refresh or a new
-  terminal window is needed, not a GWB bug (hit and confirmed during
-  the initial build, see `CLAUDE.md`).
-- winget prompting for interactive agreement/UAC on a package that
-  needs it.
-- Starship/eza icons not rendering — usually a missing Nerd Font in the
-  terminal emulator being used, the same class of issue GLB documents
-  extensively for its own Linux terminal emulators.
+See [`troubleshooting.md`](troubleshooting.md) — `PATH` not refreshing
+after a new install (confirmed, hit during the initial build), PowerShell
+execution-policy/downloaded-file-blocking errors running `gwb.ps1`
+(anticipated), and missing Nerd Font glyphs (anticipated).
 
 ---
 

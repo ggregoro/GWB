@@ -21,6 +21,10 @@ feature/code changes. Mirrors GLB's own `docs/DOCS_CHANGELOG.md`.
   `docs/ROADMAP.md`, `docs/CODING_STANDARDS.md`.
 - Added `docs/design/` (feature-scoping docs, currently just a README —
   nothing scoped this way yet).
+- Added `docs/DOCS_CHANGELOG.md` (this file) and
+  `docs/troubleshooting.md` (real/anticipated gotchas: `PATH` not
+  refreshing after install, PowerShell execution-policy and
+  downloaded-file-blocking errors, missing Nerd Font glyphs).
 - Added `docs/reference/` (tool/config cheat sheets, currently just a
   README — nothing written yet).
 - Added root-level `README.md`, `LICENSE` (MIT, matching GLB),
