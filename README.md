@@ -93,3 +93,7 @@ itself, and additional profiles.
 
 - [GLB](https://github.com/ggregoro/GLB) — the Linux original this
   project ports from.
+
+## License
+
+MIT — see [`LICENSE`](LICENSE).
