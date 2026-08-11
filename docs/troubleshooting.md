@@ -13,6 +13,28 @@ convention for why that distinction matters.
 
 ---
 
+## `ls` shows the plain PowerShell table, not `eza`'s icon output
+
+**Confirmed** — hit directly by Greg in a real terminal after restoring
+(`ll`/`la` worked fine; only `ls` was affected).
+
+**Symptom**: `ll`/`la` correctly show `eza`'s icon-based listing, but
+bare `ls` shows PowerShell's default `Mode`/`LastWriteTime`/`Length`/
+`Name` table instead, as if GWB's `ls` function were never defined.
+
+**Cause**: PowerShell ships a built-in `ls` → `Get-ChildItem` **alias**,
+and alias resolution always wins over a same-named **function** —
+confirmed directly: even with both registered (`Get-Command ls -All`
+shows both), calling bare `ls` invokes the alias's target, silently
+ignoring the function. `ll`/`la` aren't affected because PowerShell
+doesn't ship built-in aliases with those names, so there's nothing to
+collide with — this is specific to `ls`. Fixed in `profiles/*/
+profile-snippet.ps1` (`Remove-Item -Path Alias:ls -Force` before
+defining the function); update by re-running `gwb restore <profile>`
+if you're on an older checkout.
+
+---
+
 ## A newly-installed tool isn't found on `PATH`
 
 **Confirmed** — hit directly while building and verifying GWB.

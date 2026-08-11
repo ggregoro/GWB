@@ -197,3 +197,17 @@ This project follows a simple versioning approach:
   confirmed the fresh checkout resolves its own paths correctly from
   its new location, and completed the full chain with a real
   `gwb.ps1 restore default` from it. Version 1.0 is now fully complete.
+- Fixed a real, user-visible bug found by Greg in a live terminal:
+  `ls` showed PowerShell's default table output instead of `eza`'s
+  icons, while `ll`/`la` worked fine. PowerShell ships a built-in
+  `ls` -> `Get-ChildItem` alias, and alias resolution always wins over
+  a same-named function - confirmed directly with a synthetic
+  alias/function pair before touching the real code
+  (`Get-Command ls -All` showed both registered, but bare `ls` only
+  ever invoked the alias's target). `ll`/`la` don't collide with any
+  built-in alias, which is why only `ls` was affected. Fixed in all
+  three profiles' `profile-snippet.ps1` (`Remove-Item -Path Alias:ls
+  -Force` before defining the function). Verified for real: restored
+  `default`, dot-sourced the real `$PROFILE`, confirmed `Get-Command ls
+  -All` now shows only the function and bare `ls` correctly invokes
+  `eza`; confirmed idempotency across two restores.

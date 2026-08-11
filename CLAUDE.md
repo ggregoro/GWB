@@ -132,6 +132,31 @@ end to end on real hardware.
 
 ## Working notes
 
+- **Session (2026-08-11, real Windows 11 machine): fixed a real,
+  user-reported `ls` bug.** Greg reported it live via two screenshots
+  from an actual terminal: `ll`/`la` correctly showed `eza`'s icon
+  output with Starship's prompt, but bare `ls` fell back to plain
+  PowerShell `Get-ChildItem` table output. Root-caused with a
+  synthetic repro before touching real code — a throwaway
+  `Set-Alias`/`function` pair sharing the name `lstest` confirmed
+  PowerShell's built-in `ls` → `Get-ChildItem` alias always wins over
+  a same-named function in command resolution, even though
+  `Get-Command ls -All` shows both registered. `ll`/`la` aren't
+  affected since PowerShell ships no built-in aliases with those
+  names. Fixed in all three profiles' `profile-snippet.ps1`
+  (`Remove-Item -Path Alias:ls -Force -ErrorAction SilentlyContinue`
+  before defining the function). Verified for real: parse-checked all
+  three files, ran the full Pester suite (88/88), restored `default`
+  for real, dot-sourced the live `$PROFILE`, confirmed `Get-Command ls
+  -All` now shows only the function and bare `ls` correctly invokes
+  `eza`, confirmed idempotency across two restores (byte-identical
+  `$PROFILE` output). Updated `docs/troubleshooting.md` (new first
+  entry, marked Confirmed), `CHANGELOG.md`, and
+  `docs/DOCS_CHANGELOG.md`. Also added `testResults.xml` to
+  `.gitignore` — a stray Pester `-CI` output artifact found untracked
+  while checking `git status` before committing.
+  Working tree clean, everything pushed to `master` as of this note.
+
 - **Session (2026-08-11, real Windows 11 machine): verified
   `install.ps1` for real, closing the one gap the previous cloud
   session flagged.** Started by fetching/pulling — found 3 commits on

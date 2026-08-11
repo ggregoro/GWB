@@ -7,7 +7,31 @@ feature/code changes. Mirrors GLB's own `docs/DOCS_CHANGELOG.md`.
 
 ## [Unreleased]
 
-(none since the installer verification below)
+(none since the `ls` alias-precedence fix below)
+
+---
+
+## 2026-08-11 (real-hardware `ls` bug report)
+
+### Documentation
+
+- Added `docs/troubleshooting.md`'s new first entry, "`ls` shows the
+  plain PowerShell table, not `eza`'s icon output" — a real bug Greg
+  hit and reported live via screenshots (`ll`/`la` worked, bare `ls`
+  fell back to `Get-ChildItem`'s default table). Updated `CHANGELOG.md`
+  with the actual fix.
+
+### Development Environment
+
+- Root-caused with a synthetic repro before touching real code: a
+  throwaway `Set-Alias`/`function` pair with the same name, confirmed
+  the alias always wins even when `Get-Command -All` shows both
+  registered. Fixed all three profiles' `profile-snippet.ps1`
+  (`Remove-Item -Path Alias:ls -Force` before defining the function).
+  Verified for real: restored `default`, dot-sourced the live
+  `$PROFILE`, confirmed `Get-Command ls -All` now shows only the
+  function and bare `ls` correctly invokes `eza`; confirmed
+  idempotency across two restores; full Pester suite still 88/88.
 
 ---
 

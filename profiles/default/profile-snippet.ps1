@@ -3,6 +3,12 @@
 # beyond function/alias/prompt definitions.
 
 if (Get-Command eza -ErrorAction SilentlyContinue) {
+    # PowerShell ships a built-in `ls` -> Get-ChildItem alias, and alias
+    # resolution always wins over a same-named function - confirmed
+    # directly (a function alone silently never gets invoked via bare
+    # `ls`, even though `Get-Command ls -All` shows both registered).
+    # `ll`/`la` don't collide with any built-in alias, so they're fine.
+    Remove-Item -Path Alias:ls -Force -ErrorAction SilentlyContinue
     function ls  { eza --icons --group-directories-first @args }
     function ll  { eza --icons --group-directories-first -lah @args }
     function la  { eza --icons --group-directories-first -a @args }

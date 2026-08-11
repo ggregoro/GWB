@@ -14,6 +14,9 @@
 *~
 *.tmp
 
+# Pester test output
+testResults.xml
+
 # Editors
 .vscode/
 .*.sw?
