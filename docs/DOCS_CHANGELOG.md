@@ -7,9 +7,47 @@ feature/code changes. Mirrors GLB's own `docs/DOCS_CHANGELOG.md`.
 
 ## [Unreleased]
 
-(none since the `ls` alias-precedence fix below)
+(none since the `far` function fix below)
 
 ---
+
+## 2026-08-12 (live-machine verification session)
+
+### Documentation
+
+- Bumped `VERSION` from `0.1.0` to `1.0.0` — `docs/ROADMAP.md`'s
+  Version 1.0 milestone had been complete since 2026-08-11, but the
+  file itself was never updated alongside it, so `gwb.ps1 version`/
+  `help` were still printing the old number. Updated
+  `docs/PROJECT.md`'s Release Strategy and `README.md`'s Status section
+  to match, plus `CHANGELOG.md` with the actual fix.
+- Added a `far` function to `developer`/`server`'s
+  `profile-snippet.ps1` — found while walking through how to actually
+  launch GWB's add-on programs live: Far Manager installs as a
+  registered GUI app (Start Menu shortcut) with no `PATH` entry, unlike
+  its CLI tools which winget shims onto `PATH` automatically (`fresh`
+  confirmed working bare already). Updated `CHANGELOG.md` with the
+  actual fix.
+
+### Development Environment
+
+- Ran a full live verification pass on the real Windows 11 machine
+  with no code changes intended going in: re-ran the Pester suite,
+  walked through `help`/`version`/`info`/`profiles`/`export`/`diff`
+  against the real machine, and did a real `gwb.ps1 restore developer`
+  (idempotent, confirmed via a second run) — this surfaced both real
+  gaps above along the way, neither of which was previously flagged as
+  an open bug.
+- Confirmed Far Manager's real install location
+  (`Program Files\Far Manager\Far.exe`) via its registry Uninstall
+  key's `InstallLocation` before hardcoding the path, rather than
+  guessing from the Start Menu shortcut alone.
+- Investigated an apparent `ll` regression (a `Get-ChildItem`-style
+  table appeared after the `ls` fix) that turned out to be a
+  misdiagnosis, not a bug: `eza`'s `-h` flag means "add a header row,"
+  not "human-readable" like GNU `ls` — `eza -lah` was correctly
+  rendering its own long/table view. Caught by reading `eza --help`
+  directly instead of assuming GNU `ls` semantics carried over.
 
 ## 2026-08-11 (real-hardware `ls` bug report)
 

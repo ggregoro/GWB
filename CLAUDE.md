@@ -29,10 +29,12 @@ shape and its `default`-profile-first approach.
   present. All real verification so far has happened here — GWB hasn't
   been tested on a second machine/VM yet, unlike GLB's many.
 
-## Current state (as of 2026-08-11)
+## Current state (as of 2026-08-12)
 
 GWB is feature-complete against every GLB Version 0.1–0.6 equivalent,
-plus a Pester test suite. See `docs/ROADMAP.md` for the full versioned
+plus a Pester test suite, and is at `VERSION` `1.0.0` (bumped this
+session to match the Version 1.0 milestone, which had already been
+complete since 2026-08-11). See `docs/ROADMAP.md` for the full versioned
 breakdown — this section is a snapshot, that file is the source of truth.
 
 - Commands: `help`, `version`, `info`, `install <pkg>`, `remove <pkg>`,
@@ -86,8 +88,11 @@ breakdown — this section is a snapshot, that file is the source of truth.
   backup-clobbering edge case, a mixed-line-endings false-positive
   diff, `Read-Host` crashing instead of failing gracefully, an
   `Invoke-Expression` array-binding bug, `-ErrorAction SilentlyContinue`
-  not actually suppressing a PSReadLine message, and a `Mandatory`
-  PowerShell array parameter rejecting a legitimate empty array).
+  not actually suppressing a PSReadLine message, a `Mandatory`
+  PowerShell array parameter rejecting a legitimate empty array, a real
+  `ls`-vs-built-in-alias precedence bug Greg hit live, and a missing
+  `far` launcher found while walking through how to actually run GWB's
+  add-on programs).
 - Full documentation set, matching GLB's: `README.md`, `LICENSE` (MIT),
   `CHANGELOG.md`, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`,
   `.gitignore`, `docs/ROADMAP.md`/`ARCHITECTURE.md`/
@@ -131,6 +136,54 @@ end to end on real hardware.
   re-derive context.
 
 ## Working notes
+
+- **Session (2026-08-12, real Windows 11 machine): live verification
+  pass + two real gaps found and fixed.** Started with no specific bug
+  to chase — Greg asked to run GWB live since he doesn't have a second
+  Windows box to test on. Re-ran the full Pester suite (88/88), then
+  walked through `help`/`version`/`info`/`profiles`/`export`/`diff`
+  against the real machine (all correct — `diff default <snapshot>`
+  correctly showed drift from `developer`/`server` extras already
+  installed here, exit code 1 on detected drift is by design, not a
+  bug), then a real `gwb.ps1 restore developer` (idempotent, confirmed
+  via a second run; dot-sourcing the live `$PROFILE` afterward in a
+  fresh process confirmed `mise activate pwsh` and `ll` both still work
+  correctly). Two real, previously-unflagged gaps turned up along the
+  way:
+  1. **`VERSION` file was stale at `0.1.0`** despite Version 1.0 having
+     been complete and verified since 2026-08-11 — `gwb.ps1 version`/
+     `help` were printing the wrong number live. Bumped to `1.0.0`,
+     updated `docs/PROJECT.md`'s Release Strategy and `README.md`'s
+     Status section to match. `Dispatcher.Tests.ps1` reads the real
+     `VERSION` file directly, so no test changes were needed; 88/88
+     confirmed after.
+  2. **No way to launch Far Manager by name.** Asked live "how do I
+     launch the add-on programs" — `fresh` already worked bare
+     (winget shims CLI tools onto `PATH` automatically), but Far
+     Manager installs as a registered GUI app with a Start Menu
+     shortcut and no `PATH` entry (confirmed via its registry
+     Uninstall key's `InstallLocation`, not guessed). Added a `far`
+     function to `developer`/`server`'s `profile-snippet.ps1` wrapping
+     the real install path, guarded by `Test-Path` matching every
+     other tool's detection idiom in these files. Verified for real:
+     restored `developer`, dot-sourced the live `$PROFILE` in a fresh
+     process, confirmed `Get-Command far -All` resolves to the
+     function with the correct path and no leaked `$GwbFarExe`
+     variable in scope. Didn't actually invoke `far` from automation
+     (it's a full-screen interactive console app that would hang a
+     non-interactive session) — Greg confirmed it launches correctly
+     from a real terminal separately.
+  - **A near-miss worth remembering, not a bug**: right after the `ls`
+    fix below, `ll` briefly looked broken again (a `Mode`/`Size`/`Date
+    Modified` table that resembled the old `Get-ChildItem` fallback).
+    Root cause: `eza`'s `-h` flag means "add a header row," not
+    "human-readable" like GNU `ls` — `eza -lah` was correctly
+    rendering its own long/table view all along. Caught by reading
+    `eza --help` directly rather than assuming GNU `ls` flag semantics
+    carried over; no code change was needed.
+  - Updated `docs/DOCS_CHANGELOG.md` and `CHANGELOG.md` with both real
+    fixes. Working tree clean, everything pushed to `master`
+    (`f9e0fd3`) as of this note. **Nothing queued.**
 
 - **Session (2026-08-11, real Windows 11 machine): fixed a real,
   user-reported `ls` bug.** Greg reported it live via two screenshots
