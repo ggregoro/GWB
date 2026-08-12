@@ -47,6 +47,15 @@ if (Get-Module -ListAvailable -Name PSReadLine) {
     }
 }
 
+# winget installs Far Manager as a registered GUI app, not a PATH entry
+# (unlike its CLI tools, which winget shims onto PATH automatically) -
+# confirmed via its registry Uninstall key's InstallLocation.
+$GwbFarExe = Join-Path $env:ProgramFiles "Far Manager\Far.exe"
+if (Test-Path $GwbFarExe) {
+    function far { & $GwbFarExe @args }
+}
+Remove-Variable -Name GwbFarExe -ErrorAction SilentlyContinue
+
 if (Get-Command starship -ErrorAction SilentlyContinue) {
     Invoke-Expression ((&starship init powershell) -join "`n")
 }

@@ -219,3 +219,15 @@ This project follows a simple versioning approach:
   real: `gwb.ps1 version`/`gwb.ps1 help` now print `v1.0.0` live, full
   Pester suite still 88/88 (`Dispatcher.Tests.ps1` reads the real
   `VERSION` file directly rather than asserting a hardcoded string).
+- Added a `far` function to `developer`/`server`'s `profile-snippet.ps1`
+  so Far Manager launches with a bare `far` from the terminal, matching
+  how every other profile tool works. Real gap found while walking
+  through how to launch GWB's add-on programs: unlike its CLI tools
+  (which winget shims onto `PATH` automatically, e.g. `fresh`), Far
+  Manager installs as a registered GUI app with a Start Menu shortcut
+  but no `PATH` entry - confirmed via its registry Uninstall key's
+  `InstallLocation`. Verified for real: parse-checked both files, full
+  Pester suite still 88/88, restored `developer` for real, dot-sourced
+  the live `$PROFILE` in a fresh process and confirmed `Get-Command far
+  -All` resolves to the function with the correct path and no leaked
+  `$GwbFarExe` variable in scope.
