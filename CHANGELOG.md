@@ -211,3 +211,11 @@ This project follows a simple versioning approach:
   `default`, dot-sourced the real `$PROFILE`, confirmed `Get-Command ls
   -All` now shows only the function and bare `ls` correctly invokes
   `eza`; confirmed idempotency across two restores.
+- Bumped the `VERSION` file from `0.1.0` to `1.0.0`, matching
+  `docs/ROADMAP.md`'s Version 1.0 (Stable Release) milestone that had
+  already been reached and verified for real - the file itself had
+  never been updated alongside it. Updated `docs/PROJECT.md`'s Release
+  Strategy and `README.md`'s Status section to match. Verified for
+  real: `gwb.ps1 version`/`gwb.ps1 help` now print `v1.0.0` live, full
+  Pester suite still 88/88 (`Dispatcher.Tests.ps1` reads the real
+  `VERSION` file directly rather than asserting a hardcoded string).

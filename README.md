@@ -143,7 +143,7 @@ touched. 88 tests, one file roughly per `lib/` module plus
 
 ## Status
 
-v0.1.0, Version 1.0 (Stable Release) complete. The dispatcher, package
+v1.0.0, Version 1.0 (Stable Release) complete. The dispatcher, package
 installs, PowerShell Gallery modules, `$PROFILE` management, all three
 profiles (`default`/`developer`/`server`), the full
 configuration-management set

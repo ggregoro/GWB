@@ -114,10 +114,10 @@ detection/abstraction layer to build.
 
 ## Release Strategy
 
-GWB is at `0.1.0` — the initial dispatcher/packages/profile build.
-Development happens directly against `master`, with features tracked in
-`docs/ROADMAP.md` and itemized as they ship in `CHANGELOG.md`'s
-`[Unreleased]` section.
+GWB is at `1.0.0` — Version 1.0 (Stable Release), feature-complete
+against GLB's Version 0.1–0.6 equivalents. Development happens directly
+against `master`, with features tracked in `docs/ROADMAP.md` and
+itemized as they ship in `CHANGELOG.md`'s `[Unreleased]` section.
 
 **The repository went public on 2026-08-11**, Greg's own decision once
 GWB reached feature parity with GLB's Version 0.1–0.6 equivalents and a
