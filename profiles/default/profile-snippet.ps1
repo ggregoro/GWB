@@ -57,6 +57,20 @@ if (Get-Module -ListAvailable -Name PSReadLine) {
     }
 }
 
+# winget installs the `file` MIME-type-detection tool (needed by
+# yazi's previewer - without it, every preview fails with "Cannot find
+# 'file' to detect the file's MIME type.") but does not add it to PATH -
+# confirmed directly (it's an Inno Setup installer, not PATH-shimmed the
+# way winget's CLI-tool installers are). Add its directory explicitly,
+# same "winget doesn't PATH-shim this" pattern already handled for Far
+# Manager - guarded so this is a no-op if it isn't installed or its
+# directory is already on PATH.
+$GwbFileBin = Join-Path ${env:ProgramFiles(x86)} "GnuWin32\bin"
+if ((Test-Path (Join-Path $GwbFileBin "file.exe")) -and ($env:Path -notlike "*$GwbFileBin*")) {
+    $env:Path = "$env:Path;$GwbFileBin"
+}
+Remove-Variable -Name GwbFileBin -ErrorAction SilentlyContinue
+
 if (Get-Command starship -ErrorAction SilentlyContinue) {
     Invoke-Expression ((&starship init powershell) -join "`n")
 }

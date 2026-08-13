@@ -14,3 +14,17 @@ mise
 fresh
 mingw
 farmanager
+
+# File manager alternative to lf (kept, not replaced) - stronger plugin
+# support (git status, configured below via Install-GwbYaziConfig).
+# Ported from GLB's default profile, then to GWB's developer/server too.
+yazi
+
+# yazi's file previewer shells out to the real `file` command for MIME-
+# type detection - without it, every preview fails with "Cannot find
+# 'file' to detect the file's MIME type." winget installs this but does
+# not add it to PATH (confirmed directly - it's an Inno Setup installer,
+# not a PATH-shimmed one), so profile-snippet.ps1 adds its install
+# directory to PATH explicitly, same "winget doesn't PATH-shim this"
+# pattern already handled for Far Manager.
+file

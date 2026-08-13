@@ -326,3 +326,40 @@ This project follows a simple versioning approach:
   correctly isolated via `-YaziConfigPath`; only this one dispatcher-
   level end-to-end test was exposed. Fixed by scoping `$env:APPDATA` to
   a fresh temp directory for just that one test.
+- Fixed a real bug: yazi's file previewer failed on every single file
+  with "Cannot find 'file' to detect the file's MIME type" - hit live
+  by Greg running yazi directly right after the port was verified.
+  Root-caused precisely, not assumed: yazi's previewer shells out to
+  the real `file` command for MIME-type detection, but nothing
+  guaranteed it existed. Git for Windows bundles a working
+  `file.exe`, but its installer only adds `Git\cmd` to `PATH`, never
+  `Git\usr\bin` (confirmed via `[Environment]::GetEnvironmentVariable`
+  against the real persisted User/Machine `PATH`, not just the current
+  process's inherited one, which can lie - a plain `Get-Command file`
+  from *this* shell falsely succeeded, inherited from git-bash's own
+  internal PATH, while a reconstructed-from-registry check correctly
+  showed it missing). Even on `developer`, which does install `git`,
+  `file` still wouldn't resolve. Added `file` (`GnuWin32.File`) to
+  `_GWB_PACKAGE_OVERRIDES` and `default`'s `packages.txt` - but winget
+  installs it without adding it to `PATH` either (confirmed directly:
+  it's an Inno Setup installer, not one of winget's PATH-shimmed CLI
+  tools), so `profile-snippet.ps1` also adds its install directory to
+  `PATH` explicitly, guarded and idempotent, the same "winget doesn't
+  PATH-shim this" pattern already handled for Far Manager. Verified for
+  real: a `PATH` rebuilt purely from persisted registry values (the
+  same construction a genuinely new terminal window performs) resolves
+  `file.exe` and produces correct output; full Pester suite still
+  103/103; `gwb.ps1 restore default --dry-run` correctly reports `file`
+  alongside `yazi`.
+- Ported yazi (and its `file` dependency) from `default`-only to all
+  three profiles - Greg's call, since he's actually on `developer` day
+  to day. Added `yazi`/`file` to `developer`/`server`'s `packages.txt`,
+  copied `yazi-config/` into both profile directories (byte-for-byte
+  identical to `default`'s, confirmed via `diff -rq`), and added the
+  same guarded `file`-on-PATH block to both profiles'
+  `profile-snippet.ps1`. Verified for real: full Pester suite still
+  103/103; `restore developer`/`restore server --dry-run` both
+  correctly report `yazi`/`file`; ran a real (non-dry-run)
+  `gwb.ps1 restore developer` on this machine's actual live profile -
+  `$PROFILE` updated with the new PATH guard, yazi config deployed to
+  `$env:APPDATA\yazi\config`, confirmed idempotent on a second run.

@@ -54,16 +54,21 @@ breakdown — this section is a snapshot, that file is the source of truth.
   MinGW-over-MSVC, IPBan staying manual, etc.) are in
   `docs/design/developer-profile.md`/`server-profile.md`, not repeated
   here.
-- `default` also ships `yazi-config/` (`yazi.toml`, `init.lua`, the
-  vendored `yazi-rs/plugins:git` plugin) — deployed by
-  `Install-GwbYaziConfig` (`lib/profile.ps1`) into `$env:APPDATA
-  \yazi\config`, wired into `Invoke-GwbApplyProfile` conditionally (only
-  when a profile actually ships a `yazi-config/` directory, same
-  `Test-Path`-gated pattern as `modules.txt` and
+- All three profiles ship `yazi-config/` (`yazi.toml`, `init.lua`, the
+  vendored `yazi-rs/plugins:git` plugin, byte-identical across all
+  three) — deployed by `Install-GwbYaziConfig` (`lib/profile.ps1`) into
+  `$env:APPDATA\yazi\config`, wired into `Invoke-GwbApplyProfile`
+  conditionally (only when a profile actually ships a `yazi-config/`
+  directory, same `Test-Path`-gated pattern as `modules.txt` and
   `windows-terminal-settings.json`). Ported from GLB's own `default`
-  profile — see the Working notes entry below for the full port and its
-  real verification (yazi installed, config deployed byte-identical,
-  `yazi --debug` confirms the config/plugin load with no errors).
+  profile, `default`-only at first, then to `developer`/`server` too —
+  see the Working notes entries below for the full history: the port
+  itself, its real verification, a real `file`-not-found bug found live
+  and fixed (yazi's previewer needs the real `file` command for MIME
+  detection; neither Git for Windows nor winget's own `GnuWin32.File`
+  package puts it on `PATH`, so `profile-snippet.ps1` adds it
+  explicitly, guarded, in all three profiles), and the developer/server
+  port itself.
 - A `gwb` command + tab-completion is installed into `$PROFILE`
   automatically on every restore (a separate managed block from the
   profile snippet) — commands, profile/snapshot names, and package
@@ -151,6 +156,91 @@ also **verified for real** — see the Working notes entry below.
   re-derive context.
 
 ## Working notes
+
+- **Session (2026-08-13, real Windows 11 machine, second follow-up):
+  fixed a real bug in yazi's previewer, found by Greg using it live
+  minutes after the verification pass directly below confirmed
+  everything working.** Greg launched `yazi` directly and hit
+  `Cannot find 'file' to detect the file's MIME type.` on every file
+  (screenshot). Root-caused precisely rather than assumed:
+  - yazi's previewer shells out to the real `file` command for
+    MIME-type detection — nothing in GWB guaranteed it existed on
+    `PATH`. Git for Windows *does* bundle a working `file.exe`
+    (`Git\usr\bin\file.exe`), but its installer only ever adds
+    `Git\cmd` to `PATH`, never `Git\usr\bin` — confirmed against the
+    real persisted registry `PATH`
+    (`[Environment]::GetEnvironmentVariable("Path", "User"/"Machine")`),
+    not just the current process's inherited one. That distinction
+    mattered directly: an initial `Get-Command file` check from this
+    session's own shell falsely reported success, because it inherited
+    git-bash's own internal `PATH` (which always includes `usr\bin`
+    regardless of the real system `PATH`) — only checking the
+    registry-persisted values directly (simulating what a genuinely
+    new terminal window actually starts with) revealed the truth.
+    Worth remembering for any future PATH-related check in this
+    project: a Bash-tool-spawned `pwsh` process is not a reliable proxy
+    for a real, independent PowerShell session's `PATH`.
+  - Even `developer` (which does install `git`) wouldn't have fixed
+    this, since Git's `usr\bin` still isn't on `PATH` there either.
+  - **Fixed**: added `file` → `GnuWin32.File` to
+    `_GWB_PACKAGE_OVERRIDES` and `default`'s `packages.txt`. winget
+    installs it but — confirmed directly — doesn't add it to `PATH`
+    either (an Inno Setup installer, not one of winget's PATH-shimmed
+    CLI-tool installers), so `profile-snippet.ps1` also adds its
+    install directory to `PATH` explicitly, guarded and idempotent —
+    the exact same "winget doesn't PATH-shim this" pattern already
+    handled for Far Manager, just via a raw `PATH` entry instead of a
+    function wrapper, since `file` needs to be found by *yazi's own
+    child-process spawn*, not invoked directly by the user — a
+    PowerShell function/alias would be invisible to that.
+  - **Fixed Greg's actual live machine state directly, not just the
+    repo** — his real `$PROFILE` is `developer`, which doesn't (and,
+    as scoped, shouldn't) carry yazi/`file` at all, so the
+    `profile-snippet.ps1` fix alone wouldn't reach him without
+    switching profiles. Persisted the `GnuWin32\bin` directory onto his
+    real **User** `PATH` directly via
+    `[Environment]::SetEnvironmentVariable`, independent of any GWB
+    profile — confirmed via the same registry-reconstruction technique
+    that `file.exe` now resolves and produces correct output.
+  - Verified for real: full Pester suite still 103/103;
+    `gwb.ps1 restore default --dry-run` correctly reports `file`
+    alongside `yazi` (both "Already installed", since the real winget
+    install from the verification pass below already covers `file`
+    too); `Resolve-GwbPackageId -Name 'file'` returns `GnuWin32.File`
+    correctly.
+  - yazi was `default`-only at this point — Greg is on `developer`, so
+    this session fixed his actual live usage directly rather than via
+    a profile restore. **Resolved immediately after, same session**:
+    Greg asked for it on `developer`/`server` too — see the next entry
+    up top for the port.
+
+- **Session (2026-08-13, real Windows 11 machine, third follow-up):
+  ported yazi + `file` to `developer`/`server`, closing out the open
+  question the previous entry left.** Greg's call — he's actually on
+  `developer` day to day, and asked directly.
+  - Added `yazi`/`file` to both profiles' `packages.txt` (same
+    explanatory comments as `default`'s). Copied `yazi-config/` into
+    both profile directories — raw byte copy from `default`'s, not
+    hand-typed (`diff -rq` confirms byte-identical, avoiding any risk
+    of the kind of content-corruption GLB's own `starship.toml` history
+    documents at length, even though these particular files don't carry
+    the specific glyph-range risk that bug was about). Added the same
+    guarded `file`-on-PATH block to both profiles' `profile-snippet.ps1`.
+  - Verified for real: full Pester suite still 103/103;
+    `restore developer`/`restore server --dry-run` both correctly
+    report `yazi`/`file`. Then, since `developer` is this machine's
+    actual live profile, ran a real (non-dry-run)
+    `gwb.ps1 restore developer` — `$PROFILE` updated with the new PATH
+    guard, yazi config deployed to `$env:APPDATA\yazi\config`,
+    confirmed idempotent on a second real run.
+  - **Real, direct visual confirmation from Greg**: a screenshot of
+    `yazi` browsing this repo showed `CLAUDE.md` rendering correctly in
+    the preview pane (syntax-highlighted, scrollable) — genuine
+    end-user confirmation the `file`-detection fix actually works, not
+    just a clean exit code.
+  - All three profiles now carry yazi/`file` identically. Working tree
+    clean, everything pushed to `master` as of this note. **Nothing
+    queued.**
 
 - **Session (2026-08-13, real Windows 11 machine, follow-up): verified
   the yazi port for real, closing out the one thing the cloud session

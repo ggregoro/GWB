@@ -24,6 +24,7 @@ $Script:_GWB_PACKAGE_OVERRIDES = @{
     "btop"     = "aristocratos.btop4win"
     "farmanager" = "FarManager.FarManager"
     "yazi"     = "sxyazi.yazi"
+    "file"     = "GnuWin32.File"
 }
 
 function Resolve-GwbPackageId {
