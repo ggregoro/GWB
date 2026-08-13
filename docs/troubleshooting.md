@@ -122,13 +122,23 @@ directory.
 
 **Fix**: as of the `Install-GwbStarshipConfig` step added to
 `restore`/`repair` (see `CHANGELOG.md`), GWB writes
-`scan_timeout = 100` into `~/.config/starship.toml` automatically if
+`scan_timeout = 1000` into `~/.config/starship.toml` automatically if
 it isn't already set. Re-run `gwb restore <profile>` (or `gwb repair
 <profile>`) on an older checkout to pick it up. To set it manually:
 
 ```powershell
-Add-Content "$env:USERPROFILE\.config\starship.toml" "scan_timeout = 100"
+Add-Content "$env:USERPROFILE\.config\starship.toml" "scan_timeout = 1000"
 ```
+
+**Note on the value**: an earlier version of this fix shipped
+`scan_timeout = 100`, which turned out to still be too tight for
+`System32` on real hardware (measured at ~305ms per scan directly via
+`starship prompt --path`, three consecutive runs, no caching tricks) -
+confirmed live, not assumed. `Install-GwbStarshipConfig` never
+overwrites an *existing* `scan_timeout`, by design (it might be a real
+user customization) - if you picked up the `100` value from an older
+GWB checkout, you'll need to bump it manually with the command above;
+`gwb restore`/`repair` won't touch it for you.
 
 If you're consistently launching into `System32`, see the next entry —
 GWB now handles the most common cause of that automatically.

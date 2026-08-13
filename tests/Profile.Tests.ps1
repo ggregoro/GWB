@@ -121,7 +121,7 @@ Describe "Install-GwbStarshipConfig" {
 
     It "creates the config file with scan_timeout when none exists" {
         Install-GwbStarshipConfig -ConfigPath $script:configPath
-        (Get-Content $script:configPath -Raw) | Should -Match "scan_timeout = 100"
+        (Get-Content $script:configPath -Raw) | Should -Match "scan_timeout = 1000"
     }
 
     It "appends scan_timeout to an existing config that lacks it" {
@@ -130,7 +130,7 @@ Describe "Install-GwbStarshipConfig" {
         Install-GwbStarshipConfig -ConfigPath $script:configPath
         $content = Get-Content $script:configPath -Raw
         $content | Should -Match "add_newline = false"
-        $content | Should -Match "scan_timeout = 100"
+        $content | Should -Match "scan_timeout = 1000"
     }
 
     It "never overwrites an existing scan_timeout (regression: don't clobber user customization)" {

@@ -139,6 +139,34 @@ end to end on real hardware.
 
 ## Working notes
 
+- **Session (2026-08-13, real Windows 11 machine, follow-up): `100ms`
+  wasn't actually enough for `System32`.** Right after the session
+  below shipped, Greg used the new `sys32` shortcut to `cd` into
+  `System32` mid-session and the Starship warning came right back -
+  the `$PROFILE` startup guard doesn't fire here (it only moves *away*
+  from `System32` at load time, and `sys32` is a deliberate manual `cd`
+  afterward), so the scan still runs, and apparently the earlier
+  session's own "verified for real" check (via `starship prompt
+  --path`) had been against an already cache-warmed directory from its
+  own repeated test invocations - a real gap in that verification, not
+  a fluke. This time measured the actual scan cost directly instead of
+  just checking pass/fail: `starship prompt --path
+  C:\Windows\System32` took ~305ms across three consecutive runs, well
+  over the shipped `100`ms budget. Raised `Install-GwbStarshipConfig`'s
+  default to `1000`ms (still imperceptible on an interactive prompt,
+  and irrelevant for any normal directory that already scans in single-
+  digit ms). Updated the two Pester assertions checking the literal
+  value; 93/93 still passes. Verified for real, properly this time: a
+  fresh `pwsh` process started at home, `cd`'d into `System32`
+  mid-session (reproducing the exact `sys32` scenario), rendered a
+  prompt there - stderr genuinely empty, no warning. Manually bumped
+  this machine's own real `~/.config/starship.toml` from `100` to
+  `1000`, since `Install-GwbStarshipConfig`'s own "never touch an
+  existing value" rule means `gwb restore` won't do that automatically
+  - documented as a real, known limitation (not silently papered over)
+  in `docs/troubleshooting.md` for anyone upgrading from the earlier
+  same-day default.
+
 - **Session (2026-08-13, real Windows 11 machine): fixed two real,
   user-reported prompt/shell-startup issues.**
 

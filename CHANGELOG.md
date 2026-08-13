@@ -270,3 +270,21 @@ This project follows a simple versioning approach:
   `C:\Users\ggreg\Projects` and confirmed that one was left alone,
   proving the guard doesn't clobber a deliberate starting directory
   elsewhere.
+- Raised `Install-GwbStarshipConfig`'s `scan_timeout` from `100` to
+  `1000`. The `100` value shipped earlier the same day turned out to
+  still be too tight for `System32` on real hardware - Greg hit the
+  warning again after manually `cd`-ing there mid-session (the new
+  `sys32` shortcut, not the `$PROFILE` startup guard, which moves away
+  from `System32` before Starship ever renders a prompt there).
+  Measured the real scan directly rather than guessing again:
+  `starship prompt --path C:\Windows\System32` took ~305ms across three
+  consecutive runs, comfortably over the old 100ms budget and
+  comfortably under the new 1000ms one. Verified for real: full Pester
+  suite still 93/93 (two assertions updated to the new literal value),
+  then a real `pwsh` process started at home, `cd`'d into `System32`
+  mid-session, and rendered a prompt there - stderr empty, no warning.
+  Since `Install-GwbStarshipConfig` never overwrites an *existing*
+  `scan_timeout` (by design, in case it's a real user customization),
+  this only affects fresh installs - an already-written `100` from an
+  older checkout needs a manual bump, documented in
+  `docs/troubleshooting.md`.

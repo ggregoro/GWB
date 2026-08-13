@@ -119,11 +119,11 @@ function Install-GwbStarshipConfig {
     }
 
     if (-not (Test-Path $ConfigPath)) {
-        Set-Content -Path $ConfigPath -Value "scan_timeout = 100`n" -NoNewline
+        Set-Content -Path $ConfigPath -Value "scan_timeout = 1000`n" -NoNewline
     } else {
-        Add-Content -Path $ConfigPath -Value "`nscan_timeout = 100"
+        Add-Content -Path $ConfigPath -Value "`nscan_timeout = 1000"
     }
-    Write-Ok "Starship config updated: $ConfigPath (scan_timeout = 100)"
+    Write-Ok "Starship config updated: $ConfigPath (scan_timeout = 1000)"
 }
 
 function Undo-GwbRestore {
