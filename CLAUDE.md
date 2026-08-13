@@ -29,7 +29,7 @@ shape and its `default`-profile-first approach.
   present. All real verification so far has happened here — GWB hasn't
   been tested on a second machine/VM yet, unlike GLB's many.
 
-## Current state (as of 2026-08-12)
+## Current state (as of 2026-08-13)
 
 GWB is feature-complete against every GLB Version 0.1–0.6 equivalent,
 plus a Pester test suite, and is at `VERSION` `1.0.0` (bumped this
@@ -68,7 +68,7 @@ breakdown — this section is a snapshot, that file is the source of truth.
   install documented in `docs/reference/ipban-manual-install.md`.
   Recorded as a durable principle in `docs/PROJECT.md`'s Non-Goals, not
   just a one-off note.
-- A Pester test suite (`tests/`, 88 tests) mocks `winget`/
+- A Pester test suite (`tests/`, 93 tests) mocks `winget`/
   `Install-Module` and overrides `$PROFILE`, including real
   dispatcher-level coverage (dot-sources `gwb.ps1` itself with `Mock`
   still active). Run with `Invoke-Pester -Path tests/`.
@@ -90,9 +90,11 @@ breakdown — this section is a snapshot, that file is the source of truth.
   `Invoke-Expression` array-binding bug, `-ErrorAction SilentlyContinue`
   not actually suppressing a PSReadLine message, a `Mandatory`
   PowerShell array parameter rejecting a legitimate empty array, a real
-  `ls`-vs-built-in-alias precedence bug Greg hit live, and a missing
+  `ls`-vs-built-in-alias precedence bug Greg hit live, a missing
   `far` launcher found while walking through how to actually run GWB's
-  add-on programs).
+  add-on programs, a Starship `scan_timeout` warning Greg hit live in
+  `C:\Windows\System32`, and that same directory turning out to be
+  where his taskbar-pinned PowerShell icon always started).
 - Full documentation set, matching GLB's: `README.md`, `LICENSE` (MIT),
   `CHANGELOG.md`, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`,
   `.gitignore`, `docs/ROADMAP.md`/`ARCHITECTURE.md`/
@@ -136,6 +138,85 @@ end to end on real hardware.
   re-derive context.
 
 ## Working notes
+
+- **Session (2026-08-13, real Windows 11 machine): fixed two real,
+  user-reported prompt/shell-startup issues.**
+
+  **1. Starship's `scan_timeout` warning** (`5e8ceb0`). Greg reported it
+  live from a real terminal: every new PowerShell window printed
+  `[WARN] - (starship::context): Scanning current directory timed out.`
+  before the prompt (shell was starting in `C:\Windows\System32`, a
+  large directory). Root cause: Starship scans the cwd on every prompt
+  render to pick language/tool modules, with a default `scan_timeout`
+  of only 30ms — GWB installs Starship in every profile but had never
+  written it a config file at all, so it always ran on that bare
+  default. Added `Install-GwbStarshipConfig` (`lib/profile.ps1`), wired
+  into `Invoke-GwbApplyProfile` (runs on every `restore`/`repair`):
+  writes `scan_timeout = 100` into `~/.config/starship.toml`, only when
+  the setting isn't already present — never clobbers a value the user
+  set themselves. Verified for real: 5 new Pester tests (93/93 across
+  the full suite), then a real `gwb.ps1 restore developer` against this
+  machine's actual `$PROFILE` — confirmed `~/.config/starship.toml` was
+  created with `scan_timeout = 100`, and a second restore correctly
+  left it untouched (idempotent).
+  - **A real test-isolation bug caught along the way, not by Pester
+    itself**: the first Pester run genuinely wrote to this machine's
+    real `~/.config/starship.toml` — `Repair.Tests.ps1` also
+    dot-sources `lib/profile.ps1` and calls the real
+    `Invoke-GwbApplyProfile` path (via `Invoke-GwbRepair`) without
+    mocking the new function, unlike `Profile.Tests.ps1`'s own
+    `Invoke-GwbApplyProfile` block, which was mocked correctly on the
+    first pass. Caught by noticing the real file appear on disk after
+    the first full-suite run, not from any test failure (all 93 tests
+    passed even with the leak). Fixed by adding
+    `Mock Install-GwbStarshipConfig { }` to `Repair.Tests.ps1`'s
+    `BeforeEach`; deleted the stray real file and re-ran the full suite
+    to confirm no `~/.config` directory gets created anymore as a test
+    side effect.
+
+  **2. PowerShell always starting in `System32`** (`dd8e0ae`). Greg
+  separately asked whether PowerShell can start in `C:\Users\ggreg`
+  instead. First attempt (a `startingDirectory` edit to Windows
+  Terminal's own `settings.json`, `profiles.defaults`) had no effect —
+  real diagnosis, not a guess, found why: decoded the raw
+  `HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Taskband`
+  `Favorites` registry blob (Windows 11's taskbar no longer stores pins
+  as simple `.lnk` files) and found the actual pinned icon resolves to
+  `Microsoft.PowerShell_8wekyb3d8bbwe!App` — the separately
+  MSIX-packaged PowerShell 7 app, not Windows Terminal at all, launched
+  elevated (matching the persistent 🔒 Greg's prompt was showing). No
+  shortcut-level fix exists for an elevated/packaged launch's working
+  directory, so fixed it at the `$PROFILE` level instead: a guarded
+  `Set-Location $env:USERPROFILE` at the very top of all three
+  `profile-snippet.ps1` files, firing only when `$PWD.Path` is exactly
+  `System32`. Also added two personal shortcuts (`proj` →
+  `C:\Users\ggreg\Projects`, `sys32` → back to `C:\Windows\System32`
+  on demand) directly to the real `$PROFILE`, deliberately placed
+  *outside* the `# >>> GWB managed block >>>`/`# >>> GWB self >>>`
+  markers so `gwb restore` never touches them — they're Greg's own
+  folder convention, not something that belongs in the portable,
+  publicly-shared `profile-snippet.ps1`.
+  - Verified for real, not just parse-checked: launched actual `pwsh`
+    processes via `Start-Process -WorkingDirectory` (the same mechanism
+    that reproduces both the elevated-launch and packaged-app cases) —
+    one starting in `System32` confirmed the live `$PROFILE` resets to
+    `$env:USERPROFILE`, a second starting in
+    `C:\Users\ggreg\Projects` confirmed it's left alone (the guard
+    doesn't clobber a real starting directory elsewhere), and two more
+    confirmed `proj`/`sys32` themselves both work. Full Pester suite
+    still 93/93 after the `profile-snippet.ps1` edits (their runtime
+    behavior isn't covered by the suite at all — snippet content is
+    only ever written verbatim by `Install-GwbProfileSnippet`'s tests,
+    never executed — so this class of change can only be verified for
+    real, matching this project's own `far`/`ls` precedent).
+  - The Windows Terminal `settings.json` edit from earlier in the
+    session was left in place (harmless, and still correct if Greg ever
+    does use Windows Terminal for something) — a backup
+    (`settings.json.bak-20260813`) was saved alongside it before
+    editing.
+
+  Working tree clean, everything pushed to `master` as of this note.
+  **Nothing else queued.**
 
 - **Session (2026-08-12, real Windows 11 machine): live verification
   pass + two real gaps found and fixed.** Started with no specific bug

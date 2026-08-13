@@ -7,7 +7,20 @@ feature/code changes. Mirrors GLB's own `docs/DOCS_CHANGELOG.md`.
 
 ## [Unreleased]
 
-(none since the `far` function fix below)
+(none since the System32/`$PROFILE` session below)
+
+---
+
+## 2026-08-13 (live-machine session)
+
+### Documentation
+
+- Added two new `docs/troubleshooting.md` entries (both Confirmed):
+  Starship's `Scanning current directory timed out` warning, and
+  PowerShell always starting in `C:\Windows\System32`. Updated
+  `docs/ARCHITECTURE.md`'s `profile.ps1` row to mention
+  `Install-GwbStarshipConfig`, and `README.md`'s test count (88 → 93).
+  See `CHANGELOG.md` for the two features themselves.
 
 ---
 
