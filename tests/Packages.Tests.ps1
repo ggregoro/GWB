@@ -13,6 +13,10 @@ Describe "Resolve-GwbPackageId" {
         Resolve-GwbPackageId -Name "eza" | Should -Be "eza-community.eza"
     }
 
+    It "resolves yazi to its winget package id" {
+        Resolve-GwbPackageId -Name "yazi" | Should -Be "sxyazi.yazi"
+    }
+
     It "passes an unknown name through unchanged" {
         Resolve-GwbPackageId -Name "totally-unknown-package" | Should -Be "totally-unknown-package"
     }

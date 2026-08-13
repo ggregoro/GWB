@@ -23,6 +23,7 @@ $Script:_GWB_PACKAGE_OVERRIDES = @{
     "restic"   = "restic.restic"
     "btop"     = "aristocratos.btop4win"
     "farmanager" = "FarManager.FarManager"
+    "yazi"     = "sxyazi.yazi"
 }
 
 function Resolve-GwbPackageId {

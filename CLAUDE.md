@@ -54,6 +54,15 @@ breakdown — this section is a snapshot, that file is the source of truth.
   MinGW-over-MSVC, IPBan staying manual, etc.) are in
   `docs/design/developer-profile.md`/`server-profile.md`, not repeated
   here.
+- `default` also ships `yazi-config/` (`yazi.toml`, `init.lua`, the
+  vendored `yazi-rs/plugins:git` plugin) — deployed by
+  `Install-GwbYaziConfig` (`lib/profile.ps1`) into `$env:APPDATA
+  \yazi\config`, wired into `Invoke-GwbApplyProfile` conditionally (only
+  when a profile actually ships a `yazi-config/` directory, same
+  `Test-Path`-gated pattern as `modules.txt` and
+  `windows-terminal-settings.json`). Ported from GLB's own `default`
+  profile — see the Working notes entry below for the full port and
+  what's not yet verified.
 - A `gwb` command + tab-completion is installed into `$PROFILE`
   automatically on every restore (a separate managed block from the
   profile snippet) — commands, profile/snapshot names, and package
@@ -113,10 +122,17 @@ including public-release readiness (repo went public 2026-08-11, see
 one-liner installer (`install.ps1` — built in a cloud session with no
 `pwsh` at all, genuinely never executed there; verified for real the
 same day on Greg's Windows 11 machine, see `docs/design/installer.md`
-and the Working notes entry below for what that surfaced). **Nothing
-is currently queued.** GWB is feature-complete against GLB's Version
-0.1–0.6, publicly released, and its own installer is confirmed working
-end to end on real hardware.
+and the Working notes entry below for what that surfaced). GWB is
+feature-complete against GLB's Version 0.1–0.6, publicly released, and
+its own installer is confirmed working end to end on real hardware.
+
+**One item queued, not yet verified**: yazi was just ported from GLB
+(see Working notes below) — built in a cloud session with no `pwsh`
+available (same situation `install.ps1` was in originally), so it's
+parse-reviewed but not yet actually executed. Needs a real `Invoke-Pester
+-Path tests/` run plus a live `gwb.ps1 restore default` on Greg's
+Windows 11 machine before this is genuinely done, matching the
+Conventions section's own "verify for real" rule below.
 
 ## Conventions
 
@@ -139,6 +155,82 @@ end to end on real hardware.
 
 ## Working notes
 
+- **Session (2026-08-13, cloud session, no `pwsh` available): ported
+  yazi from GLB — `default` profile only, alongside `lf` (not
+  replacing it).** Greg had just gone through the process of adding
+  yazi to GLB's `default` profile (new `snap` extras method, since
+  yazi has no apt package on Debian/Ubuntu-family distros; the
+  `yazi-rs/plugins:git` status plugin vendored as static, byte-for-byte
+  config rather than fetched via `ya pkg add` at restore time, since
+  GLB's snap build doesn't reliably expose the `ya` CLI on PATH — see
+  GLB's own `CLAUDE.md`) and asked to port the same addition here.
+  - **`ya`-on-PATH isn't actually a problem on Windows** — winget/scoop
+    both ship `ya` normally (unlike GLB's snap build), so
+    `ya pkg add yazi-rs/plugins:git` would work fine here. Vendored the
+    plugin as static config anyway, for consistency with GLB and
+    because the exact same byte-identical files were already sitting in
+    GLB's repo to copy from (`diff -r` confirmed identical) — no reason
+    to introduce a live network fetch at restore time when a
+    known-good static copy already exists.
+  - **Real architecture gap this exposed**: unlike GLB, GWB has no
+    generic "arbitrary app config file" deployment mechanism — only a
+    bespoke, single-purpose one for Starship's `scan_timeout`
+    (`Install-GwbStarshipConfig`). Rather than build a new generic
+    system prematurely (GWB's own stated minimalism principle in
+    `lib/modules.ps1`'s header comment: "add [a second method] only if
+    a second real method ever comes up"), added a second bespoke
+    function, `Install-GwbYaziConfig` (`lib/profile.ps1`, right after
+    `Install-GwbStarshipConfig`) — copies a profile's `yazi-config/`
+    directory into `$env:APPDATA\yazi\config`, backing up any real
+    pre-existing content to `<path>.gwb-backup` exactly once (same
+    backup-on-first-touch rule `Set-GwbManagedBlock` already uses for
+    `$PROFILE`), wired into `Invoke-GwbApplyProfile` conditionally
+    (only when a profile ships a `yazi-config/` dir — same
+    `Test-Path`-gated pattern as `modules.txt`/
+    `windows-terminal-settings.json`). If a *third* app-config-file need
+    ever comes up, that's the point to generalize this into a real
+    mechanism, not before.
+  - **Real gap caught while wiring this up, fixed in the same pass**:
+    `Install-GwbYaziConfig` creates a `.gwb-backup`, but the existing
+    `Undo-GwbRestore` only knew about `$PROFILE`'s backup — that new
+    backup would have been silently unrestorable via `gwb restore
+    --undo`. Extended `Undo-GwbRestore` to also check for and restore
+    the yazi config backup (same "remove current, copy backup over"
+    logic, not just a file copy since it's a whole directory), added a
+    `-YaziConfigPath` parameter defaulting to the real path so tests
+    can isolate it exactly the way `$PROFILE` already gets swapped to a
+    temp path in tests — this machine (Windows, in real use) could
+    plausibly have a genuine yazi backup sitting in `$env:APPDATA`, and
+    a unit test must never touch that.
+  - Added `yazi` to `profiles/default/packages.txt` (kept `lf`, not
+    replaced — same "alternative, not replacement" framing as GLB's
+    `ranger`) and `"yazi" = "sxyazi.yazi"` to `_GWB_PACKAGE_OVERRIDES`
+    (`lib/packages.ps1`) — yazi's official winget package ID.
+  - 10 new Pester tests: 1 in `tests/Packages.Tests.ps1` (override
+    resolution), 9 in `tests/Profile.Tests.ps1` (a new
+    `Install-GwbYaziConfig` `Describe` block mirroring
+    `Install-GwbStarshipConfig`'s existing style — create/backup/
+    never-re-backup/-WhatIf/missing-source cases; new `Undo-GwbRestore`
+    cases for the yazi-config restore path, isolated via
+    `-YaziConfigPath` pointed at a temp directory rather than the real
+    `$env:APPDATA`; two new `Invoke-GwbApplyProfile` cases confirming
+    the conditional wiring - not called when a profile ships no
+    `yazi-config/`, called with the right `-SourceDir` when it does).
+  - **Not yet verified for real, same situation `install.ps1` was
+    originally in** — this cloud session has no `pwsh` at all (checked
+    directly: `command -v pwsh` fails; `sudo snap install powershell`
+    is available but blocked by no-TTY sudo in this sandbox, the same
+    limitation documented throughout GLB's own `CLAUDE.md`). Every file
+    was hand-reviewed for syntax (brace-balance checked, structure
+    compared line-by-line against the existing
+    `Install-GwbStarshipConfig`/`Undo-GwbRestore` patterns it mirrors)
+    but **never actually executed**. Needs, on Greg's real Windows 11
+    machine: `Invoke-Pester -Path tests/` to confirm the new tests
+    actually pass (not just parse), then a live `gwb.ps1 restore
+    default` to confirm `Install-GwbYaziConfig` really deploys the
+    config to `$env:APPDATA\yazi\config` and that yazi picks up the
+    git-status plugin correctly (mirroring how GLB's own yazi port was
+    confirmed by Greg looking at the real yazi display afterward).
 - **Session (2026-08-13, real Windows 11 machine, follow-up): `100ms`
   wasn't actually enough for `System32`.** Right after the session
   below shipped, Greg used the new `sys32` shortcut to `cd` into

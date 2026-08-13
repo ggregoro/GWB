@@ -126,14 +126,71 @@ function Install-GwbStarshipConfig {
     Write-Ok "Starship config updated: $ConfigPath (scan_timeout = 1000)"
 }
 
-function Undo-GwbRestore {
-    $backupPath = "$PROFILE.gwb-backup"
-    if (-not (Test-Path $backupPath)) {
-        Write-Fail "No backup found at $backupPath - nothing to undo"
+function Install-GwbYaziConfig {
+    param(
+        [Parameter(Mandatory)][string]$SourceDir,
+        [string]$DestDir = (Join-Path $env:APPDATA "yazi\config"),
+        [switch]$WhatIf
+    )
+
+    if (-not (Test-Path $SourceDir)) {
+        Write-Fail "Yazi config source not found: $SourceDir"
         return
     }
-    Copy-Item -Path $backupPath -Destination $PROFILE -Force
-    Write-Ok "Restored `$PROFILE from $backupPath"
+
+    $backupDir = "$DestDir.gwb-backup"
+
+    if ($WhatIf) {
+        if (Test-Path $DestDir) {
+            Write-Info "[WhatIf] Would replace yazi config at $DestDir"
+        } else {
+            Write-Info "[WhatIf] Would install yazi config to $DestDir"
+        }
+        return
+    }
+
+    # Preserve any real pre-existing config exactly once - same
+    # backup-on-first-touch rule Set-GwbManagedBlock uses for $PROFILE -
+    # never overwrite an existing backup on a later re-apply.
+    if ((Test-Path $DestDir) -and -not (Test-Path $backupDir)) {
+        Copy-Item -Path $DestDir -Destination $backupDir -Recurse -Force
+        Write-Info "Backed up existing yazi config to $backupDir"
+    }
+
+    if (-not (Test-Path $DestDir)) {
+        New-Item -ItemType Directory -Path $DestDir -Force | Out-Null
+    }
+
+    Copy-Item -Path (Join-Path $SourceDir "*") -Destination $DestDir -Recurse -Force
+    Write-Ok "Yazi config installed: $DestDir"
+}
+
+function Undo-GwbRestore {
+    param(
+        [string]$YaziConfigPath = (Join-Path $env:APPDATA "yazi\config")
+    )
+    $profileBackupPath = "$PROFILE.gwb-backup"
+    $yaziBackupPath = "$YaziConfigPath.gwb-backup"
+    $restoredAny = $false
+
+    if (Test-Path $profileBackupPath) {
+        Copy-Item -Path $profileBackupPath -Destination $PROFILE -Force
+        Write-Ok "Restored `$PROFILE from $profileBackupPath"
+        $restoredAny = $true
+    }
+
+    if (Test-Path $yaziBackupPath) {
+        if (Test-Path $YaziConfigPath) {
+            Remove-Item -Path $YaziConfigPath -Recurse -Force
+        }
+        Copy-Item -Path $yaziBackupPath -Destination $YaziConfigPath -Recurse -Force
+        Write-Ok "Restored yazi config from $yaziBackupPath"
+        $restoredAny = $true
+    }
+
+    if (-not $restoredAny) {
+        Write-Fail "No backup found - nothing to undo"
+    }
 }
 
 function Invoke-GwbApplyProfile {
@@ -163,6 +220,12 @@ function Invoke-GwbApplyProfile {
 
     Write-Step "Configuring Starship"
     Install-GwbStarshipConfig -WhatIf:$WhatIf
+
+    $yaziConfig = Join-Path $ProfileDir "yazi-config"
+    if (Test-Path $yaziConfig) {
+        Write-Step "Configuring yazi"
+        Install-GwbYaziConfig -SourceDir $yaziConfig -WhatIf:$WhatIf
+    }
 
     Write-Step "Registering 'gwb' command + tab-completion"
     Install-GwbSelfRegistration -GwbRoot $GwbRoot -WhatIf:$WhatIf

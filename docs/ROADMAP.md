@@ -65,8 +65,10 @@ developer/server split.
 ### Completed
 
 - `default` — core CLI toolkit: `eza`, `fzf`, `lf`, `ripgrep`, `fd`,
-  `bat`, `starship`, plus a `$PROFILE` snippet (eza aliases, `bat` as
-  `cat`, fzf options, Starship prompt init).
+  `bat`, `starship`, `yazi` (2026-08-13, ported from GLB, alongside
+  `lf` not replacing it — see `CLAUDE.md`'s Working notes), plus a
+  `$PROFILE` snippet (eza aliases, `bat` as `cat`, fzf options,
+  Starship prompt init).
 - **`developer`** (2026-08-11) — same foundation as `default` plus
   `git`, `jq`, `gh`, `mise`, Fresh (editor), MinGW/gcc (build
   toolchain). **No container tooling** — Docker Desktop/Podman Desktop
@@ -205,7 +207,21 @@ bugs caught and fixed (a mixed-line-endings false-positive diff, and
 
 ### Planned
 
-(none — Version 0.6 is now fully complete)
+(none — Version 0.6 is now fully complete against its original scope)
+
+### Known gap, not yet addressed
+
+- **`gwb export`/`diff`/`repair` don't know about `yazi-config/`**
+  (added 2026-08-13) — they only track `packages.txt`, `modules.txt`,
+  and `profile-snippet.ps1`. A change to a profile's `yazi-config/`
+  files (or the deployed `$env:APPDATA\yazi\config` drifting from it)
+  is currently invisible to all three commands. Same class of gap as
+  GLB's own "extras.txt packages aren't reverse-mapped by `glb export`"
+  note — flagged rather than silently left undiscovered. Fixing this
+  for real would mean generalizing `lib/export.ps1`/`diff.ps1`/
+  `repair.ps1` beyond flat text-file tracking to arbitrary config-file
+  trees, which is real scope beyond a single package port - not
+  started.
 
 ---
 

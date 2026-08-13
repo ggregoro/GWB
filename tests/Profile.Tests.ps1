@@ -154,6 +154,68 @@ Describe "Install-GwbStarshipConfig" {
     }
 }
 
+Describe "Install-GwbYaziConfig" {
+    BeforeEach {
+        $script:sourceDir = Join-Path $env:TEMP "gwb-pester-yazi-src-$([guid]::NewGuid())"
+        New-Item -ItemType Directory -Path $script:sourceDir -Force | Out-Null
+        Set-Content -Path (Join-Path $script:sourceDir "yazi.toml") -Value "source yazi.toml"
+        New-Item -ItemType Directory -Path (Join-Path $script:sourceDir "plugins\git.yazi") -Force | Out-Null
+        Set-Content -Path (Join-Path $script:sourceDir "plugins\git.yazi\main.lua") -Value "source main.lua"
+
+        $script:destDir = Join-Path $env:TEMP "gwb-pester-yazi-dest-$([guid]::NewGuid())"
+    }
+
+    AfterEach {
+        Remove-Item $script:sourceDir -Recurse -Force -ErrorAction SilentlyContinue
+        Remove-Item $script:destDir -Recurse -Force -ErrorAction SilentlyContinue
+        Remove-Item "$script:destDir.gwb-backup" -Recurse -Force -ErrorAction SilentlyContinue
+    }
+
+    It "copies the config (including nested plugin files) to the destination when none exists" {
+        Install-GwbYaziConfig -SourceDir $script:sourceDir -DestDir $script:destDir
+        (Get-Content (Join-Path $script:destDir "yazi.toml") -Raw) | Should -Match "source yazi.toml"
+        (Get-Content (Join-Path $script:destDir "plugins\git.yazi\main.lua") -Raw) | Should -Match "source main.lua"
+    }
+
+    It "fails cleanly when the source directory doesn't exist" {
+        { Install-GwbYaziConfig -SourceDir (Join-Path $env:TEMP "does-not-exist-$([guid]::NewGuid())") -DestDir $script:destDir } | Should -Not -Throw
+        (Test-Path $script:destDir) | Should -Be $false
+    }
+
+    It "backs up an existing config exactly once, on first touch" {
+        New-Item -ItemType Directory -Path $script:destDir -Force | Out-Null
+        Set-Content -Path (Join-Path $script:destDir "yazi.toml") -Value "pre-existing user config"
+
+        Install-GwbYaziConfig -SourceDir $script:sourceDir -DestDir $script:destDir
+
+        $backupPath = "$script:destDir.gwb-backup"
+        (Test-Path $backupPath) | Should -Be $true
+        (Get-Content (Join-Path $backupPath "yazi.toml") -Raw) | Should -Match "pre-existing user config"
+        # And the destination itself now has the new (source) content.
+        (Get-Content (Join-Path $script:destDir "yazi.toml") -Raw) | Should -Match "source yazi.toml"
+    }
+
+    It "never overwrites an existing backup on a later re-apply (regression: don't clobber the true original)" {
+        New-Item -ItemType Directory -Path $script:destDir -Force | Out-Null
+        Set-Content -Path (Join-Path $script:destDir "yazi.toml") -Value "the real original config"
+
+        Install-GwbYaziConfig -SourceDir $script:sourceDir -DestDir $script:destDir
+        # Simulate a later re-apply after the destination has since changed
+        # again (e.g. a second restore) - the backup must still hold the
+        # true original, not this intermediate content.
+        Set-Content -Path (Join-Path $script:destDir "yazi.toml") -Value "intermediate content"
+        Install-GwbYaziConfig -SourceDir $script:sourceDir -DestDir $script:destDir
+
+        $backupPath = "$script:destDir.gwb-backup"
+        (Get-Content (Join-Path $backupPath "yazi.toml") -Raw) | Should -Match "the real original config"
+    }
+
+    It "does not write anything under -WhatIf" {
+        Install-GwbYaziConfig -SourceDir $script:sourceDir -DestDir $script:destDir -WhatIf
+        (Test-Path $script:destDir) | Should -Be $false
+    }
+}
+
 Describe "Get-GwbProfileList / Get-GwbProfileDescription" {
     BeforeEach {
         $script:profilesRoot = Join-Path $env:TEMP "gwb-pester-profiles-$([guid]::NewGuid())"
@@ -192,23 +254,52 @@ Describe "Undo-GwbRestore" {
     BeforeEach {
         $script:realProfile = $global:PROFILE
         $global:PROFILE = New-GwbTempProfilePath
+        # Isolated, not the real $env:APPDATA\yazi\config - this machine
+        # may genuinely have a yazi config/backup already (see
+        # Install-GwbYaziConfig tests below), and Undo-GwbRestore must
+        # never touch real user data during a unit test.
+        $script:yaziConfigPath = Join-Path $env:TEMP "gwb-pester-undo-yazi-$([guid]::NewGuid())"
     }
 
     AfterEach {
         Remove-Item $global:PROFILE -Force -ErrorAction SilentlyContinue
         Remove-Item "$global:PROFILE.gwb-backup" -Force -ErrorAction SilentlyContinue
+        Remove-Item $script:yaziConfigPath -Recurse -Force -ErrorAction SilentlyContinue
+        Remove-Item "$script:yaziConfigPath.gwb-backup" -Recurse -Force -ErrorAction SilentlyContinue
         $global:PROFILE = $script:realProfile
     }
 
     It "fails cleanly when no backup exists" {
-        { Undo-GwbRestore } | Should -Not -Throw
+        { Undo-GwbRestore -YaziConfigPath $script:yaziConfigPath } | Should -Not -Throw
     }
 
     It "restores real backup content" {
         Set-Content -Path "$global:PROFILE.gwb-backup" -Value "original content"
         Set-Content -Path $global:PROFILE -Value "modified content"
-        Undo-GwbRestore
+        Undo-GwbRestore -YaziConfigPath $script:yaziConfigPath
         (Get-Content $global:PROFILE -Raw) | Should -Match "original content"
+    }
+
+    It "restores the yazi config from its backup, replacing whatever is currently there" {
+        New-Item -ItemType Directory -Path "$script:yaziConfigPath.gwb-backup" -Force | Out-Null
+        Set-Content -Path (Join-Path "$script:yaziConfigPath.gwb-backup" "yazi.toml") -Value "original yazi config"
+        New-Item -ItemType Directory -Path $script:yaziConfigPath -Force | Out-Null
+        Set-Content -Path (Join-Path $script:yaziConfigPath "yazi.toml") -Value "modified yazi config"
+
+        Undo-GwbRestore -YaziConfigPath $script:yaziConfigPath
+
+        (Get-Content (Join-Path $script:yaziConfigPath "yazi.toml") -Raw) | Should -Match "original yazi config"
+    }
+
+    It "restores both `$PROFILE and the yazi config when both have backups" {
+        Set-Content -Path "$global:PROFILE.gwb-backup" -Value "original profile"
+        New-Item -ItemType Directory -Path "$script:yaziConfigPath.gwb-backup" -Force | Out-Null
+        Set-Content -Path (Join-Path "$script:yaziConfigPath.gwb-backup" "yazi.toml") -Value "original yazi config"
+
+        Undo-GwbRestore -YaziConfigPath $script:yaziConfigPath
+
+        (Get-Content $global:PROFILE -Raw) | Should -Match "original profile"
+        (Get-Content (Join-Path $script:yaziConfigPath "yazi.toml") -Raw) | Should -Match "original yazi config"
     }
 }
 
@@ -227,6 +318,9 @@ Describe "Invoke-GwbApplyProfile" {
         # explicit -ConfigPath - mocked here so this block never touches the
         # real machine's ~/.config/starship.toml.
         Mock Install-GwbStarshipConfig { }
+        # Same reasoning, for $env:APPDATA\yazi\config - real behavior is
+        # covered by its own Describe block above with an explicit -DestDir.
+        Mock Install-GwbYaziConfig { }
     }
 
     AfterEach {
@@ -257,5 +351,20 @@ Describe "Invoke-GwbApplyProfile" {
         Invoke-GwbApplyProfile -ProfileDir $script:profileDir -ProfileName "test" -WhatIf
         Should -Invoke Install-Module -Times 0
         (Test-Path $global:PROFILE) | Should -Be $false
+    }
+
+    It "does not configure yazi when the profile ships no yazi-config directory" {
+        Invoke-GwbApplyProfile -ProfileDir $script:profileDir -ProfileName "test"
+        Should -Invoke Install-GwbYaziConfig -Times 0
+    }
+
+    It "configures yazi with the profile's yazi-config directory when one is present" {
+        $yaziConfigSource = Join-Path $script:profileDir "yazi-config"
+        New-Item -ItemType Directory -Path $yaziConfigSource -Force | Out-Null
+        Set-Content -Path (Join-Path $yaziConfigSource "yazi.toml") -Value "test config"
+
+        Invoke-GwbApplyProfile -ProfileDir $script:profileDir -ProfileName "test"
+
+        Should -Invoke Install-GwbYaziConfig -Times 1 -ParameterFilter { $SourceDir -eq $yaziConfigSource }
     }
 }

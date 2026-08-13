@@ -7,3 +7,8 @@ ripgrep
 fd
 bat
 starship
+
+# File manager alternative to lf (kept, not replaced) - stronger plugin
+# support (git status, configured below via Install-GwbYaziConfig).
+# Ported from GLB's default profile.
+yazi

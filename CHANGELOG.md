@@ -288,3 +288,17 @@ This project follows a simple versioning approach:
   this only affects fresh installs - an already-written `100` from an
   older checkout needs a manual bump, documented in
   `docs/troubleshooting.md`.
+- Added `yazi` to the `default` profile, alongside `lf` (not
+  replacing it) - ported from GLB's own `default` profile. Installed
+  via winget (`"yazi" = "sxyazi.yazi"` in `_GWB_PACKAGE_OVERRIDES`,
+  `lib/packages.ps1`). Ships with the `yazi-rs/plugins:git` git-status
+  plugin pre-configured, vendored as static config
+  (`profiles/default/yazi-config/`) rather than fetched via `ya pkg
+  add` at restore time, matching GLB's own choice for consistency (even
+  though the Windows `ya` CLI, unlike GLB's snap build, is reliably on
+  PATH via winget/scoop). Added `Install-GwbYaziConfig`
+  (`lib/profile.ps1`) - GWB's first app-config-file deployer beyond
+  Starship's `scan_timeout`, copying a profile's `yazi-config/`
+  directory into `$env:APPDATA\yazi\config` and backing up any real
+  pre-existing content exactly once. Extended `Undo-GwbRestore` to also
+  restore that backup, alongside `$PROFILE`'s.
