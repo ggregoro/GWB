@@ -2,6 +2,17 @@
 # GWB managed-block markers. Keep this idempotent and side-effect-free
 # beyond function/alias/prompt definitions.
 
+# The MSIX-packaged PowerShell app (and elevated/"Run as administrator"
+# launches in general) can start the shell in C:\Windows\System32
+# regardless of any shortcut or Windows Terminal startingDirectory
+# setting - confirmed directly (a taskbar pin resolving to
+# Microsoft.PowerShell_8wekyb3d8bbwe!App, no Windows Terminal settings
+# involved at all). Reset only when that's literally where we landed, so
+# a deliberate "start here" shortcut elsewhere is never overridden.
+if ($PWD.Path -eq (Join-Path $env:SystemRoot "System32")) {
+    Set-Location $env:USERPROFILE
+}
+
 if (Get-Command eza -ErrorAction SilentlyContinue) {
     # PowerShell ships a built-in `ls` -> Get-ChildItem alias, and alias
     # resolution always wins over a same-named function - confirmed

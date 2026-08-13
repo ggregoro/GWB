@@ -249,3 +249,24 @@ This project follows a simple versioning approach:
   `$PROFILE` - confirmed `~/.config/starship.toml` created with
   `scan_timeout = 100`, and a second restore correctly left it
   untouched (idempotent).
+- Added a guarded `Set-Location` at the top of all three profiles'
+  `profile-snippet.ps1`: resets the shell to `$env:USERPROFILE` when it
+  starts in `C:\Windows\System32`, and only then. Real gap Greg hit
+  live, separate from the Starship fix above: his PowerShell taskbar
+  icon turned out to be pinned to the MSIX-packaged
+  `Microsoft.PowerShell_8wekyb3d8bbwe!App` (not Windows Terminal at
+  all - confirmed by decoding the taskbar pin's registry data directly,
+  after a `startingDirectory` edit to Windows Terminal's own
+  `settings.json` had no effect), launched elevated. Elevated/packaged-
+  app launches default their working directory to `System32`
+  regardless of any shortcut or Windows Terminal setting - there's no
+  shortcut-level fix for this, so the reset lives in `$PROFILE` itself,
+  which always runs regardless of how the shell started. Verified for
+  real: launched a real `pwsh` process with its working directory
+  forced to `System32` (Windows still lands there for a fresh
+  `pwsh -Command` invocation, same as the packaged-app/elevation case)
+  and confirmed the live `$PROFILE` reset it to `$env:USERPROFILE`;
+  launched a second real process starting in
+  `C:\Users\ggreg\Projects` and confirmed that one was left alone,
+  proving the guard doesn't clobber a deliberate starting directory
+  elsewhere.

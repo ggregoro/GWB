@@ -130,6 +130,36 @@ it isn't already set. Re-run `gwb restore <profile>` (or `gwb repair
 Add-Content "$env:USERPROFILE\.config\starship.toml" "scan_timeout = 100"
 ```
 
+If you're consistently launching into `System32`, see the next entry —
+GWB now handles the most common cause of that automatically.
+
+---
+
+## PowerShell always starts in `C:\Windows\System32`
+
+**Confirmed** — hit directly by Greg via a taskbar-pinned icon.
+
+**Symptom**: every new shell starts in `C:\Windows\System32` instead of
+your home directory, regardless of any shortcut "Start in" field or
+Windows Terminal `startingDirectory` setting.
+
+**Cause**: the MSIX-packaged PowerShell app
+(`Microsoft.PowerShell_8wekyb3d8bbwe!App`, distinct from Windows
+Terminal) and elevated ("Run as administrator") launches in general
+default their working directory to `System32` — there's no
+shortcut-level setting that overrides this for a packaged or elevated
+launch, unlike a classic `.lnk`'s "Start in" field.
+
+**Fix**: as of the guard added to `profile-snippet.ps1` (see
+`CHANGELOG.md`), GWB resets to `$env:USERPROFILE` automatically
+whenever a shell starts in `System32`, and only then — any other
+starting directory (including a deliberate one from a real shortcut) is
+left alone. Re-run `gwb restore <profile>` on an older checkout to pick
+it up. If you want to jump to a specific working directory instead
+(e.g. a projects folder), add your own function/alias directly to
+`$PROFILE` **outside** the `# >>> GWB managed block >>>` markers so it
+survives future restores untouched.
+
 ---
 
 ## `eza`/Starship icons render as boxes or blanks
