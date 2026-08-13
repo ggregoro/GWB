@@ -105,6 +105,33 @@ Installation instructions.
 
 ---
 
+## Starship prints `Scanning current directory timed out` on every prompt
+
+**Confirmed** — hit directly by Greg in a real terminal.
+
+**Symptom**: every new PowerShell window prints
+`[WARN] - (starship::context): Scanning current directory timed out.`
+before the prompt, most often when the shell starts in a large
+directory like `C:\Windows\System32` (e.g. an elevated/Administrator
+shell, which defaults there).
+
+**Cause**: Starship scans the current directory on every prompt render
+to decide which language/tool modules to show, with a default
+`scan_timeout` of just 30ms — too tight for a large or cold-cache
+directory.
+
+**Fix**: as of the `Install-GwbStarshipConfig` step added to
+`restore`/`repair` (see `CHANGELOG.md`), GWB writes
+`scan_timeout = 100` into `~/.config/starship.toml` automatically if
+it isn't already set. Re-run `gwb restore <profile>` (or `gwb repair
+<profile>`) on an older checkout to pick it up. To set it manually:
+
+```powershell
+Add-Content "$env:USERPROFILE\.config\starship.toml" "scan_timeout = 100"
+```
+
+---
+
 ## `eza`/Starship icons render as boxes or blanks
 
 **Anticipated** — the same class of issue GLB documents extensively for

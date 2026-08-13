@@ -22,6 +22,9 @@ Describe "Invoke-GwbRepair" {
         Mock winget { $global:LASTEXITCODE = 0 }
         Mock Get-Module { $null }
         Mock Install-Module { }
+        # Invoke-GwbRepair goes through the real Invoke-GwbApplyProfile path -
+        # mocked so this suite never touches the real ~/.config/starship.toml.
+        Mock Install-GwbStarshipConfig { }
     }
 
     AfterEach {

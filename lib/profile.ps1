@@ -91,6 +91,41 @@ function Install-GwbProfileSnippet {
         -Content $snippetContent -Label "Profile" -WhatIf:$WhatIf
 }
 
+function Install-GwbStarshipConfig {
+    param(
+        [string]$ConfigPath = (Join-Path $env:USERPROFILE ".config\starship.toml"),
+        [switch]$WhatIf
+    )
+
+    if (-not (Get-Command starship -ErrorAction SilentlyContinue)) { return }
+
+    # Never touch an existing scan_timeout - only fill it in when absent,
+    # the same "don't clobber what's already there" rule Set-GwbManagedBlock
+    # follows for $PROFILE. Starship's own 30ms default times out scanning
+    # large directories (e.g. C:\Windows\System32), printing a warning on
+    # every prompt render.
+    if ((Test-Path $ConfigPath) -and (Select-String -Path $ConfigPath -Pattern '^\s*scan_timeout\s*=' -Quiet -ErrorAction SilentlyContinue)) {
+        return
+    }
+
+    if ($WhatIf) {
+        Write-Info "[WhatIf] Would set scan_timeout in $ConfigPath"
+        return
+    }
+
+    $configDir = Split-Path -Parent $ConfigPath
+    if (-not (Test-Path $configDir)) {
+        New-Item -ItemType Directory -Path $configDir -Force | Out-Null
+    }
+
+    if (-not (Test-Path $ConfigPath)) {
+        Set-Content -Path $ConfigPath -Value "scan_timeout = 100`n" -NoNewline
+    } else {
+        Add-Content -Path $ConfigPath -Value "`nscan_timeout = 100"
+    }
+    Write-Ok "Starship config updated: $ConfigPath (scan_timeout = 100)"
+}
+
 function Undo-GwbRestore {
     $backupPath = "$PROFILE.gwb-backup"
     if (-not (Test-Path $backupPath)) {
@@ -125,6 +160,9 @@ function Invoke-GwbApplyProfile {
     Write-Step "Wiring up PowerShell profile"
     $snippet = Join-Path $ProfileDir "profile-snippet.ps1"
     Install-GwbProfileSnippet -SnippetPath $snippet -WhatIf:$WhatIf
+
+    Write-Step "Configuring Starship"
+    Install-GwbStarshipConfig -WhatIf:$WhatIf
 
     Write-Step "Registering 'gwb' command + tab-completion"
     Install-GwbSelfRegistration -GwbRoot $GwbRoot -WhatIf:$WhatIf

@@ -231,3 +231,21 @@ This project follows a simple versioning approach:
   the live `$PROFILE` in a fresh process and confirmed `Get-Command far
   -All` resolves to the function with the correct path and no leaked
   `$GwbFarExe` variable in scope.
+- Added `Install-GwbStarshipConfig` (`lib/profile.ps1`), run by every
+  `restore`/`repair`: ensures `~/.config/starship.toml` has
+  `scan_timeout = 100` set, raised from Starship's own default of 30ms.
+  Real gap Greg hit live: opening PowerShell showed a
+  `Scanning current directory timed out` warning on every prompt when
+  the shell's starting directory was `C:\Windows\System32` (a large
+  system directory), something no shipped profile's Starship setup had
+  ever addressed - GWB installs Starship but had never written it a
+  config file at all. Idempotent and non-destructive: only fills in
+  `scan_timeout` when the setting isn't already present, never
+  overwriting a value the user set themselves, matching
+  `Set-GwbManagedBlock`'s own "never clobber existing content" rule for
+  `$PROFILE`. Verified for real: 5 new Pester tests (create, append to
+  an existing config, don't-clobber, `-WhatIf`, starship-not-installed)
+  plus a real `gwb.ps1 restore developer` against this machine's actual
+  `$PROFILE` - confirmed `~/.config/starship.toml` created with
+  `scan_timeout = 100`, and a second restore correctly left it
+  untouched (idempotent).

@@ -136,7 +136,7 @@ Invoke-Pester -Path tests/
 A [Pester](https://pester.dev/) suite (GWB's analogue of GLB's `bats`
 suite) — `winget`/`Install-Module` are mocked and `$PROFILE` is
 overridden to a temp path, so it's safe to run; nothing real gets
-touched. 88 tests, one file roughly per `lib/` module plus
+touched. 93 tests, one file roughly per `lib/` module plus
 `Dispatcher.Tests.ps1` for real end-to-end command coverage and
 `Install.Tests.ps1` for `install.ps1`. See
 [`docs/design/pester-test-suite.md`](docs/design/pester-test-suite.md).
@@ -153,7 +153,7 @@ drift), the `gwb` command + tab-completion, the `install.ps1`
 one-liner, and a Pester test suite are all built and verified — real
 restores on a real machine (idempotency, the backup/undo round-trip,
 real drift detection, real `TabExpansion2` results, a real fresh
-install + update-in-place against the live public repo) plus 88
+install + update-in-place against the live public repo) plus 93
 automated tests. All of GLB's own Version 0.1–0.6 equivalents are now
 ported, and the repo is public. **One deliberate, permanent non-goal**:
 IPBan (`server`'s fail2ban equivalent) needs Administrator elevation

@@ -110,6 +110,50 @@ Describe "Install-GwbProfileSnippet" {
     }
 }
 
+Describe "Install-GwbStarshipConfig" {
+    BeforeEach {
+        $script:configPath = Join-Path $env:TEMP "gwb-pester-starship-$([guid]::NewGuid())\starship.toml"
+    }
+
+    AfterEach {
+        Remove-Item (Split-Path -Parent $script:configPath) -Recurse -Force -ErrorAction SilentlyContinue
+    }
+
+    It "creates the config file with scan_timeout when none exists" {
+        Install-GwbStarshipConfig -ConfigPath $script:configPath
+        (Get-Content $script:configPath -Raw) | Should -Match "scan_timeout = 100"
+    }
+
+    It "appends scan_timeout to an existing config that lacks it" {
+        New-Item -ItemType Directory -Path (Split-Path -Parent $script:configPath) -Force | Out-Null
+        Set-Content -Path $script:configPath -Value "add_newline = false"
+        Install-GwbStarshipConfig -ConfigPath $script:configPath
+        $content = Get-Content $script:configPath -Raw
+        $content | Should -Match "add_newline = false"
+        $content | Should -Match "scan_timeout = 100"
+    }
+
+    It "never overwrites an existing scan_timeout (regression: don't clobber user customization)" {
+        New-Item -ItemType Directory -Path (Split-Path -Parent $script:configPath) -Force | Out-Null
+        Set-Content -Path $script:configPath -Value "scan_timeout = 500"
+        Install-GwbStarshipConfig -ConfigPath $script:configPath
+        $content = Get-Content $script:configPath -Raw
+        $content | Should -Match "scan_timeout = 500"
+        ([regex]::Matches($content, "scan_timeout")).Count | Should -Be 1
+    }
+
+    It "does not write anything under -WhatIf" {
+        Install-GwbStarshipConfig -ConfigPath $script:configPath -WhatIf
+        (Test-Path $script:configPath) | Should -Be $false
+    }
+
+    It "does nothing when starship isn't installed" {
+        Mock Get-Command { $null } -ParameterFilter { $Name -eq "starship" }
+        Install-GwbStarshipConfig -ConfigPath $script:configPath
+        (Test-Path $script:configPath) | Should -Be $false
+    }
+}
+
 Describe "Get-GwbProfileList / Get-GwbProfileDescription" {
     BeforeEach {
         $script:profilesRoot = Join-Path $env:TEMP "gwb-pester-profiles-$([guid]::NewGuid())"
@@ -179,6 +223,10 @@ Describe "Invoke-GwbApplyProfile" {
         Mock winget { $global:LASTEXITCODE = 0 }
         Mock Get-Module { $null }
         Mock Install-Module { }
+        # Real behavior is covered by its own Describe block below with an
+        # explicit -ConfigPath - mocked here so this block never touches the
+        # real machine's ~/.config/starship.toml.
+        Mock Install-GwbStarshipConfig { }
     }
 
     AfterEach {
