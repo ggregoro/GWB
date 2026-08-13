@@ -136,7 +136,7 @@ Invoke-Pester -Path tests/
 A [Pester](https://pester.dev/) suite (GWB's analogue of GLB's `bats`
 suite) — `winget`/`Install-Module` are mocked and `$PROFILE` is
 overridden to a temp path, so it's safe to run; nothing real gets
-touched. 93 tests, one file roughly per `lib/` module plus
+touched. 103 tests, one file roughly per `lib/` module plus
 `Dispatcher.Tests.ps1` for real end-to-end command coverage and
 `Install.Tests.ps1` for `install.ps1`. See
 [`docs/design/pester-test-suite.md`](docs/design/pester-test-suite.md).

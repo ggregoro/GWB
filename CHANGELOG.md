@@ -302,3 +302,27 @@ This project follows a simple versioning approach:
   directory into `$env:APPDATA\yazi\config` and backing up any real
   pre-existing content exactly once. Extended `Undo-GwbRestore` to also
   restore that backup, alongside `$PROFILE`'s.
+- Verified the yazi port for real (built in a cloud session with no
+  `pwsh`, so only parse-reviewed until now): full Pester suite 103/103,
+  a real `winget install sxyazi.yazi`, and `Install-GwbYaziConfig`
+  called directly (isolated from `$PROFILE`, so this machine's live
+  `developer` setup was left untouched) - confirmed the deployed config
+  at `$env:APPDATA\yazi\config` is byte-identical to the source, and
+  `yazi --debug` confirms both `init.lua` and `yazi.toml` genuinely
+  load with no error, meaning the `git.yazi` plugin actually
+  initializes. Also confirmed the backup-on-first-touch and
+  never-clobber-an-existing-backup behavior for real (a second apply
+  creates `config.gwb-backup`; a planted canary file survives a third
+  apply untouched).
+- Fixed a real test-isolation gap the verification above surfaced:
+  `Dispatcher.Tests.ps1`'s "restore --undo fails cleanly with no backup
+  present" test called the real `gwb.ps1` script, which calls
+  `Undo-GwbRestore` with no `-YaziConfigPath` override, so it resolved
+  the real `$env:APPDATA\yazi\config.gwb-backup` - the moment this
+  machine had a genuine yazi backup on disk (from the verification
+  above), the test started failing, since the real backup restore
+  message no longer matched the expected "nothing to undo" text. The
+  unit-level `Undo-GwbRestore` tests in `Profile.Tests.ps1` were already
+  correctly isolated via `-YaziConfigPath`; only this one dispatcher-
+  level end-to-end test was exposed. Fixed by scoping `$env:APPDATA` to
+  a fresh temp directory for just that one test.

@@ -61,8 +61,9 @@ breakdown — this section is a snapshot, that file is the source of truth.
   when a profile actually ships a `yazi-config/` directory, same
   `Test-Path`-gated pattern as `modules.txt` and
   `windows-terminal-settings.json`). Ported from GLB's own `default`
-  profile — see the Working notes entry below for the full port and
-  what's not yet verified.
+  profile — see the Working notes entry below for the full port and its
+  real verification (yazi installed, config deployed byte-identical,
+  `yazi --debug` confirms the config/plugin load with no errors).
 - A `gwb` command + tab-completion is installed into `$PROFILE`
   automatically on every restore (a separate managed block from the
   profile snippet) — commands, profile/snapshot names, and package
@@ -77,7 +78,7 @@ breakdown — this section is a snapshot, that file is the source of truth.
   install documented in `docs/reference/ipban-manual-install.md`.
   Recorded as a durable principle in `docs/PROJECT.md`'s Non-Goals, not
   just a one-off note.
-- A Pester test suite (`tests/`, 93 tests) mocks `winget`/
+- A Pester test suite (`tests/`, 103 tests) mocks `winget`/
   `Install-Module` and overrides `$PROFILE`, including real
   dispatcher-level coverage (dot-sources `gwb.ps1` itself with `Mock`
   still active). Run with `Invoke-Pester -Path tests/`.
@@ -126,13 +127,9 @@ and the Working notes entry below for what that surfaced). GWB is
 feature-complete against GLB's Version 0.1–0.6, publicly released, and
 its own installer is confirmed working end to end on real hardware.
 
-**One item queued, not yet verified**: yazi was just ported from GLB
-(see Working notes below) — built in a cloud session with no `pwsh`
-available (same situation `install.ps1` was in originally), so it's
-parse-reviewed but not yet actually executed. Needs a real `Invoke-Pester
--Path tests/` run plus a live `gwb.ps1 restore default` on Greg's
-Windows 11 machine before this is genuinely done, matching the
-Conventions section's own "verify for real" rule below.
+yazi (ported from GLB, built in a cloud session with no `pwsh`) is now
+also **verified for real** — see the Working notes entry below.
+**Nothing currently queued.**
 
 ## Conventions
 
@@ -154,6 +151,93 @@ Conventions section's own "verify for real" rule below.
   re-derive context.
 
 ## Working notes
+
+- **Session (2026-08-13, real Windows 11 machine, follow-up): verified
+  the yazi port for real, closing out the one thing the cloud session
+  below flagged as unverified.** Pulled `f06ae92` from GitHub (the
+  cloud session's push had genuinely made it up, despite an earlier
+  false alarm this same day about it not being pushed — see below).
+  - `Invoke-Pester -Path tests/`: **103/103**, up from 93 — all 10 new
+    yazi tests pass for real, not just parse-reviewed.
+  - Installed `yazi` for real via `winget install sxyazi.yazi` (clean
+    machine, nothing pre-installed) — `26.5.6`, confirmed via
+    `yazi --version`.
+  - Deployed the config for real by calling `Install-GwbYaziConfig`
+    directly with an explicit `-SourceDir` (the function's own
+    `-ConfigPath`-style isolation parameter, same pattern
+    `Install-GwbStarshipConfig` already established) — deliberately
+    **not** via a full `gwb.ps1 restore default`, since that would have
+    switched this machine's live `$PROFILE` from `developer` to
+    `default`, a real disruptive side effect well beyond what
+    "verify yazi" actually needed. `Install-GwbYaziConfig` itself never
+    touches `$PROFILE` at all, so this was safe to call in isolation.
+    Confirmed the deployed files at `$env:APPDATA\yazi\config` are
+    byte-identical to the source (`diff -rq`, zero output).
+  - **Confirmed the config genuinely loads, not just that the files
+    exist**: `yazi --debug` reports `Init` (39 chars) and `Yazi`
+    (177 chars) loaded from the real deployed paths, sizes matching the
+    source files exactly, and the full debug dump completes with no
+    Lua/plugin error — meaning `init.lua`'s `require("git"):setup{...}`
+    genuinely executed. No pty available in this environment to
+    visually confirm the git-status icons render in the live TUI, but
+    this is real confirmation the config parses and the plugin loads,
+    not just that files landed in the right place.
+  - **Verified the backup-on-first-touch and never-clobber-an-existing-
+    backup behavior for real**, not just via the Pester tests that
+    already cover it in isolation: called `Install-GwbYaziConfig` a
+    second time (config now existed) and confirmed
+    `config.gwb-backup` was created; planted a canary file inside that
+    backup, called it a third time, and confirmed the canary survived
+    untouched — matching `Set-GwbManagedBlock`'s own rule for
+    `$PROFILE`, now genuinely confirmed for yazi's backup path too, not
+    just asserted by a test double. Canary cleaned up afterward; the
+    real yazi install and deployed config were deliberately left in
+    place rather than torn down, matching how every other GWB feature
+    in this file has been verified (a real install left in a real
+    working state, not undone after the check).
+  - **Deliberately did not exercise `Undo-GwbRestore`'s new yazi-restore
+    branch live** — it also unconditionally restores `$PROFILE` from
+    `$PROFILE.gwb-backup` with no way to isolate just the yazi half,
+    and this machine's real `$PROFILE` is the live `developer` setup
+    from earlier today; calling it for real would have silently
+    reverted that. Covered by the Pester suite only, same as the
+    original cloud session's own build.
+  - **A real test-isolation bug this verification pass itself
+    surfaced, caught by re-running the full suite after leaving the
+    real yazi install/config in place**: `Dispatcher.Tests.ps1`'s
+    "restore --undo fails cleanly with no backup present" test started
+    failing (102/103) right after the backup-preservation check above
+    left a genuine `$env:APPDATA\yazi\config.gwb-backup` on this
+    machine. Root cause: that test calls the real `gwb.ps1` script,
+    which calls `Undo-GwbRestore` with no `-YaziConfigPath` override at
+    all (`gwb.ps1` line 136) — so it resolves the *real* host path,
+    unlike `Profile.Tests.ps1`'s own `Undo-GwbRestore` tests, which were
+    already correctly isolated via `-YaziConfigPath` by the cloud
+    session that built this. A textbook instance of this project's own
+    recurring "real machine state leaks into a test that assumed a
+    clean host" pattern (same class as GLB's many documented
+    `fresh`-on-`PATH` gaps) — except this time the leak was created by
+    this very session's own real verification, and caught within
+    minutes by simply re-running the suite afterward rather than
+    trusting the earlier clean pass. Fixed by scoping `$env:APPDATA` to
+    a fresh temp directory for just that one test; 103/103 confirmed
+    stable across two more runs, and the real yazi backup on disk was
+    confirmed untouched by the fix.
+  - **Earlier the same day, a real false alarm, now resolved**: Greg
+    reported the yazi work as not pushed after a prior "close it out"
+    checkpoint; a direct `git fetch`/`pull` here found it actually was
+    on `origin/master` all along (`f06ae92`) — a miscommunication
+    about what had landed, not a real lost-work incident. Worth noting
+    only so a future session doesn't go looking for a genuine gap that
+    never existed.
+  - **`yazi` is now genuinely available and configured on this
+    machine** as a real side effect of this verification pass — not
+    wired into the live `$PROFILE` (that only happens via a real
+    `gwb.ps1 restore default`, deliberately not run this session for
+    the reason above), but `yazi` itself works from any shell right now
+    with the git-status plugin active.
+  - Working tree clean, everything pushed to `master` as of this note
+    (see the commit this note ships in). **Nothing queued.**
 
 - **Session (2026-08-13, cloud session, no `pwsh` available): ported
   yazi from GLB — `default` profile only, alongside `lf` (not
