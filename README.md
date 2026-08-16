@@ -10,12 +10,27 @@ every time a machine gets reimaged.
 
 GLB solves this for Linux; GWB solves it for the Windows boxes in the
 same rotation — a modern `ls`/`cat` (`eza`, `bat`), fuzzy search (`fzf`),
-fast search (`ripgrep`, `fd`), a terminal file manager (`lf`), and a
+fast search (`ripgrep`, `fd`), two terminal file managers (`lf` and
+`yazi`, the latter with a git-status plugin pre-configured), and a
 clean prompt (Starship), applied in one pass as a reusable **profile**: a
 package list plus a `$PROFILE` snippet.
 
 GWB enhances the terminal you already have — it doesn't install or
 replace it. See [`docs/PHILOSOPHY.md`](docs/PHILOSOPHY.md) for why.
+
+## Screenshots
+
+**A real `fastfetch` system-info banner**, captured on Greg's own
+Windows 11 machine, with the GWB-configured Starship `pwsh` prompt
+visible below it (`fastfetch` itself isn't a GWB package — Greg
+installed it separately):
+
+![fastfetch banner](docs/images/fastfetch-banner.png)
+
+**`yazi` browsing a real directory**, with the GWB/GLB checkouts visible
+in the preview pane:
+
+![yazi file browser](docs/images/yazi-file-browser.png)
 
 ## Architecture
 
@@ -59,6 +74,11 @@ the full module breakdown.
   Icons (file-type icons in `Get-ChildItem`). PSReadLine's predictive
   IntelliSense is configured directly since it already ships with
   PowerShell 7.
+- **yazi**, pre-configured with the `git.yazi` status plugin (vendored,
+  not fetched at restore time) and a real MIME-type-detection
+  dependency (`file`) wired onto `PATH`, since winget doesn't do that
+  automatically for either tool. Ported from GLB's own `default`
+  profile, then to all three of GWB's.
 
 ## Installation
 
@@ -116,7 +136,7 @@ gwb repair <profile>        Check this machine against a profile
 
 | Profile | Installs |
 |---|---|
-| `default` | `eza`, `fzf`, `lf`, `ripgrep`, `fd`, `bat`, `starship` + PSFzf/Terminal-Icons + a `$PROFILE` snippet (eza aliases, `bat` as `cat`, fzf options, PSFzf/Terminal-Icons/PSReadLine activation, Starship prompt init). |
+| `default` | `eza`, `fzf`, `lf`, `ripgrep`, `fd`, `bat`, `starship`, `yazi` + `file` (yazi's MIME-detection dependency) + PSFzf/Terminal-Icons + a `$PROFILE` snippet (eza aliases, `bat` as `cat`, fzf options, PSFzf/Terminal-Icons/PSReadLine activation, Starship prompt init). |
 | `developer` | `default`'s foundation + `git`, `jq`, `gh`, `mise`, Fresh (editor), MinGW/gcc (build toolchain), Far Manager (file manager). No container tooling — see [`docs/design/developer-profile.md`](docs/design/developer-profile.md). |
 | `server` | `default`'s foundation + `restic` (backups), Far Manager (file manager). No firewall/fail2ban/resource-monitor tooling — see [`docs/design/server-profile.md`](docs/design/server-profile.md). |
 

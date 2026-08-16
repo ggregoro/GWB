@@ -7,7 +7,26 @@ feature/code changes. Mirrors GLB's own `docs/DOCS_CHANGELOG.md`.
 
 ## [Unreleased]
 
-(none since the System32/`$PROFILE` session below)
+(none since the screenshots/README session below)
+
+---
+
+## 2026-08-15 (live-machine session)
+
+### Documentation
+
+- Added `docs/images/` (`fastfetch-banner.png`, `yazi-file-browser.png`
+  — real screenshots from Greg's own machine) and a new `README.md`
+  Screenshots section referencing them. Caught and fixed two real
+  inaccuracies while writing captions: `fastfetch` and `ranger` both
+  appeared in the screenshots' command history/output but neither is
+  actually a GWB-managed package (confirmed via `grep` across every
+  profile's `packages.txt` and `_GWB_PACKAGE_OVERRIDES`) — captions
+  worded to not imply GWB installs either. Also fixed a real,
+  longer-standing gap: `README.md`'s "Why GWB?" intro, Features list,
+  and Profiles table had never been updated across any of the three
+  separate sessions that added `yazi` to GWB — now mention it, its
+  `git.yazi` plugin, and its `file` MIME-detection dependency.
 
 ---
 
