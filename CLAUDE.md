@@ -26,8 +26,15 @@ shape and its `default`-profile-first approach.
 ## Test environments
 
 - Greg's Windows 11 Pro machine (build 26200), PowerShell 7.6.4, winget
-  present. All real verification so far has happened here — GWB hasn't
-  been tested on a second machine/VM yet, unlike GLB's many.
+  present. The original dev machine — most real verification has
+  happened here.
+- Greg's second Windows 11 Pro machine (build 26100) — a new laptop,
+  GWB's first real second-machine verification (2026-08-21), closing
+  the gap this section used to note ("hasn't been tested on a second
+  machine/VM yet, unlike GLB's many"). Started with only Windows
+  PowerShell 5.1 and no `pwsh` at all; `Documents` is OneDrive-redirected
+  here, unlike the primary machine. See the Working notes entry below
+  for the full account.
 
 ## Current state (as of 2026-08-13)
 
@@ -156,6 +163,119 @@ also **verified for real** — see the Working notes entry below.
   re-derive context.
 
 ## Working notes
+
+- **Session (2026-08-21, Greg's second real Windows 11 machine, a new
+  laptop): GWB's first real second-machine install, closing a gap
+  documented since the project's very first session.** Greg asked to
+  install GWB here, dry run first. No code in the repository changed
+  this session — pure deployment plus this documentation pass.
+  - **Real prerequisite gap found before anything else could run**:
+    this laptop (build 26100, vs. the primary machine's 26200) had only
+    Windows PowerShell 5.1 — no `pwsh` at all — and `gwb.ps1` declares
+    `#Requires -Version 7.0`. Confirmed directly (`grep`) rather than
+    assumed. Installed PowerShell 7 via `winget install --id
+    Microsoft.PowerShell -e` (7.6.5.0) with Greg's confirmation first,
+    since installing system-wide software is a real, if low-risk,
+    mutation. **Real finding**: this winget install resolved to the
+    MSIX-packaged app (`C:\Program Files\WindowsApps\
+    Microsoft.PowerShell_7.6.5.0_x64__8wekyb3d8bbwe`, `pwsh.exe`
+    reachable via an App Execution Alias on `PATH`), not the classic
+    `C:\Program Files\PowerShell\7\pwsh.exe` MSI layout the primary
+    machine likely has — confirmed by checking both locations directly
+    rather than assuming the familiar path still applied.
+  - **Dry run** (`gwb.ps1 restore developer --dry-run`): clean, all
+    `[WhatIf]`, no errors — `git` already present, 14 packages + 2
+    PowerShell modules queued, `$PROFILE` (didn't exist yet on this
+    machine) and yazi config both correctly previewed.
+  - Greg asked whether `developer` also gets everything `default` has.
+    Checked directly rather than assumed: **no runtime inheritance** —
+    `lib/profile.ps1` has no layering logic at all (confirmed via
+    `grep`) — `developer`'s `packages.txt`/`modules.txt`/
+    `profile-snippet.ps1` are each maintained as manual supersets of
+    `default`'s (every `default` package duplicated verbatim, plus
+    developer-specific extras). Worth remembering: keeping these two
+    profiles in sync is a manual discipline, not something the code
+    enforces.
+  - **Real (non-dry-run) `gwb.ps1 restore developer`**, run in the
+    background and watched to completion (exit code 0): 14 packages
+    installed (`eza`, `fzf`, `lf`, `ripgrep`, `fd`, `bat`, `starship`,
+    `jq`, `gh`, `mise`, `fresh`, `mingw`, `farmanager`, `yazi`, `file`),
+    2 PowerShell modules (`PSFzf`, `Terminal-Icons`), `$PROFILE`
+    created fresh and wired (packages + Starship `scan_timeout = 1000`
+    + yazi config + `gwb` self-registration). Several UAC/installer
+    elevation prompts appeared for real mid-install (the VC++
+    Redistributable dependency `fd`/`bat`/`mise`/`yazi` all pull in,
+    plus the `starship`/`gh`/`mingw` MSIs) — Greg approved each live;
+    all were expected, none were GWB's own doing.
+  - **A real gap in the verification tooling itself, worth remembering
+    for future sessions**: the PowerShell tool used to drive this
+    doesn't persist shell state (env vars, not just variables/functions
+    as documented) between separate tool calls — refreshing `$env:Path`
+    from the registry in one call and then spawning a child `pwsh` to
+    test tools in a *following* call silently reverted to the stale
+    PATH, which made `profile-snippet.ps1`'s own `Get-Command`-guarded
+    tool detection silently skip defining `ll`/`ls`/`la` and made
+    `PSFzf` fail to load — none of that was a real GWB bug, purely a
+    verification-methodology artifact. Fixed by combining the PATH
+    refresh and the actual test command into one call. A close cousin
+    of the 2026-08-13 session's own "a Bash-tool-spawned `pwsh` process
+    is not a reliable proxy for a real PowerShell session's `PATH`"
+    note — same root cause, different tool this time.
+  - **A related false alarm, chased down and resolved rather than
+    written up as a bug**: `eza`/`ll` produced literally empty output
+    when invoked via a semicolon-chained `pwsh -NoLogo -Command '...;
+    ll'` string, but the *exact same* `eza --icons --group-directories-
+    first -lah` call produced correct output both when invoked directly
+    and via `pwsh -File <script>.ps1`. Isolated with a side-by-side
+    repro before concluding anything — an artifact of that specific
+    nested `-Command`-string invocation style, not a real `eza` or GWB
+    bug.
+  - **Verified for real, once the above was worked around**: a fresh
+    `pwsh` session loads the profile with no errors; `gwb version`,
+    `ll`/`ls`/`la` (full correct eza listing), `Get-Command ls -All`
+    (resolves to `Function` only, confirming the built-in-alias-removal
+    fix applies here too), `rg`, `gcc`, `yazi --version`, and `far`
+    (resolves to the wrapper function) all work correctly.
+  - Greg asked whether closing/reopening his terminal would now run
+    PowerShell 7. Answered directly rather than assuming: **no** —
+    installing PS7 via winget doesn't change any shortcut's or Windows
+    Terminal profile's default; the GWB-managed `$PROFILE` was written
+    to PS7's own profile path (`...\Documents\PowerShell\...`), a
+    completely separate file from Windows PowerShell 5.1's untouched
+    one (`...\Documents\WindowsPowerShell\...`) — and on this machine
+    both actually resolve under a OneDrive-redirected `Documents`
+    folder, a real difference from the primary dev machine worth
+    remembering if a future session assumes the plain
+    `C:\Users\ggreg\Documents` path.
+  - **Set Windows Terminal's default profile to PowerShell 7** (Greg's
+    explicit ask, and out of scope for `gwb restore` itself per
+    `docs/PHILOSOPHY.md`'s "Enhance the Terminal You Have" boundary —
+    done directly as a one-off machine-config change, not added to any
+    GWB code). Found the Store-packaged `settings.json`
+    (`%LOCALAPPDATA%\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\
+    LocalState\settings.json`), backed it up
+    (`settings.json.bak-20260821`) before editing, matching the same
+    precedent from the 2026-08-13 System32 session. **A real gotcha hit
+    live**: Windows Terminal was running throughout, and mid-edit it
+    silently regenerated its own `settings.json` — it had auto-detected
+    the new PS7 install and added its own dynamic `"PowerShell"`
+    profile (`source: Windows.Terminal.PowershellCore`) — which
+    overwrote the first manual `defaultProfile` edit before it could be
+    verified. Caught by re-reading the file before the second edit
+    rather than trusting the first one had stuck; used Windows
+    Terminal's own auto-detected profile (rather than adding a
+    duplicate manual entry) and pointed `defaultProfile` at its real
+    `guid`. **Flagged to Greg, not independently verified this
+    session**: Windows Terminal was still running at the time of the
+    final edit, so a full close-and-reopen (not just a new tab) is
+    needed to be certain the change isn't clobbered again by its own
+    in-memory state on exit — left as something for Greg to confirm on
+    his next real restart, the same "flag the real gap rather than
+    assume it's fine" discipline this project applies throughout.
+  - Working tree: only this documentation update touches the repo.
+    Everything else this session (PS7 install, the real `restore`, the
+    Windows Terminal edit) was live-machine state, not committed code.
+    **Nothing queued.**
 
 - **Session (2026-08-13, real Windows 11 machine, second follow-up):
   fixed a real bug in yazi's previewer, found by Greg using it live

@@ -171,9 +171,9 @@ configuration-management set
 --from-manifest`, tracking both `packages.txt` and `modules.txt`
 drift), the `gwb` command + tab-completion, the `install.ps1`
 one-liner, and a Pester test suite are all built and verified — real
-restores on a real machine (idempotency, the backup/undo round-trip,
+restores on real machines (idempotency, the backup/undo round-trip,
 real drift detection, real `TabExpansion2` results, a real fresh
-install + update-in-place against the live public repo) plus 93
+install + update-in-place against the live public repo) plus 103
 automated tests. All of GLB's own Version 0.1–0.6 equivalents are now
 ported, and the repo is public. **One deliberate, permanent non-goal**:
 IPBan (`server`'s fail2ban equivalent) needs Administrator elevation
@@ -194,9 +194,9 @@ GWB's direction and current progress are tracked in
 
 ## Contributing
 
-GWB is currently a personal project (private repository) built and
-tested by its author on a real Windows 11 machine, documented in detail
-in [`CLAUDE.md`](CLAUDE.md). See [`CONTRIBUTING.md`](CONTRIBUTING.md)
+GWB is currently a personal project built and tested by its author on
+two real Windows 11 machines, documented in detail in
+[`CLAUDE.md`](CLAUDE.md). See [`CONTRIBUTING.md`](CONTRIBUTING.md)
 for conventions and [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md).
 
 ## Related
