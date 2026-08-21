@@ -141,7 +141,12 @@ its own installer is confirmed working end to end on real hardware.
 
 yazi (ported from GLB, built in a cloud session with no `pwsh`) is now
 also **verified for real** — see the Working notes entry below.
-**Nothing currently queued.**
+
+**One open item**: `fastfetch`/`cpufetch` (2026-08-21, `c3752ef`) and
+`eza --hyperlink` on `ll`/`la` are committed and pushed, but not yet
+verified for real — no live OSC 8 hyperlink check in a real terminal
+(Ctrl-click to open a file). See the Working notes entry below for
+detail. Nothing else queued.
 
 ## Conventions
 
@@ -187,15 +192,16 @@ also **verified for real** — see the Working notes entry below.
   reach for `winget install` directly, or `Install-GwbPackage` in
   isolation, not a full `restore` of a different profile than the one
   actually live on the machine.
-  - Working tree otherwise unchanged from the entry below — still
-    holding off on commit/push per Greg's instruction; this entry
-    records the real package-install/profile-restore side effect, not a
-    code change.
+  - Working tree otherwise unchanged from the entry below at the time —
+    this entry records the real package-install/profile-restore side
+    effect, not a code change. (Greg reviewed and approved the pending
+    edits from the entry below shortly after; see its closing note for
+    the commit.)
 
 - **Session (2026-08-21, real Windows 11 machine, follow-up): added
   `fastfetch`/`cpufetch` to `default` and `eza --hyperlink` to the
-  shared alias config, ported from GLB. Not yet committed/pushed —
-  Greg wants to review before testing again.**
+  shared alias config, ported from GLB. Reviewed and committed/pushed
+  as [`c3752ef`](https://github.com/ggregoro/GWB/commit/c3752ef26b49dba5d28beb87d428b72e5d461036).**
   - **`fastfetch`/`cpufetch` added to `profiles/default/packages.txt`**
     (system-info banner tools, mirroring GLB's own `default` profile).
     Winget IDs confirmed directly via `winget search` rather than
@@ -229,14 +235,17 @@ also **verified for real** — see the Working notes entry below.
     resolves both new packages correctly (`fastfetch` reports "Already
     installed" - it's already on this machine from earlier ad hoc use;
     `cpufetch` correctly previews `Would install: cpufetch ->
-    Dr-Noob.cpufetch`). **Not yet verified for real** — no actual
-    install, no live `ll`/`la` hyperlink check in a real terminal (this
-    session's own automation tooling still can't confirm OSC 8 escape
-    sequences render/Ctrl-click visually, the same class of gap the
-    2026-08-13 session's yazi work hit). Greg asked to hold off on
-    testing until after reviewing this change, and asked not to
-    commit/push yet either — working tree currently has these edits
-    uncommitted, deliberately, pending his review.
+    Dr-Noob.cpufetch`). **`cpufetch` itself was installed for real
+    immediately after, same session** — see the entry above (out of
+    chronological order in this file: that entry was written first but
+    describes work that happened after this one). **Still not verified
+    for real**: no live `ll`/`la` hyperlink check in a real terminal
+    (this session's own automation tooling still can't confirm OSC 8
+    escape sequences render/Ctrl-click visually, the same class of gap
+    the 2026-08-13 session's yazi work hit) — flagged for Greg to
+    eyeball directly. Greg reviewed this change and approved committing
+    it; pushed as
+    [`c3752ef`](https://github.com/ggregoro/GWB/commit/c3752ef26b49dba5d28beb87d428b72e5d461036).
 
 - **Session (2026-08-21, real Windows 11 machine, follow-up): confirmed
   the flagged Windows Terminal restart, closing out the one open item
