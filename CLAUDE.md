@@ -164,6 +164,80 @@ also **verified for real** — see the Working notes entry below.
 
 ## Working notes
 
+- **Session (2026-08-21, real Windows 11 machine, follow-up): installed
+  `cpufetch` for real, and caught/fixed a real mistake doing it.** Greg
+  reported `fastfetch` had installed (from the earlier dry-run's "check
+  what's pending" implication) but `cpufetch` hadn't, and asked to run
+  it. First attempt ran `gwb.ps1 restore default` for real to get
+  `cpufetch` installed — worked (`Dr-Noob.cpufetch` v1.07, confirmed via
+  `cpufetch --version` and a real `cpufetch` run showing this machine's
+  actual CPU, an Intel i5-8365U), but as a real side effect also
+  switched this laptop's live `$PROFILE` from `developer` to `default`,
+  silently dropping the `mise` activation and `far` wrapper `developer`
+  adds — the exact class of mistake this project's own 2026-08-13 yazi
+  verification session already documented and deliberately avoided
+  (calling `Install-GwbYaziConfig` directly instead of a full `restore`
+  for the same reason). Caught immediately after, not left for a future
+  session to find: re-ran `gwb.ps1 restore developer` for real,
+  confirmed via a fresh `pwsh` process that `far`/`mise` are back
+  (`Get-Command far -All`/`mise -All` both resolve to `Function`, `mise
+  --version` runs) and `cpufetch` still works globally (it's a winget
+  install, not profile-scoped). **Lesson worth remembering for next
+  time a single package needs installing outside the active profile**:
+  reach for `winget install` directly, or `Install-GwbPackage` in
+  isolation, not a full `restore` of a different profile than the one
+  actually live on the machine.
+  - Working tree otherwise unchanged from the entry below — still
+    holding off on commit/push per Greg's instruction; this entry
+    records the real package-install/profile-restore side effect, not a
+    code change.
+
+- **Session (2026-08-21, real Windows 11 machine, follow-up): added
+  `fastfetch`/`cpufetch` to `default` and `eza --hyperlink` to the
+  shared alias config, ported from GLB. Not yet committed/pushed —
+  Greg wants to review before testing again.**
+  - **`fastfetch`/`cpufetch` added to `profiles/default/packages.txt`**
+    (system-info banner tools, mirroring GLB's own `default` profile).
+    Winget IDs confirmed directly via `winget search` rather than
+    assumed — `fastfetch`'s real ID is `Fastfetch-cli.Fastfetch` (note
+    the casing differs from the `fastfetch-cli.fastfetch` first
+    suggested; winget IDs matched case-sensitively against the override
+    table elsewhere in this project, e.g. `BurntSushi.ripgrep.MSVC`, so
+    used the exact casing winget reports), `cpufetch`'s is
+    `Dr-Noob.cpufetch` — both single, unambiguous native winget
+    packages, no per-distro-style override complexity like GLB
+    sometimes hits. Added to `_GWB_PACKAGE_OVERRIDES`
+    (`lib/packages.ps1`) following the existing pattern. Only
+    `default` per Greg's explicit ask — not ported to `developer`/
+    `server`.
+  - **`eza --hyperlink` added to `ll`/`la` (not plain `ls`) in all three
+    profiles' `profile-snippet.ps1`**, mirroring GLB's own 2026-08-18
+    change exactly: OSC 8 hyperlinks (Ctrl-click to open a file) on the
+    long-listing-style aliases only, `ls` left untouched. One real
+    divergence from GLB worth recording: GLB's `la` is `-la` (a true
+    long listing); GWB's `la` has always been `-a` only, no `-l` — the
+    "mirror the named aliases GLB touched (`ll`/`la`), not `ls`" reading
+    was used rather than "mirror flag-for-flag," since GWB has no
+    separate `l` alias and this project has no `--git` flag on eza at
+    all (never added it, unlike GLB) so there was no `--git`-preservation
+    concern to carry over either. Added a comment above the block in all
+    three files explaining the `ll`/`la`-only choice and pointing back
+    at GLB's change for context.
+  - **Verified so far**: all four edited files parse clean
+    (`[System.Management.Automation.Language.Parser]::ParseFile`), full
+    Pester suite still 103/103, and `gwb.ps1 restore default --dry-run`
+    resolves both new packages correctly (`fastfetch` reports "Already
+    installed" - it's already on this machine from earlier ad hoc use;
+    `cpufetch` correctly previews `Would install: cpufetch ->
+    Dr-Noob.cpufetch`). **Not yet verified for real** — no actual
+    install, no live `ll`/`la` hyperlink check in a real terminal (this
+    session's own automation tooling still can't confirm OSC 8 escape
+    sequences render/Ctrl-click visually, the same class of gap the
+    2026-08-13 session's yazi work hit). Greg asked to hold off on
+    testing until after reviewing this change, and asked not to
+    commit/push yet either — working tree currently has these edits
+    uncommitted, deliberately, pending his review.
+
 - **Session (2026-08-21, real Windows 11 machine, follow-up): confirmed
   the flagged Windows Terminal restart, closing out the one open item
   from earlier today.** Greg closed and fully reopened Windows Terminal
