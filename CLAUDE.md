@@ -25,16 +25,24 @@ shape and its `default`-profile-first approach.
 
 ## Test environments
 
-- Greg's Windows 11 Pro machine (build 26200), PowerShell 7.6.4, winget
-  present. The original dev machine — most real verification has
-  happened here.
+- Greg's Windows 11 Pro machine (build 26200, hostname `PC-F2C15AL`),
+  PowerShell 7.6.5 (was 7.6.4 as of the 2026-08-13 sessions — updated
+  since, confirmed directly via `$PSVersionTable` during the
+  2026-08-21 `$PROFILE`-fix session below), winget present. The
+  original dev machine — most real verification has happened here.
+  **`Documents` is now OneDrive-redirected here too** (confirmed
+  directly, `$PROFILE` resolves under
+  `C:\Users\ggreg\OneDrive\Documents\PowerShell\...`) — this section
+  used to claim OneDrive redirection was unique to the second machine
+  below; that was true when written but is stale now. Don't assume a
+  plain `C:\Users\ggreg\Documents` path on either machine going
+  forward.
 - Greg's second Windows 11 Pro machine (build 26100) — a new laptop,
   GWB's first real second-machine verification (2026-08-21), closing
   the gap this section used to note ("hasn't been tested on a second
   machine/VM yet, unlike GLB's many"). Started with only Windows
   PowerShell 5.1 and no `pwsh` at all; `Documents` is OneDrive-redirected
-  here, unlike the primary machine. See the Working notes entry below
-  for the full account.
+  here too. See the Working notes entry below for the full account.
 
 ## Current state (as of 2026-08-13)
 
@@ -168,6 +176,54 @@ detail. Nothing else queued.
   re-derive context.
 
 ## Working notes
+
+- **Session (2026-08-21, real Windows 11 machine — `PC-F2C15AL`,
+  the primary dev machine, follow-up): fixed a real, user-reported
+  `$PROFILE` breakage — stale "GWB self" block pointing at a
+  since-removed install directory.** Greg reported two errors on every
+  new `pwsh` window: dot-sourcing
+  `C:\Users\ggreg\AppData\Local\GWB\lib\completions.ps1` failed (file
+  not found), which cascaded into `Register-GwbCompletions` also being
+  unrecognized.
+  - **Root cause, confirmed directly rather than guessed**:
+    `C:\Users\ggreg\AppData\Local\GWB` (the `install.ps1` install
+    location, `$env:LOCALAPPDATA\GWB`) doesn't exist on this machine at
+    all — checked directly. The real dev checkout has always been
+    `C:\Users\ggreg\GWB`. The `# >>> GWB self >>>` block in `$PROFILE`
+    gets rewritten by *every* `gwb.ps1 restore` to point at wherever
+    that particular `gwb.ps1` was invoked from (documented already in
+    the 2026-08-11 install.ps1-verification entry below as expected
+    behavior) — at some point a restore ran from the `LOCALAPPDATA`
+    install, and that install directory was later removed without a
+    follow-up restore from the dev checkout to re-point `$PROFILE` back.
+    The rest of `$PROFILE` (the `# >>> GWB managed block >>>` aliases/
+    mise/etc.) was untouched and fine — only the self-registration tail
+    was broken.
+  - **Fixed**: ran `gwb.ps1 restore developer` explicitly from
+    `C:\Users\ggreg\GWB` (Greg confirmed before running, since it
+    rewrites his live `$PROFILE`). The broken-profile errors printed
+    once more during that very invocation (expected — `pwsh -Command`
+    still loads the existing broken profile before running anything),
+    then the restore completed cleanly and rewrote both the `$PROFILE`
+    managed block and the `gwb` self block to `C:\Users\ggreg\GWB`.
+  - **Verified for real**: a fresh `pwsh -NoLogo` process (no `-Command`
+    this time, so nothing masked residual errors) loads with **zero**
+    errors; `gwb version` reports `1.0.0` correctly; `Get-Command gwb
+    -All` resolves cleanly to the function with no leftover stale
+    registration. `ll` output looked empty in this same check, but
+    that's the same non-tty `eza`/automation-tooling artifact already
+    documented at length elsewhere in this file (2026-08-21 second-
+    machine and Windows-Terminal-restart entries) — not a new bug,
+    flagged for Greg to eyeball in a real terminal.
+  - **Same-session finding, worth noting for future path assumptions**:
+    this machine's `Documents` is now OneDrive-redirected too (`
+    $PROFILE` resolves under `...\OneDrive\Documents\PowerShell\...`),
+    and PowerShell itself is at `7.6.5` now (was `7.6.4` as of the
+    2026-08-13 sessions) — both updated in the Test environments
+    section above.
+  - Working tree: only this documentation update touches the repo —
+    the actual fix was a live `$PROFILE` rewrite via `gwb.ps1 restore`,
+    not a code change. **Nothing queued.**
 
 - **Session (2026-08-21, real Windows 11 machine, follow-up): installed
   `cpufetch` for real, and caught/fixed a real mistake doing it.** Greg
