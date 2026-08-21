@@ -215,6 +215,10 @@ detail. Nothing else queued.
     documented at length elsewhere in this file (2026-08-21 second-
     machine and Windows-Terminal-restart entries) — not a new bug,
     flagged for Greg to eyeball in a real terminal.
+  - **Confirmed by Greg directly, in a real new terminal window**: no
+    error message, profile loads clean — "Loads profile in 1292ms."
+    Closes this out with genuine end-user confirmation, not just an
+    automated check.
   - **Same-session finding, worth noting for future path assumptions**:
     this machine's `Documents` is now OneDrive-redirected too (`
     $PROFILE` resolves under `...\OneDrive\Documents\PowerShell\...`),
