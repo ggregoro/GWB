@@ -164,6 +164,36 @@ also **verified for real** — see the Working notes entry below.
 
 ## Working notes
 
+- **Session (2026-08-21, real Windows 11 machine, follow-up): confirmed
+  the flagged Windows Terminal restart, closing out the one open item
+  from earlier today.** Greg closed and fully reopened Windows Terminal
+  (not just a new tab) and confirmed PowerShell 7 loads as the default
+  profile — the in-memory-state clobbering risk the entry below flagged
+  did not recur. Independently re-verified from this session too:
+  `defaultProfile` in the real `settings.json` resolves to the
+  auto-detected `"PowerShell"` entry (`source:
+  Windows.Terminal.PowershellCore`); a fresh `pwsh` process (registry
+  PATH refresh and the test command combined into one call, per this
+  same session's own methodology note below) confirms `$PROFILE`
+  resolves correctly under the OneDrive-redirected path, loads with no
+  errors, `Get-Command ll -All`/`ls -All` each resolve to `Function`
+  only (no built-in-alias regression), and `rg`/`yazi --version`/`far`/
+  `gwb version` all work.
+  - **A new instance of the same automation-tooling artifact already
+    documented below, not a real bug**: `eza`/`ll` again produced empty
+    output when invoked through this session's own non-interactive
+    PowerShell tool calls — this time reproduced even via `-File`
+    (previously noted as a workaround), and isolated further: bare
+    `eza`/`eza -1` are silently empty specifically in this tool's
+    non-tty automation context, while `Get-ChildItem` against the exact
+    same real directory and `eza --version` (needs no terminal-size
+    detection) both work fine. Points at eza's own terminal-width/tty
+    detection under non-interactive invocation, not a `gwb`/profile bug
+    — flagged for Greg to eyeball `ll` in a real terminal to be certain,
+    since this environment still can't visually confirm it. Nothing in
+    the repo changed for this.
+  - Working tree still clean (verification-only). **Nothing queued.**
+
 - **Session (2026-08-21, Greg's second real Windows 11 machine, a new
   laptop): GWB's first real second-machine install, closing a gap
   documented since the project's very first session.** Greg asked to
