@@ -177,6 +177,48 @@ detail. Nothing else queued.
 
 ## Working notes
 
+- **Session (2026-08-23, real Windows 11 machine — `PC-F2C15AL`): the
+  exact same stale "GWB self" `$PROFILE` bug from 2026-08-21
+  recurred, fixed the same way.** Greg reported the identical error
+  pair on every new PowerShell 7.6.5 window — dot-sourcing
+  `C:\Users\ggreg\AppData\Local\GWB\lib\completions.ps1` failing (file
+  not found) cascading into `Register-GwbCompletions` unrecognized —
+  this time from line 83/84 of
+  `...\OneDrive\Documents\PowerShell\Microsoft.PowerShell_profile.ps1`.
+  - **Confirmed directly, not assumed, that it's the same root cause**:
+    `C:\Users\ggreg\AppData\Local\GWB` still doesn't exist on this
+    machine, and the `# >>> GWB self >>>` block was again pointing at
+    it instead of the real dev checkout `C:\Users\ggreg\GWB`. **Did
+    not** track down what re-triggered it this time (unlike the
+    2026-08-21 entry below, which pinned the cause to a restore having
+    once run from the `install.ps1`/`$env:LOCALAPPDATA\GWB` location) —
+    worth remembering this can recur from *any* `gwb.ps1 restore`
+    invoked from somewhere other than `C:\Users\ggreg\GWB` (an
+    `irm | iex` re-run of `install.ps1`, a restore from a fresh clone
+    elsewhere, etc.), and there's currently no guard against it — every
+    restore unconditionally self-registers to its own invocation path.
+    If this keeps recurring, worth considering a real fix (e.g. pin
+    self-registration to a known-good dev-checkout path, or warn if
+    invoked from an unexpected location) rather than just re-fixing it
+    by hand each time.
+  - **Fixed the same way, with Greg's confirmation before rewriting his
+    live `$PROFILE`**: ran `pwsh -NoLogo -NoProfile -Command
+    "& './gwb.ps1' restore developer"` from `C:\Users\ggreg\GWB`.
+    Completed cleanly (`-NoProfile` avoided even the one-time
+    re-triggering of the broken profile's own errors that the
+    2026-08-21 session saw). Confirmed directly afterward, by reading
+    the profile file back, that the `# >>> GWB self >>>` block now
+    reads `C:\Users\ggreg\GWB` in all three lines.
+  - **Not independently re-confirmed by Greg in a real new terminal
+    window this time** (unlike 2026-08-21, which had his direct
+    "Loads profile in 1292ms" confirmation) — asked him to open a new
+    PowerShell window and check. Flagged here so a future session
+    knows that confirmation is still outstanding if the issue is
+    reported again.
+  - Working tree: only this documentation update touches the repo —
+    the fix itself was a live `$PROFILE` rewrite via `gwb.ps1 restore`,
+    same as 2026-08-21, not a code change. **Nothing queued.**
+
 - **Session (2026-08-21, real Windows 11 machine — `PC-F2C15AL`,
   the primary dev machine, follow-up): fixed a real, user-reported
   `$PROFILE` breakage — stale "GWB self" block pointing at a
