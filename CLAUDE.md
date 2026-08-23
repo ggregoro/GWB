@@ -150,11 +150,26 @@ its own installer is confirmed working end to end on real hardware.
 yazi (ported from GLB, built in a cloud session with no `pwsh`) is now
 also **verified for real** — see the Working notes entry below.
 
-**One open item**: `fastfetch`/`cpufetch` (2026-08-21, `c3752ef`) and
-`eza --hyperlink` on `ll`/`la` are committed and pushed, but not yet
-verified for real — no live OSC 8 hyperlink check in a real terminal
-(Ctrl-click to open a file). See the Working notes entry below for
-detail. Nothing else queued.
+**Open items**:
+1. `fastfetch`/`cpufetch` (2026-08-21, `c3752ef`) and `eza --hyperlink`
+   on `ll`/`la` are committed and pushed, but not yet verified for real
+   — no live OSC 8 hyperlink check in a real terminal (Ctrl-click to
+   open a file). See the 2026-08-21 Working notes entry below for
+   detail.
+2. **The `# >>> GWB self >>>` block in `$PROFILE` isn't safe for
+   two-machine OneDrive sync** — Greg's `$PROFILE` is the same
+   physical file synced (via OneDrive-redirected `Documents`) between
+   this machine and his second Windows laptop, but `gwb.ps1 restore`
+   unconditionally bakes in whatever local path it was invoked from,
+   so restoring on one machine silently breaks the other's self-
+   registration on next sync. Hit for real twice now (2026-08-21,
+   2026-08-23 — see that entry below for the full root-cause trail).
+   **Next session, on the second machine**: find its actual GWB
+   install path, then implement the discussed fix — resolve the GWB
+   root dynamically at each `$PROFILE` load from a short list of
+   candidate paths, instead of hardcoding the last restore's
+   invocation path. Verify for real on both machines before closing
+   out.
 
 ## Conventions
 
@@ -209,15 +224,58 @@ detail. Nothing else queued.
     2026-08-21 session saw). Confirmed directly afterward, by reading
     the profile file back, that the `# >>> GWB self >>>` block now
     reads `C:\Users\ggreg\GWB` in all three lines.
-  - **Not independently re-confirmed by Greg in a real new terminal
-    window this time** (unlike 2026-08-21, which had his direct
-    "Loads profile in 1292ms" confirmation) — asked him to open a new
-    PowerShell window and check. Flagged here so a future session
-    knows that confirmation is still outstanding if the issue is
-    reported again.
-  - Working tree: only this documentation update touches the repo —
-    the fix itself was a live `$PROFILE` rewrite via `gwb.ps1 restore`,
-    same as 2026-08-21, not a code change. **Nothing queued.**
+  - **Confirmed by Greg directly**, in a real new terminal window: no
+    errors, matching this session's own fix.
+  - **Follow-up, same session: found the real root cause of the
+    recurrence — this is a two-machine OneDrive sync conflict, not a
+    one-off.** Checked `...\OneDrive\Documents\PowerShell\` directly
+    and found a OneDrive conflict copy,
+    `Microsoft.PowerShell_profile-PC-F2C15AL.ps1` (OneDrive's standard
+    "couldn't reconcile with the cloud" naming), **born 2026-08-23
+    01:08** — i.e. created *this morning*, containing the *correct*
+    2026-08-21 fix (pointing at `C:\Users\ggreg\GWB`). That means
+    OneDrive detected a conflicting cloud write, preserved this
+    machine's good copy under the conflict name, and let the *other*
+    (broken) version become the live file. Ruled out a scheduled task
+    as an alternative cause first (`Get-ScheduledTask` shows only
+    OneDrive's own standard sync tasks, nothing GWB-related). **Greg
+    confirmed directly**: he uses the same OneDrive account on his
+    second Windows machine (the build-26100 laptop from the
+    2026-08-21 second-machine session above), and that machine also
+    has `Documents` OneDrive-redirected — so both machines' `$PROFILE`
+    is the *same physical synced file*. Every `gwb.ps1 restore` on
+    either machine unconditionally bakes in its own local invocation
+    path into the shared `# >>> GWB self >>>` block
+    (`Set-GwbManagedBlock`/`lib/completions.ps1`'s self-registration
+    logic, `lib/profile.ps1`) — so whichever machine restores *last*
+    silently breaks the other one the next time OneDrive syncs. This
+    is a real, structural GWB design gap (self-registration assumes
+    `$PROFILE` is local-only, which OneDrive Known Folder Move
+    violates on this household's setup), not something either machine
+    did wrong.
+  - **Not yet fixed at the design level — genuinely queued for the
+    next session on the second machine**, since fixing it needs
+    information only obtainable there: what path GWB is actually
+    installed/cloned to on that laptop (a dev checkout like this
+    machine's `C:\Users\ggreg\GWB`, or the `install.ps1`/
+    `$env:LOCALAPPDATA\GWB` path — the 2026-08-21 second-machine
+    session didn't record which). Leading fix candidate discussed with
+    Greg: make the `# >>> GWB self >>>` block resolve its own GWB root
+    **dynamically at each `$PROFILE` load** (check a short list of
+    known candidate paths on disk, e.g. `C:\Users\ggreg\GWB` and
+    `$env:LOCALAPPDATA\GWB`, and use whichever actually exists locally)
+    instead of hardcoding whatever path `restore` last ran from — that
+    way the shared synced file works correctly no matter which machine
+    wrote it last, without having to fight OneDrive's Documents
+    redirection (Greg wants to keep that, not disable it). Needs a
+    `lib/profile.ps1`/`lib/completions.ps1` code change plus updated
+    Pester coverage for the new resolution logic, tested for real on
+    *both* machines before calling it done.
+  - Working tree: only this documentation update touches the repo this
+    session — the immediate fix was a live `$PROFILE` rewrite via
+    `gwb.ps1 restore`, same as 2026-08-21, not a code change. **The
+    OneDrive-sync design fix above is queued for next session, to be
+    picked up on the second machine.**
 
 - **Session (2026-08-21, real Windows 11 machine — `PC-F2C15AL`,
   the primary dev machine, follow-up): fixed a real, user-reported
