@@ -52,9 +52,17 @@ function Get-GwbSelfRegistrationContent {
     $completionsScript = Join-Path $GwbRoot "lib\completions.ps1"
     $gwbScript = Join-Path $GwbRoot "gwb.ps1"
 
+    # Guarded with Test-Path: this block gets synced (via the shared
+    # OneDrive-hosted $PROFILE) to machines where $GwbRoot doesn't
+    # exist locally - an unconditional `.` dot-source there throws on
+    # every new shell. See CLAUDE.md's Working notes (2026-08-24) for
+    # the real repeat-offender bug this fixes.
     @"
-. '$completionsScript'
-Register-GwbCompletions -GwbRoot '$GwbRoot'
+`$gwbCompletions = '$completionsScript'
+if (Test-Path `$gwbCompletions) {
+    . `$gwbCompletions
+    Register-GwbCompletions -GwbRoot '$GwbRoot'
+}
 function gwb { & '$gwbScript' @args }
 "@
 }
