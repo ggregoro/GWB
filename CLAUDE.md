@@ -25,9 +25,24 @@ shape and its `default`-profile-first approach.
 
 ## Test environments
 
-- Greg's Windows 11 Pro machine (build 26200), PowerShell 7.6.4, winget
-  present. All real verification so far has happened here — GWB hasn't
-  been tested on a second machine/VM yet, unlike GLB's many.
+- Greg's Windows 11 Pro machine (build 26200, hostname `PC-F2C15AL`),
+  PowerShell 7.6.5 (was 7.6.4 as of the 2026-08-13 sessions — updated
+  since, confirmed directly via `$PSVersionTable` during the
+  2026-08-21 `$PROFILE`-fix session below), winget present. The
+  original dev machine — most real verification has happened here.
+  **`Documents` is now OneDrive-redirected here too** (confirmed
+  directly, `$PROFILE` resolves under
+  `C:\Users\ggreg\OneDrive\Documents\PowerShell\...`) — this section
+  used to claim OneDrive redirection was unique to the second machine
+  below; that was true when written but is stale now. Don't assume a
+  plain `C:\Users\ggreg\Documents` path on either machine going
+  forward.
+- Greg's second Windows 11 Pro machine (build 26100) — a new laptop,
+  GWB's first real second-machine verification (2026-08-21), closing
+  the gap this section used to note ("hasn't been tested on a second
+  machine/VM yet, unlike GLB's many"). Started with only Windows
+  PowerShell 5.1 and no `pwsh` at all; `Documents` is OneDrive-redirected
+  here too. See the Working notes entry below for the full account.
 
 ## Current state (as of 2026-08-13)
 
@@ -134,7 +149,27 @@ its own installer is confirmed working end to end on real hardware.
 
 yazi (ported from GLB, built in a cloud session with no `pwsh`) is now
 also **verified for real** — see the Working notes entry below.
-**Nothing currently queued.**
+
+**Open items**:
+1. `fastfetch`/`cpufetch` (2026-08-21, `c3752ef`) and `eza --hyperlink`
+   on `ll`/`la` are committed and pushed, but not yet verified for real
+   — no live OSC 8 hyperlink check in a real terminal (Ctrl-click to
+   open a file). See the 2026-08-21 Working notes entry below for
+   detail.
+2. **The `# >>> GWB self >>>` block in `$PROFILE` isn't safe for
+   two-machine OneDrive sync** — Greg's `$PROFILE` is the same
+   physical file synced (via OneDrive-redirected `Documents`) between
+   this machine and his second Windows laptop, but `gwb.ps1 restore`
+   unconditionally bakes in whatever local path it was invoked from,
+   so restoring on one machine silently breaks the other's self-
+   registration on next sync. Hit for real twice now (2026-08-21,
+   2026-08-23 — see that entry below for the full root-cause trail).
+   **Next session, on the second machine**: find its actual GWB
+   install path, then implement the discussed fix — resolve the GWB
+   root dynamically at each `$PROFILE` load from a short list of
+   candidate paths, instead of hardcoding the last restore's
+   invocation path. Verify for real on both machines before closing
+   out.
 
 ## Conventions
 
@@ -156,6 +191,364 @@ also **verified for real** — see the Working notes entry below.
   re-derive context.
 
 ## Working notes
+
+- **Session (2026-08-23, real Windows 11 machine — `PC-F2C15AL`): the
+  exact same stale "GWB self" `$PROFILE` bug from 2026-08-21
+  recurred, fixed the same way.** Greg reported the identical error
+  pair on every new PowerShell 7.6.5 window — dot-sourcing
+  `C:\Users\ggreg\AppData\Local\GWB\lib\completions.ps1` failing (file
+  not found) cascading into `Register-GwbCompletions` unrecognized —
+  this time from line 83/84 of
+  `...\OneDrive\Documents\PowerShell\Microsoft.PowerShell_profile.ps1`.
+  - **Confirmed directly, not assumed, that it's the same root cause**:
+    `C:\Users\ggreg\AppData\Local\GWB` still doesn't exist on this
+    machine, and the `# >>> GWB self >>>` block was again pointing at
+    it instead of the real dev checkout `C:\Users\ggreg\GWB`. **Did
+    not** track down what re-triggered it this time (unlike the
+    2026-08-21 entry below, which pinned the cause to a restore having
+    once run from the `install.ps1`/`$env:LOCALAPPDATA\GWB` location) —
+    worth remembering this can recur from *any* `gwb.ps1 restore`
+    invoked from somewhere other than `C:\Users\ggreg\GWB` (an
+    `irm | iex` re-run of `install.ps1`, a restore from a fresh clone
+    elsewhere, etc.), and there's currently no guard against it — every
+    restore unconditionally self-registers to its own invocation path.
+    If this keeps recurring, worth considering a real fix (e.g. pin
+    self-registration to a known-good dev-checkout path, or warn if
+    invoked from an unexpected location) rather than just re-fixing it
+    by hand each time.
+  - **Fixed the same way, with Greg's confirmation before rewriting his
+    live `$PROFILE`**: ran `pwsh -NoLogo -NoProfile -Command
+    "& './gwb.ps1' restore developer"` from `C:\Users\ggreg\GWB`.
+    Completed cleanly (`-NoProfile` avoided even the one-time
+    re-triggering of the broken profile's own errors that the
+    2026-08-21 session saw). Confirmed directly afterward, by reading
+    the profile file back, that the `# >>> GWB self >>>` block now
+    reads `C:\Users\ggreg\GWB` in all three lines.
+  - **Confirmed by Greg directly**, in a real new terminal window: no
+    errors, matching this session's own fix.
+  - **Follow-up, same session: found the real root cause of the
+    recurrence — this is a two-machine OneDrive sync conflict, not a
+    one-off.** Checked `...\OneDrive\Documents\PowerShell\` directly
+    and found a OneDrive conflict copy,
+    `Microsoft.PowerShell_profile-PC-F2C15AL.ps1` (OneDrive's standard
+    "couldn't reconcile with the cloud" naming), **born 2026-08-23
+    01:08** — i.e. created *this morning*, containing the *correct*
+    2026-08-21 fix (pointing at `C:\Users\ggreg\GWB`). That means
+    OneDrive detected a conflicting cloud write, preserved this
+    machine's good copy under the conflict name, and let the *other*
+    (broken) version become the live file. Ruled out a scheduled task
+    as an alternative cause first (`Get-ScheduledTask` shows only
+    OneDrive's own standard sync tasks, nothing GWB-related). **Greg
+    confirmed directly**: he uses the same OneDrive account on his
+    second Windows machine (the build-26100 laptop from the
+    2026-08-21 second-machine session above), and that machine also
+    has `Documents` OneDrive-redirected — so both machines' `$PROFILE`
+    is the *same physical synced file*. Every `gwb.ps1 restore` on
+    either machine unconditionally bakes in its own local invocation
+    path into the shared `# >>> GWB self >>>` block
+    (`Set-GwbManagedBlock`/`lib/completions.ps1`'s self-registration
+    logic, `lib/profile.ps1`) — so whichever machine restores *last*
+    silently breaks the other one the next time OneDrive syncs. This
+    is a real, structural GWB design gap (self-registration assumes
+    `$PROFILE` is local-only, which OneDrive Known Folder Move
+    violates on this household's setup), not something either machine
+    did wrong.
+  - **Not yet fixed at the design level — genuinely queued for the
+    next session on the second machine**, since fixing it needs
+    information only obtainable there: what path GWB is actually
+    installed/cloned to on that laptop (a dev checkout like this
+    machine's `C:\Users\ggreg\GWB`, or the `install.ps1`/
+    `$env:LOCALAPPDATA\GWB` path — the 2026-08-21 second-machine
+    session didn't record which). Leading fix candidate discussed with
+    Greg: make the `# >>> GWB self >>>` block resolve its own GWB root
+    **dynamically at each `$PROFILE` load** (check a short list of
+    known candidate paths on disk, e.g. `C:\Users\ggreg\GWB` and
+    `$env:LOCALAPPDATA\GWB`, and use whichever actually exists locally)
+    instead of hardcoding whatever path `restore` last ran from — that
+    way the shared synced file works correctly no matter which machine
+    wrote it last, without having to fight OneDrive's Documents
+    redirection (Greg wants to keep that, not disable it). Needs a
+    `lib/profile.ps1`/`lib/completions.ps1` code change plus updated
+    Pester coverage for the new resolution logic, tested for real on
+    *both* machines before calling it done.
+  - Working tree: only this documentation update touches the repo this
+    session — the immediate fix was a live `$PROFILE` rewrite via
+    `gwb.ps1 restore`, same as 2026-08-21, not a code change. **The
+    OneDrive-sync design fix above is queued for next session, to be
+    picked up on the second machine.**
+
+- **Session (2026-08-21, real Windows 11 machine — `PC-F2C15AL`,
+  the primary dev machine, follow-up): fixed a real, user-reported
+  `$PROFILE` breakage — stale "GWB self" block pointing at a
+  since-removed install directory.** Greg reported two errors on every
+  new `pwsh` window: dot-sourcing
+  `C:\Users\ggreg\AppData\Local\GWB\lib\completions.ps1` failed (file
+  not found), which cascaded into `Register-GwbCompletions` also being
+  unrecognized.
+  - **Root cause, confirmed directly rather than guessed**:
+    `C:\Users\ggreg\AppData\Local\GWB` (the `install.ps1` install
+    location, `$env:LOCALAPPDATA\GWB`) doesn't exist on this machine at
+    all — checked directly. The real dev checkout has always been
+    `C:\Users\ggreg\GWB`. The `# >>> GWB self >>>` block in `$PROFILE`
+    gets rewritten by *every* `gwb.ps1 restore` to point at wherever
+    that particular `gwb.ps1` was invoked from (documented already in
+    the 2026-08-11 install.ps1-verification entry below as expected
+    behavior) — at some point a restore ran from the `LOCALAPPDATA`
+    install, and that install directory was later removed without a
+    follow-up restore from the dev checkout to re-point `$PROFILE` back.
+    The rest of `$PROFILE` (the `# >>> GWB managed block >>>` aliases/
+    mise/etc.) was untouched and fine — only the self-registration tail
+    was broken.
+  - **Fixed**: ran `gwb.ps1 restore developer` explicitly from
+    `C:\Users\ggreg\GWB` (Greg confirmed before running, since it
+    rewrites his live `$PROFILE`). The broken-profile errors printed
+    once more during that very invocation (expected — `pwsh -Command`
+    still loads the existing broken profile before running anything),
+    then the restore completed cleanly and rewrote both the `$PROFILE`
+    managed block and the `gwb` self block to `C:\Users\ggreg\GWB`.
+  - **Verified for real**: a fresh `pwsh -NoLogo` process (no `-Command`
+    this time, so nothing masked residual errors) loads with **zero**
+    errors; `gwb version` reports `1.0.0` correctly; `Get-Command gwb
+    -All` resolves cleanly to the function with no leftover stale
+    registration. `ll` output looked empty in this same check, but
+    that's the same non-tty `eza`/automation-tooling artifact already
+    documented at length elsewhere in this file (2026-08-21 second-
+    machine and Windows-Terminal-restart entries) — not a new bug,
+    flagged for Greg to eyeball in a real terminal.
+  - **Confirmed by Greg directly, in a real new terminal window**: no
+    error message, profile loads clean — "Loads profile in 1292ms."
+    Closes this out with genuine end-user confirmation, not just an
+    automated check.
+  - **Same-session finding, worth noting for future path assumptions**:
+    this machine's `Documents` is now OneDrive-redirected too (`
+    $PROFILE` resolves under `...\OneDrive\Documents\PowerShell\...`),
+    and PowerShell itself is at `7.6.5` now (was `7.6.4` as of the
+    2026-08-13 sessions) — both updated in the Test environments
+    section above.
+  - Working tree: only this documentation update touches the repo —
+    the actual fix was a live `$PROFILE` rewrite via `gwb.ps1 restore`,
+    not a code change. **Nothing queued.**
+
+- **Session (2026-08-21, real Windows 11 machine, follow-up): installed
+  `cpufetch` for real, and caught/fixed a real mistake doing it.** Greg
+  reported `fastfetch` had installed (from the earlier dry-run's "check
+  what's pending" implication) but `cpufetch` hadn't, and asked to run
+  it. First attempt ran `gwb.ps1 restore default` for real to get
+  `cpufetch` installed — worked (`Dr-Noob.cpufetch` v1.07, confirmed via
+  `cpufetch --version` and a real `cpufetch` run showing this machine's
+  actual CPU, an Intel i5-8365U), but as a real side effect also
+  switched this laptop's live `$PROFILE` from `developer` to `default`,
+  silently dropping the `mise` activation and `far` wrapper `developer`
+  adds — the exact class of mistake this project's own 2026-08-13 yazi
+  verification session already documented and deliberately avoided
+  (calling `Install-GwbYaziConfig` directly instead of a full `restore`
+  for the same reason). Caught immediately after, not left for a future
+  session to find: re-ran `gwb.ps1 restore developer` for real,
+  confirmed via a fresh `pwsh` process that `far`/`mise` are back
+  (`Get-Command far -All`/`mise -All` both resolve to `Function`, `mise
+  --version` runs) and `cpufetch` still works globally (it's a winget
+  install, not profile-scoped). **Lesson worth remembering for next
+  time a single package needs installing outside the active profile**:
+  reach for `winget install` directly, or `Install-GwbPackage` in
+  isolation, not a full `restore` of a different profile than the one
+  actually live on the machine.
+  - Working tree otherwise unchanged from the entry below at the time —
+    this entry records the real package-install/profile-restore side
+    effect, not a code change. (Greg reviewed and approved the pending
+    edits from the entry below shortly after; see its closing note for
+    the commit.)
+
+- **Session (2026-08-21, real Windows 11 machine, follow-up): added
+  `fastfetch`/`cpufetch` to `default` and `eza --hyperlink` to the
+  shared alias config, ported from GLB. Reviewed and committed/pushed
+  as [`c3752ef`](https://github.com/ggregoro/GWB/commit/c3752ef26b49dba5d28beb87d428b72e5d461036).**
+  - **`fastfetch`/`cpufetch` added to `profiles/default/packages.txt`**
+    (system-info banner tools, mirroring GLB's own `default` profile).
+    Winget IDs confirmed directly via `winget search` rather than
+    assumed — `fastfetch`'s real ID is `Fastfetch-cli.Fastfetch` (note
+    the casing differs from the `fastfetch-cli.fastfetch` first
+    suggested; winget IDs matched case-sensitively against the override
+    table elsewhere in this project, e.g. `BurntSushi.ripgrep.MSVC`, so
+    used the exact casing winget reports), `cpufetch`'s is
+    `Dr-Noob.cpufetch` — both single, unambiguous native winget
+    packages, no per-distro-style override complexity like GLB
+    sometimes hits. Added to `_GWB_PACKAGE_OVERRIDES`
+    (`lib/packages.ps1`) following the existing pattern. Only
+    `default` per Greg's explicit ask — not ported to `developer`/
+    `server`.
+  - **`eza --hyperlink` added to `ll`/`la` (not plain `ls`) in all three
+    profiles' `profile-snippet.ps1`**, mirroring GLB's own 2026-08-18
+    change exactly: OSC 8 hyperlinks (Ctrl-click to open a file) on the
+    long-listing-style aliases only, `ls` left untouched. One real
+    divergence from GLB worth recording: GLB's `la` is `-la` (a true
+    long listing); GWB's `la` has always been `-a` only, no `-l` — the
+    "mirror the named aliases GLB touched (`ll`/`la`), not `ls`" reading
+    was used rather than "mirror flag-for-flag," since GWB has no
+    separate `l` alias and this project has no `--git` flag on eza at
+    all (never added it, unlike GLB) so there was no `--git`-preservation
+    concern to carry over either. Added a comment above the block in all
+    three files explaining the `ll`/`la`-only choice and pointing back
+    at GLB's change for context.
+  - **Verified so far**: all four edited files parse clean
+    (`[System.Management.Automation.Language.Parser]::ParseFile`), full
+    Pester suite still 103/103, and `gwb.ps1 restore default --dry-run`
+    resolves both new packages correctly (`fastfetch` reports "Already
+    installed" - it's already on this machine from earlier ad hoc use;
+    `cpufetch` correctly previews `Would install: cpufetch ->
+    Dr-Noob.cpufetch`). **`cpufetch` itself was installed for real
+    immediately after, same session** — see the entry above (out of
+    chronological order in this file: that entry was written first but
+    describes work that happened after this one). **Still not verified
+    for real**: no live `ll`/`la` hyperlink check in a real terminal
+    (this session's own automation tooling still can't confirm OSC 8
+    escape sequences render/Ctrl-click visually, the same class of gap
+    the 2026-08-13 session's yazi work hit) — flagged for Greg to
+    eyeball directly. Greg reviewed this change and approved committing
+    it; pushed as
+    [`c3752ef`](https://github.com/ggregoro/GWB/commit/c3752ef26b49dba5d28beb87d428b72e5d461036).
+
+- **Session (2026-08-21, real Windows 11 machine, follow-up): confirmed
+  the flagged Windows Terminal restart, closing out the one open item
+  from earlier today.** Greg closed and fully reopened Windows Terminal
+  (not just a new tab) and confirmed PowerShell 7 loads as the default
+  profile — the in-memory-state clobbering risk the entry below flagged
+  did not recur. Independently re-verified from this session too:
+  `defaultProfile` in the real `settings.json` resolves to the
+  auto-detected `"PowerShell"` entry (`source:
+  Windows.Terminal.PowershellCore`); a fresh `pwsh` process (registry
+  PATH refresh and the test command combined into one call, per this
+  same session's own methodology note below) confirms `$PROFILE`
+  resolves correctly under the OneDrive-redirected path, loads with no
+  errors, `Get-Command ll -All`/`ls -All` each resolve to `Function`
+  only (no built-in-alias regression), and `rg`/`yazi --version`/`far`/
+  `gwb version` all work.
+  - **A new instance of the same automation-tooling artifact already
+    documented below, not a real bug**: `eza`/`ll` again produced empty
+    output when invoked through this session's own non-interactive
+    PowerShell tool calls — this time reproduced even via `-File`
+    (previously noted as a workaround), and isolated further: bare
+    `eza`/`eza -1` are silently empty specifically in this tool's
+    non-tty automation context, while `Get-ChildItem` against the exact
+    same real directory and `eza --version` (needs no terminal-size
+    detection) both work fine. Points at eza's own terminal-width/tty
+    detection under non-interactive invocation, not a `gwb`/profile bug
+    — flagged for Greg to eyeball `ll` in a real terminal to be certain,
+    since this environment still can't visually confirm it. Nothing in
+    the repo changed for this.
+  - Working tree still clean (verification-only). **Nothing queued.**
+
+- **Session (2026-08-21, Greg's second real Windows 11 machine, a new
+  laptop): GWB's first real second-machine install, closing a gap
+  documented since the project's very first session.** Greg asked to
+  install GWB here, dry run first. No code in the repository changed
+  this session — pure deployment plus this documentation pass.
+  - **Real prerequisite gap found before anything else could run**:
+    this laptop (build 26100, vs. the primary machine's 26200) had only
+    Windows PowerShell 5.1 — no `pwsh` at all — and `gwb.ps1` declares
+    `#Requires -Version 7.0`. Confirmed directly (`grep`) rather than
+    assumed. Installed PowerShell 7 via `winget install --id
+    Microsoft.PowerShell -e` (7.6.5.0) with Greg's confirmation first,
+    since installing system-wide software is a real, if low-risk,
+    mutation. **Real finding**: this winget install resolved to the
+    MSIX-packaged app (`C:\Program Files\WindowsApps\
+    Microsoft.PowerShell_7.6.5.0_x64__8wekyb3d8bbwe`, `pwsh.exe`
+    reachable via an App Execution Alias on `PATH`), not the classic
+    `C:\Program Files\PowerShell\7\pwsh.exe` MSI layout the primary
+    machine likely has — confirmed by checking both locations directly
+    rather than assuming the familiar path still applied.
+  - **Dry run** (`gwb.ps1 restore developer --dry-run`): clean, all
+    `[WhatIf]`, no errors — `git` already present, 14 packages + 2
+    PowerShell modules queued, `$PROFILE` (didn't exist yet on this
+    machine) and yazi config both correctly previewed.
+  - Greg asked whether `developer` also gets everything `default` has.
+    Checked directly rather than assumed: **no runtime inheritance** —
+    `lib/profile.ps1` has no layering logic at all (confirmed via
+    `grep`) — `developer`'s `packages.txt`/`modules.txt`/
+    `profile-snippet.ps1` are each maintained as manual supersets of
+    `default`'s (every `default` package duplicated verbatim, plus
+    developer-specific extras). Worth remembering: keeping these two
+    profiles in sync is a manual discipline, not something the code
+    enforces.
+  - **Real (non-dry-run) `gwb.ps1 restore developer`**, run in the
+    background and watched to completion (exit code 0): 14 packages
+    installed (`eza`, `fzf`, `lf`, `ripgrep`, `fd`, `bat`, `starship`,
+    `jq`, `gh`, `mise`, `fresh`, `mingw`, `farmanager`, `yazi`, `file`),
+    2 PowerShell modules (`PSFzf`, `Terminal-Icons`), `$PROFILE`
+    created fresh and wired (packages + Starship `scan_timeout = 1000`
+    + yazi config + `gwb` self-registration). Several UAC/installer
+    elevation prompts appeared for real mid-install (the VC++
+    Redistributable dependency `fd`/`bat`/`mise`/`yazi` all pull in,
+    plus the `starship`/`gh`/`mingw` MSIs) — Greg approved each live;
+    all were expected, none were GWB's own doing.
+  - **A real gap in the verification tooling itself, worth remembering
+    for future sessions**: the PowerShell tool used to drive this
+    doesn't persist shell state (env vars, not just variables/functions
+    as documented) between separate tool calls — refreshing `$env:Path`
+    from the registry in one call and then spawning a child `pwsh` to
+    test tools in a *following* call silently reverted to the stale
+    PATH, which made `profile-snippet.ps1`'s own `Get-Command`-guarded
+    tool detection silently skip defining `ll`/`ls`/`la` and made
+    `PSFzf` fail to load — none of that was a real GWB bug, purely a
+    verification-methodology artifact. Fixed by combining the PATH
+    refresh and the actual test command into one call. A close cousin
+    of the 2026-08-13 session's own "a Bash-tool-spawned `pwsh` process
+    is not a reliable proxy for a real PowerShell session's `PATH`"
+    note — same root cause, different tool this time.
+  - **A related false alarm, chased down and resolved rather than
+    written up as a bug**: `eza`/`ll` produced literally empty output
+    when invoked via a semicolon-chained `pwsh -NoLogo -Command '...;
+    ll'` string, but the *exact same* `eza --icons --group-directories-
+    first -lah` call produced correct output both when invoked directly
+    and via `pwsh -File <script>.ps1`. Isolated with a side-by-side
+    repro before concluding anything — an artifact of that specific
+    nested `-Command`-string invocation style, not a real `eza` or GWB
+    bug.
+  - **Verified for real, once the above was worked around**: a fresh
+    `pwsh` session loads the profile with no errors; `gwb version`,
+    `ll`/`ls`/`la` (full correct eza listing), `Get-Command ls -All`
+    (resolves to `Function` only, confirming the built-in-alias-removal
+    fix applies here too), `rg`, `gcc`, `yazi --version`, and `far`
+    (resolves to the wrapper function) all work correctly.
+  - Greg asked whether closing/reopening his terminal would now run
+    PowerShell 7. Answered directly rather than assuming: **no** —
+    installing PS7 via winget doesn't change any shortcut's or Windows
+    Terminal profile's default; the GWB-managed `$PROFILE` was written
+    to PS7's own profile path (`...\Documents\PowerShell\...`), a
+    completely separate file from Windows PowerShell 5.1's untouched
+    one (`...\Documents\WindowsPowerShell\...`) — and on this machine
+    both actually resolve under a OneDrive-redirected `Documents`
+    folder, a real difference from the primary dev machine worth
+    remembering if a future session assumes the plain
+    `C:\Users\ggreg\Documents` path.
+  - **Set Windows Terminal's default profile to PowerShell 7** (Greg's
+    explicit ask, and out of scope for `gwb restore` itself per
+    `docs/PHILOSOPHY.md`'s "Enhance the Terminal You Have" boundary —
+    done directly as a one-off machine-config change, not added to any
+    GWB code). Found the Store-packaged `settings.json`
+    (`%LOCALAPPDATA%\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\
+    LocalState\settings.json`), backed it up
+    (`settings.json.bak-20260821`) before editing, matching the same
+    precedent from the 2026-08-13 System32 session. **A real gotcha hit
+    live**: Windows Terminal was running throughout, and mid-edit it
+    silently regenerated its own `settings.json` — it had auto-detected
+    the new PS7 install and added its own dynamic `"PowerShell"`
+    profile (`source: Windows.Terminal.PowershellCore`) — which
+    overwrote the first manual `defaultProfile` edit before it could be
+    verified. Caught by re-reading the file before the second edit
+    rather than trusting the first one had stuck; used Windows
+    Terminal's own auto-detected profile (rather than adding a
+    duplicate manual entry) and pointed `defaultProfile` at its real
+    `guid`. **Flagged to Greg, not independently verified this
+    session**: Windows Terminal was still running at the time of the
+    final edit, so a full close-and-reopen (not just a new tab) is
+    needed to be certain the change isn't clobbered again by its own
+    in-memory state on exit — left as something for Greg to confirm on
+    his next real restart, the same "flag the real gap rather than
+    assume it's fine" discipline this project applies throughout.
+  - Working tree: only this documentation update touches the repo.
+    Everything else this session (PS7 install, the real `restore`, the
+    Windows Terminal edit) was live-machine state, not committed code.
+    **Nothing queued.**
 
 - **Session (2026-08-13, real Windows 11 machine, second follow-up):
   fixed a real bug in yazi's previewer, found by Greg using it live

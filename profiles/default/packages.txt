@@ -21,3 +21,7 @@ yazi
 # directory to PATH explicitly, same "winget doesn't PATH-shim this"
 # pattern already handled for Far Manager.
 file
+
+# System-info banner tools, ported from GLB's default profile.
+fastfetch
+cpufetch

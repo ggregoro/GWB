@@ -19,10 +19,12 @@ if (Get-Command eza -ErrorAction SilentlyContinue) {
     # directly (a function alone silently never gets invoked via bare
     # `ls`, even though `Get-Command ls -All` shows both registered).
     # `ll`/`la` don't collide with any built-in alias, so they're fine.
+    # `--hyperlink` (OSC 8, Ctrl-click to open) is on `ll`/`la` only, not
+    # plain `ls` - mirrors GLB's own default (added there 2026-08-18).
     Remove-Item -Path Alias:ls -Force -ErrorAction SilentlyContinue
     function ls  { eza --icons --group-directories-first @args }
-    function ll  { eza --icons --group-directories-first -lah @args }
-    function la  { eza --icons --group-directories-first -a @args }
+    function ll  { eza --icons --group-directories-first --hyperlink -lah @args }
+    function la  { eza --icons --group-directories-first --hyperlink -a @args }
 }
 
 if (Get-Command bat -ErrorAction SilentlyContinue) {

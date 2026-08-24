@@ -172,6 +172,83 @@ survives future restores untouched.
 
 ---
 
+## `gwb.ps1` fails immediately with a PowerShell version error
+
+**Confirmed** — hit directly on a second real machine, a new laptop
+with only Windows PowerShell 5.1 installed.
+
+**Symptom**: running `.\gwb.ps1 ...` (any command at all) fails
+immediately, before any GWB banner or output, with something like
+`The script 'gwb.ps1' cannot be run because it contained a "#requires"
+statement for PowerShell version 7.0`.
+
+**Cause**: `gwb.ps1` declares `#Requires -Version 7.0` at the top, and
+Windows doesn't ship PowerShell 7 by default — only the older, separate
+Windows PowerShell 5.1 engine. GWB is PowerShell 7+ only by design (see
+`CLAUDE.md`'s Language line and `docs/CODING_STANDARDS.md`).
+
+**Fix**: install PowerShell 7 first (a one-time step, independent of
+GWB itself), then always invoke `gwb.ps1`/`gwb` via `pwsh`, not
+`powershell`:
+
+```powershell
+winget install --id Microsoft.PowerShell -e
+```
+
+Confirmed live: this installs PowerShell 7 as an MSIX package
+(`C:\Program Files\WindowsApps\Microsoft.PowerShell_...`, resolved on
+`PATH` via an App Execution Alias) rather than the classic
+`C:\Program Files\PowerShell\7\pwsh.exe` MSI layout — either way,
+`pwsh` resolves correctly on `PATH` once installed, and no further
+configuration is needed for `gwb.ps1` itself to run.
+
+---
+
+## New terminal windows still open PowerShell 5.1 after installing PowerShell 7
+
+**Confirmed** — hit directly on the same new laptop, right after
+installing PowerShell 7 to unblock the issue above.
+
+**Symptom**: PowerShell 7 is installed and `pwsh` works when typed
+explicitly, but closing and reopening a terminal still lands back in
+Windows PowerShell 5.1 — a different, separate profile from the one
+`gwb restore` just configured.
+
+**Cause**: installing PowerShell 7 via winget adds it alongside Windows
+PowerShell 5.1 — it doesn't become the default shell for any shortcut,
+Start menu entry, or Windows Terminal profile automatically. The two
+engines also have entirely separate `$PROFILE` files (Windows
+PowerShell 5.1 uses `...\Documents\WindowsPowerShell\...`; PowerShell 7
+uses `...\Documents\PowerShell\...` — on a machine where `Documents` is
+OneDrive-redirected, both live under that synced path instead of
+directly under `C:\Users\<name>\Documents`), so `gwb restore`'s changes
+are invisible from the 5.1 profile.
+
+**Fix**: launch PowerShell 7 explicitly (Start menu → "PowerShell 7",
+or type `pwsh` in an existing window), or set it as Windows Terminal's
+default profile so new tabs/windows use it automatically:
+
+1. Install PowerShell 7 (see the entry above) — Windows Terminal
+   auto-detects it and adds its own `"PowerShell"` profile
+   (`source: Windows.Terminal.PowershellCore`) to `settings.json` the
+   next time it enumerates profiles.
+2. Set that profile's `guid` as `defaultProfile` in Windows Terminal's
+   `settings.json` (for the Store-packaged install:
+   `%LOCALAPPDATA%\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\
+   LocalState\settings.json`).
+3. **Fully close every Windows Terminal window before relying on the
+   change** — if Windows Terminal is left running while `settings.json`
+   is edited externally, it can overwrite the file again from its own
+   in-memory state. Confirmed live: an in-progress manual edit was
+   silently overwritten mid-session when Windows Terminal itself
+   regenerated the file after detecting the new PowerShell 7 install.
+
+This is a Windows Terminal / PowerShell configuration detail, not
+something `gwb restore` manages — see `docs/PHILOSOPHY.md` ("Enhance
+the Terminal You Have, Don't Replace It").
+
+---
+
 ## `eza`/Starship icons render as boxes or blanks
 
 **Anticipated** — the same class of issue GLB documents extensively for

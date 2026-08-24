@@ -7,7 +7,40 @@ feature/code changes. Mirrors GLB's own `docs/DOCS_CHANGELOG.md`.
 
 ## [Unreleased]
 
-(none since the screenshots/README session below)
+(none since the second-machine session below)
+
+---
+
+## 2026-08-21 (second real Windows machine — new laptop)
+
+### Documentation
+
+- Updated `CLAUDE.md`'s Test environments section and added a new
+  Working notes entry recording GWB's first real second-machine
+  verification — a new laptop that started with only Windows
+  PowerShell 5.1 and no `pwsh` at all — closing the "hasn't been tested
+  on a second machine/VM yet" gap the project had carried since its
+  very first session. Added two new `docs/troubleshooting.md` entries
+  (both Confirmed): `gwb.ps1` failing outright with no PowerShell 7
+  present, and new terminals not picking up PowerShell 7 automatically
+  after installing it (including a real Windows Terminal
+  `settings.json` self-overwrite caught live while setting its default
+  profile). Fixed a stale `README.md` test-count mismatch (Testing
+  section said 103, Status section still said 93) and updated its
+  Contributing section to reflect two real test machines instead of
+  one.
+
+### Development Environment
+
+- Installed PowerShell 7.6.5 via winget on the new laptop (resolved to
+  the MSIX-packaged install, not the classic Program Files MSI
+  layout), then ran and verified a real `gwb.ps1 restore developer`
+  end to end — 14 packages, 2 PowerShell modules, `$PROFILE`/Starship/
+  yazi config all installed and confirmed working in a genuinely fresh
+  `pwsh` session. Also set Windows Terminal's default profile to
+  PowerShell 7 as a one-off machine-config change (outside GWB's own
+  scope, see `docs/PHILOSOPHY.md`). No code in the repository changed
+  this session — pure deployment and documentation.
 
 ---
 

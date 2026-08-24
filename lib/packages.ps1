@@ -25,6 +25,8 @@ $Script:_GWB_PACKAGE_OVERRIDES = @{
     "farmanager" = "FarManager.FarManager"
     "yazi"     = "sxyazi.yazi"
     "file"     = "GnuWin32.File"
+    "fastfetch" = "Fastfetch-cli.Fastfetch"
+    "cpufetch"  = "Dr-Noob.cpufetch"
 }
 
 function Resolve-GwbPackageId {
