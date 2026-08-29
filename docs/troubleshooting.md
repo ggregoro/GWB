@@ -249,6 +249,59 @@ the Terminal You Have, Don't Replace It").
 
 ---
 
+## PSFzf fails to load: "An Application Control policy has blocked this file"
+
+**Confirmed** — hit directly by Greg in a real terminal.
+
+**Symptom**: every new PowerShell window prints something like:
+
+```
+Import-Module: ...\Microsoft.PowerShell_profile.ps1:35
+     | Could not load file or assembly '...\Modules\PSFzf\<version>\PSFzf.dll'.
+     | An Application Control policy has blocked this file. (0x800711C7)
+Set-PsFzfOption: ...
+     | The 'Set-PsFzfOption' command was found in the module 'PSFzf', but the module could not be loaded...
+```
+
+optionally followed by a much slower-than-usual "Loading personal and
+system profiles took ...ms." line.
+
+**Cause**: Windows Defender Application Control, Smart App Control, or a
+similar third-party Application Control policy blocked `PSFzf.dll` from
+loading — `PSFzf` installed successfully (`Install-Module` and
+`Get-Module -ListAvailable` both see it fine), but the *.dll* itself
+didn't pass the machine's code-integrity policy at load time. This is a
+machine/organization security policy decision, not a GWB or PSFzf bug —
+the same category as IPBan's Administrator-elevation requirement
+(`docs/PROJECT.md`'s Non-Goals): GWB won't try to work around a security
+control the machine owner (or their org) has deliberately put in place.
+
+**Fix**: as of the `try`/`catch` added around `Import-Module PSFzf` in
+all three `profile-snippet.ps1` files (see `CHANGELOG.md`), a blocked
+policy now fails quietly instead of printing errors (and adding load
+time) on every single shell startup. Re-run `gwb restore <profile>` (or
+`gwb repair <profile>`) on an older checkout to pick it up.
+
+**`Ctrl+f`/`Ctrl+r` themselves are also restored**, not just silenced —
+confirmed directly that when the policy blocks `PSFzf.dll`, the signed
+`fzf.exe` binary itself still runs fine (its interactive UI opens and
+works normally; only the PowerShell module *assembly* fails the
+code-integrity check). So when `PSFzf` fails to load but `fzf.exe` is on
+`PATH`, `profile-snippet.ps1` now wires up the same two keybindings by
+hand via `Set-PSReadLineKeyHandler`, shelling out to `fzf.exe` directly
+instead of going through the blocked DLL — `Ctrl+r` fuzzy-searches
+PSReadLine's history file, `Ctrl+f` fuzzy-searches the current
+directory's contents (non-recursive — deliberately simpler than PSFzf's
+own recursive/provider-aware search; a fallback, not a
+reimplementation). To get the *real* PSFzf module working again (its
+fuller feature set), the policy itself still needs to allow
+`PSFzf.dll` — check with whoever manages Application Control on the
+machine (a home-grown WDAC policy, an MDM-pushed Smart App Control
+setting, or org-wide endpoint security software) about an exception;
+GWB has no part in that decision or process.
+
+---
+
 ## `eza`/Starship icons render as boxes or blanks
 
 **Anticipated** — the same class of issue GLB documents extensively for

@@ -192,6 +192,86 @@ also **verified for real** — see the Working notes entry below.
 
 ## Working notes
 
+- **Session (2026-08-29, cloud session, no `pwsh` available): fixed a
+  real, user-reported PSFzf load failure — genuinely distinct from the
+  OneDrive-sync `$PROFILE` bug below, not a recurrence of it.** Greg
+  reported new errors on shell startup; the error text (`Import-Module:
+  ... Could not load file or assembly '...\PSFzf.dll'. An Application
+  Control policy has blocked this file. (0x800711C7)`, cascading into
+  `Set-PsFzfOption` also failing, plus "Loading personal and system
+  profiles took 18454ms") is unrelated to the 2026-08-21/23 stale-path
+  bug below — confirmed by reading the actual error rather than
+  assuming a recurrence, since on the surface both are "errors on every
+  new PowerShell window." Root cause here: Windows Defender Application
+  Control / Smart App Control / a similar endpoint-security policy is
+  blocking `PSFzf.dll` itself from loading at the code-integrity level
+  — `PSFzf` installed fine (`Get-Module -ListAvailable` sees it), the
+  policy blocks the *load*, not the install. This is a machine/org
+  security decision, not a GWB or PSFzf bug, and explicitly not GWB's
+  to work around — same stance already established for IPBan in
+  `docs/PROJECT.md`'s Non-Goals.
+  - **Fixed**: wrapped `Import-Module PSFzf` (and the `Set-PsFzfOption`
+    call that depends on it) in a `try`/`catch` in all three profiles'
+    `profile-snippet.ps1`, mirroring the existing PSReadLine guard
+    already in the same files for a similar "can fail in some
+    environments, fail quietly" case. A blocked policy now silently
+    skips `Ctrl+f`/`Ctrl+r` fuzzy search for that session instead of
+    printing errors (and adding load time) on every single startup.
+  - Added a new `docs/troubleshooting.md` entry (Confirmed) with the
+    real error text, root cause, and what to actually do about it (get
+    an exception from whoever manages the Application Control policy —
+    still outside GWB's control). Updated `CHANGELOG.md` and
+    `docs/DOCS_CHANGELOG.md`.
+  - **Same-session follow-up, prompted by Greg asking whether the fix
+    would "just break again": clarified this is a different failure
+    class from the OneDrive-sync bug (static template code baked into
+    every future restore, not a per-machine path that can be
+    clobbered), then went further and restored the actual feature, not
+    just silenced the errors.** Greg asked how to be sure `fzf` itself
+    (not just PSFzf) actually works, since `Ctrl+r` still didn't. Walked
+    him through a real, isolated test independent of PSFzf/PSReadLine:
+    `fzf --version` (confirms the binary loads at all) then
+    `Get-ChildItem -Name | fzf` (confirms the real interactive UI
+    launches and works). **Greg ran it and sent a real screenshot**:
+    `fzf`'s interactive picker opened cleanly over a real directory
+    listing (22/22 items, fuzzy filter prompt, `.cache` highlighted) —
+    genuine, first-hand confirmation that the signed `fzf.exe` binary is
+    completely unaffected by the Application Control policy; only the
+    `PSFzf.dll` module assembly is blocked.
+  - **Built a real fallback on the strength of that confirmation**: when
+    `PSFzf` fails to load but `fzf.exe` is on `PATH`, all three
+    `profile-snippet.ps1` files now wire up `Ctrl+r`/`Ctrl+f` by hand via
+    `Set-PSReadLineKeyHandler`, shelling out to `fzf.exe` directly
+    instead of through the blocked DLL — `Ctrl+r` fuzzy-searches
+    PSReadLine's history file and replaces the current line with the
+    selection (`--tac` for most-recent-first, matching normal
+    reverse-search feel); `Ctrl+f` fuzzy-searches the current directory
+    (non-recursive, deliberately simpler than PSFzf's own
+    recursive/provider-aware search — a fallback, not a full
+    reimplementation) and inserts the selection at the cursor. Updated
+    `docs/troubleshooting.md` and `CHANGELOG.md` to describe the
+    fallback, not just the quiet-failure fix.
+  - **Not yet verified for real** — still a cloud session with no
+    `pwsh` at all (confirmed: `command -v pwsh` fails), the same
+    limitation this project has hit repeatedly before. All three edited
+    files were brace/paren/bracket-balance-checked after every edit, and
+    the pattern (external interactive program invoked from inside a
+    `Set-PSReadLineKeyHandler` scriptblock) is a well-established
+    community recipe, but this exact code has never run against a real
+    console. **Next session on Greg's real Windows 11 machine should**:
+    run `Invoke-Pester -Path tests/` (should be unaffected - snippet
+    content isn't executed by the suite, only written verbatim), then a
+    real `gwb.ps1 restore developer` and confirm in a fresh window that
+    (1) no more PSFzf/Application-Control errors and normal load speed,
+    and (2) `Ctrl+r` actually opens fzf against real command history and
+    replaces the line correctly, and `Ctrl+f` opens fzf against the
+    current directory and inserts the picked path at the cursor.
+  - Working tree: `profiles/{default,developer,server}/
+    profile-snippet.ps1`, `docs/troubleshooting.md`, `CHANGELOG.md`,
+    `docs/DOCS_CHANGELOG.md`, and this file. **Queued for next
+    session**: real verification per above, on top of the still-open
+    OneDrive-sync `$PROFILE` design fix from the entry directly below.
+
 - **Session (2026-08-23, real Windows 11 machine — `PC-F2C15AL`): the
   exact same stale "GWB self" `$PROFILE` bug from 2026-08-21
   recurred, fixed the same way.** Greg reported the identical error

@@ -7,7 +7,19 @@ feature/code changes. Mirrors GLB's own `docs/DOCS_CHANGELOG.md`.
 
 ## [Unreleased]
 
-(none since the second-machine session below)
+- Added `docs/troubleshooting.md`'s new entry, "PSFzf fails to load:
+  'An Application Control policy has blocked this file'" — a real bug
+  Greg hit and reported live (`Import-Module PSFzf` failing with
+  `0x800711C7` on every new shell, plus a much slower profile load).
+  Distinct from the earlier OneDrive-sync `$PROFILE` self-registration
+  bug (fixed 2026-08-21/23) despite both surfacing as startup errors —
+  this one is Windows Defender Application Control / Smart App Control
+  (or similar) blocking `PSFzf.dll` itself, a machine security policy
+  GWB can't and shouldn't try to work around (same stance as IPBan).
+  Wrapped `Import-Module PSFzf` in a `try`/`catch` in all three
+  profiles' `profile-snippet.ps1` so a blocked policy now fails quietly
+  instead of erroring on every startup. Updated `CHANGELOG.md` with the
+  actual fix.
 
 ---
 
