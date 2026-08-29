@@ -285,30 +285,47 @@ also **verified for real** — see the Working notes entry below.
     Added two new Pester tests (`tests/Profile.Tests.ps1`) covering both
     regressions directly. Documented the whole failure mode in a new
     `docs/troubleshooting.md` entry and in `CHANGELOG.md`.
-  - **Still not fully verified for real** — this remains a cloud session
-    with no `pwsh` (confirmed again this session). All edits were
-    brace/paren-balance-checked; the `MatchEvaluator` pattern is a
-    well-established PowerShell idiom for exactly this .NET substitution
-    problem, but none of it has actually run. **Next session, or later
-    this same conversation on Greg's real machine, needs to**: (1)
-    manually repair the two corrupted marker lines in his live
-    `$PROFILE` (a one-time fix - the new "fail loudly" behavior means
-    `restore` will refuse to touch the block until this is done, by
-    design), (2) pull this fix, (3) run `Invoke-Pester -Path tests/` to
-    confirm the two new tests actually pass (not just parse), (4) run a
-    real `gwb.ps1 restore developer` and confirm this time the block
-    genuinely changes, (5) confirm in a fresh window: no more
-    PSFzf/Application-Control errors, normal load speed, `Ctrl+r`/
-    `Ctrl+f` actually work via the fzf.exe fallback. Also worth
-    wondering, next time there's a chance to investigate: *how* did that
-    end marker get corrupted in the first place? Not root-caused this
-    session - flagged for later if it recurs on either machine.
+  - **Verified for real, same conversation, on Greg's actual machine —
+    genuinely closed out, not just code-reviewed.** Walked him through
+    the real repair end to end: backed up `$PROFILE`
+    (`$PROFILE.pre-marker-fix-backup`), manually patched the two
+    corrupted end markers with a negative-lookahead `-replace` (guarded
+    so it only touches a marker with *exactly* one trailing `<`, safe to
+    run even if a marker were already correct), confirmed both fixed via
+    an unambiguous `-match [regex]::Escape(...)` boolean check
+    (screenshotted - `True`/`True`), then `git pull origin master` +
+    `gwb.ps1 restore developer`. This time `Get-Content $PROFILE |
+    Select-String -Pattern "GwbPsFzfLoaded"` (screenshotted) confirmed
+    the new code genuinely landed - the block actually changed, not
+    another silent no-op. **Greg then opened a real new terminal and
+    confirmed directly**: no more PSFzf/Application-Control errors, and
+    `Ctrl+r`/`Ctrl+f` both work via the fzf.exe fallback. Both PR #1
+    (the PSFzf fallback) and PR #2 (the `Set-GwbManagedBlock` fix) are
+    merged to `master` and confirmed working end to end on real
+    hardware - not just "should work."
+  - Pester suite (`Invoke-Pester -Path tests/`, confirming the two new
+    regression tests actually pass) was **not** run this session - the
+    live-machine verification above covered the actual user-facing
+    symptom directly, and Greg's time was better spent confirming that
+    than re-running a suite this session has no way to watch execute.
+    Worth running next time `lib/` changes for any other reason, just
+    not flagged as urgently open on its own.
+  - **Still open, not root-caused**: *how* did the end marker get
+    corrupted in the first place? Not investigated this session -
+    flagged for later if it recurs on either machine (worth checking
+    first: whether it happened during one of the many prior sessions
+    that hand-edited `$PROFILE` directly, e.g. the personal `proj`/
+    `sys32` additions or the OneDrive-conflict-copy incidents
+    documented in the entries below).
   - Working tree: `profiles/{default,developer,server}/
     profile-snippet.ps1`, `lib/profile.ps1`, `tests/Profile.Tests.ps1`,
     `docs/troubleshooting.md`, `CHANGELOG.md`, `docs/DOCS_CHANGELOG.md`,
-    and this file. **Queued for next session**: real verification per
-    above, on top of the still-open OneDrive-sync `$PROFILE` design fix
-    from the entry directly below.
+    and this file - all merged to `master` via PR #1 and PR #2, both
+    confirmed working live. **Nothing queued from this session** beyond
+    the open "how did it corrupt" curiosity above, on top of the
+    still-open OneDrive-sync `$PROFILE` design fix from the entry
+    directly below (unrelated - that one's about the self-registration
+    *path*, not marker corruption).
 
 - **Session (2026-08-23, real Windows 11 machine — `PC-F2C15AL`): the
   exact same stale "GWB self" `$PROFILE` bug from 2026-08-21
