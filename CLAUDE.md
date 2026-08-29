@@ -25,24 +25,31 @@ shape and its `default`-profile-first approach.
 
 ## Test environments
 
-- Greg's Windows 11 Pro machine (build 26200, hostname `PC-F2C15AL`),
-  PowerShell 7.6.5 (was 7.6.4 as of the 2026-08-13 sessions — updated
-  since, confirmed directly via `$PSVersionTable` during the
-  2026-08-21 `$PROFILE`-fix session below), winget present. The
-  original dev machine — most real verification has happened here.
-  **`Documents` is now OneDrive-redirected here too** (confirmed
-  directly, `$PROFILE` resolves under
-  `C:\Users\ggreg\OneDrive\Documents\PowerShell\...`) — this section
-  used to claim OneDrive redirection was unique to the second machine
-  below; that was true when written but is stale now. Don't assume a
-  plain `C:\Users\ggreg\Documents` path on either machine going
-  forward.
-- Greg's second Windows 11 Pro machine (build 26100) — a new laptop,
-  GWB's first real second-machine verification (2026-08-21), closing
-  the gap this section used to note ("hasn't been tested on a second
-  machine/VM yet, unlike GLB's many"). Started with only Windows
-  PowerShell 5.1 and no `pwsh` at all; `Documents` is OneDrive-redirected
-  here too. See the Working notes entry below for the full account.
+- Greg's Windows 11 Pro machine (build 26200, hostname `PC-F2C15AL`) —
+  a **ThinkPad** (confirmed directly by Greg, 2026-08-29; not
+  previously recorded here), PowerShell 7.6.5 (was 7.6.4 as of the
+  2026-08-13 sessions — updated since, confirmed directly via
+  `$PSVersionTable` during the 2026-08-21 `$PROFILE`-fix session
+  below), winget present. The original dev machine — most real
+  verification has happened here. **`Documents` is now
+  OneDrive-redirected here too** (confirmed directly, `$PROFILE`
+  resolves under `C:\Users\ggreg\OneDrive\Documents\PowerShell\...`) —
+  this section used to claim OneDrive redirection was unique to the
+  second machine below; that was true when written but is stale now.
+  Don't assume a plain `C:\Users\ggreg\Documents` path on either
+  machine going forward.
+- Greg's second Windows 11 Pro machine (build 26100) — a **Dell
+  Desktop** (confirmed directly by Greg, 2026-08-29; this section
+  previously called it "a new laptop," which was wrong - corrected
+  here). GWB's first real second-machine verification (2026-08-21),
+  closing the gap this section used to note ("hasn't been tested on a
+  second machine/VM yet, unlike GLB's many"). Started with only
+  Windows PowerShell 5.1 and no `pwsh` at all; `Documents` is
+  OneDrive-redirected here too. See the Working notes entry below for
+  the full account (note: that entry's own prose still says "laptop"
+  throughout, describing the same real session accurately in every
+  other respect - just carrying the same since-corrected assumption
+  about form factor).
 
 ## Current state (as of 2026-08-13)
 
