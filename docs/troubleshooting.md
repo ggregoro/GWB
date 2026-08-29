@@ -278,15 +278,27 @@ control the machine owner (or their org) has deliberately put in place.
 
 **Fix**: as of the `try`/`catch` added around `Import-Module PSFzf` in
 all three `profile-snippet.ps1` files (see `CHANGELOG.md`), a blocked
-policy now fails quietly — `Ctrl+f`/`Ctrl+r` fuzzy search just won't be
-available that session, instead of printing errors (and adding load time)
-on every single shell startup. Re-run `gwb restore <profile>` (or `gwb
-repair <profile>`) on an older checkout to pick it up. To actually get
-PSFzf working again, the policy itself needs to allow it — check with
-whoever manages Application Control on the machine (a home-grown WDAC
-policy, an MDM-pushed Smart App Control setting, or org-wide endpoint
-security software) about adding an exception for `PSFzf.dll`; GWB has no
-part in that decision or process.
+policy now fails quietly instead of printing errors (and adding load
+time) on every single shell startup. Re-run `gwb restore <profile>` (or
+`gwb repair <profile>`) on an older checkout to pick it up.
+
+**`Ctrl+f`/`Ctrl+r` themselves are also restored**, not just silenced —
+confirmed directly that when the policy blocks `PSFzf.dll`, the signed
+`fzf.exe` binary itself still runs fine (its interactive UI opens and
+works normally; only the PowerShell module *assembly* fails the
+code-integrity check). So when `PSFzf` fails to load but `fzf.exe` is on
+`PATH`, `profile-snippet.ps1` now wires up the same two keybindings by
+hand via `Set-PSReadLineKeyHandler`, shelling out to `fzf.exe` directly
+instead of going through the blocked DLL — `Ctrl+r` fuzzy-searches
+PSReadLine's history file, `Ctrl+f` fuzzy-searches the current
+directory's contents (non-recursive — deliberately simpler than PSFzf's
+own recursive/provider-aware search; a fallback, not a
+reimplementation). To get the *real* PSFzf module working again (its
+fuller feature set), the policy itself still needs to allow
+`PSFzf.dll` — check with whoever manages Application Control on the
+machine (a home-grown WDAC policy, an MDM-pushed Smart App Control
+setting, or org-wide endpoint security software) about an exception;
+GWB has no part in that decision or process.
 
 ---
 

@@ -380,3 +380,19 @@ This project follows a simple versioning approach:
   session. Documented in `docs/troubleshooting.md` with the real error
   text and what to do about it (get an exception from whoever manages
   the policy - outside GWB's control either way).
+- Restored `Ctrl+f`/`Ctrl+r` fuzzy search itself, not just silenced the
+  errors, for machines where Application Control blocks `PSFzf.dll` -
+  confirmed directly (a real screenshot from Greg) that the signed
+  `fzf.exe` binary itself still runs fine under the same policy that
+  blocks the module; only the PowerShell module *assembly* fails the
+  code-integrity check. When `PSFzf` fails to load but `fzf` is on
+  `PATH`, all three profiles' `profile-snippet.ps1` now wire up
+  `Ctrl+r`/`Ctrl+f` by hand via `Set-PSReadLineKeyHandler`, shelling out
+  to `fzf.exe` directly instead of going through the blocked DLL -
+  `Ctrl+r` fuzzy-searches PSReadLine's history file (`--tac`, most
+  recent first, matching typical reverse-search behavior) and replaces
+  the current line with the selection; `Ctrl+f` fuzzy-searches the
+  current directory (non-recursive - a deliberately simpler fallback,
+  not a full reimplementation of PSFzf's own recursive/provider-aware
+  search) and inserts the selection at the cursor. Updated
+  `docs/troubleshooting.md` accordingly.

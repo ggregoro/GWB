@@ -44,13 +44,45 @@ if (Get-Module -ListAvailable -Name PSFzf) {
     # can't and shouldn't work around (same "not GWB's to fix" stance as
     # IPBan in the server profile). Fail quietly so a blocked policy
     # doesn't throw errors on every shell startup.
+    $GwbPsFzfLoaded = $false
     try {
         Import-Module PSFzf -ErrorAction Stop
         Set-PsFzfOption -PSReadlineChordProvider 'Ctrl+f' -PSReadlineChordReverseHistory 'Ctrl+r'
+        $GwbPsFzfLoaded = $true
     } catch {
-        # Blocked by policy (or some other load failure) - Ctrl+f/Ctrl+r
-        # fuzzy history/provider search just won't be available this session.
+        # Blocked by policy (or some other load failure) - fall through to
+        # the plain fzf.exe fallback below instead of losing Ctrl+f/Ctrl+r
+        # entirely.
     }
+
+    # Confirmed directly: when Application Control blocks PSFzf.dll, the
+    # signed fzf.exe binary itself still runs fine - only the PowerShell
+    # module assembly fails the policy's code-integrity check. So when the
+    # module didn't load, wire up the same two keybindings by hand,
+    # shelling out to fzf.exe directly instead of going through PSFzf's
+    # own DLL. Deliberately simpler than PSFzf's real behavior (current
+    # directory only for Ctrl+f, not a full recursive/provider-aware
+    # search) - a fallback, not a reimplementation.
+    if (-not $GwbPsFzfLoaded -and (Get-Command fzf -ErrorAction SilentlyContinue)) {
+        Set-PSReadLineKeyHandler -Key Ctrl+r -ScriptBlock {
+            $GwbHistoryPath = (Get-PSReadLineOption).HistorySavePath
+            if (-not (Test-Path $GwbHistoryPath)) { return }
+            $GwbSelection = Get-Content $GwbHistoryPath | Where-Object { $_.Trim() } |
+                Select-Object -Unique | fzf --height 40% --layout=reverse --border --tac
+            if ($GwbSelection) {
+                [Microsoft.PowerShell.PSConsoleReadLine]::RevertLine()
+                [Microsoft.PowerShell.PSConsoleReadLine]::Insert($GwbSelection)
+            }
+        }
+        Set-PSReadLineKeyHandler -Key Ctrl+f -ScriptBlock {
+            $GwbSelection = Get-ChildItem -Name -ErrorAction SilentlyContinue |
+                fzf --height 40% --layout=reverse --border
+            if ($GwbSelection) {
+                [Microsoft.PowerShell.PSConsoleReadLine]::Insert($GwbSelection)
+            }
+        }
+    }
+    Remove-Variable -Name GwbPsFzfLoaded -ErrorAction SilentlyContinue
 }
 
 if (Get-Module -ListAvailable -Name Terminal-Icons) {
