@@ -35,6 +35,7 @@ function Set-GwbManagedBlock {
     $existing = if (Test-Path $PROFILE) { (Get-Content $PROFILE -Raw).TrimEnd() } else { "" }
     $backupPath = "$PROFILE.gwb-backup"
     $hasMarker = $existing -match [regex]::Escape($Marker)
+    $hasEndMarker = $existing -match [regex]::Escape($EndMarker)
 
     if ($WhatIf) {
         if ($hasMarker) {
@@ -56,10 +57,34 @@ function Set-GwbManagedBlock {
         New-Item -ItemType File -Path $PROFILE -Force | Out-Null
     }
 
+    # A start marker with no matching end marker means the block is
+    # malformed (hand-edited, truncated, or corrupted some other way) -
+    # confirmed for real, not hypothetical: a machine was found with its
+    # end marker missing its trailing "<<<", which silently defeated the
+    # regex replace below every single time (no match -> $existing came
+    # back completely unchanged -> Set-Content wrote the identical content
+    # right back -> Write-Ok still printed "updated" regardless). That let
+    # a stale block survive an unknown number of "successful" restores
+    # with zero indication anything was wrong. Fail loudly instead so this
+    # is visible the moment it happens rather than staying invisible.
+    if ($hasMarker -and -not $hasEndMarker) {
+        Write-Fail "$Label block in `$PROFILE has a '$Marker' start marker but no matching '$EndMarker' end marker - the block looks corrupted or was hand-edited. Not touching it; fix or remove the stale marker manually, then re-run restore."
+        return
+    }
+
     if ($hasMarker) {
         $pattern = "(?s)$([regex]::Escape($Marker)).*?$([regex]::Escape($EndMarker))"
         $replacement = "$Marker`n$Content`n$EndMarker"
-        $updated = $existing -replace $pattern, $replacement
+        # A MatchEvaluator, not a plain replacement string - the latter is
+        # parsed as a .NET regex substitution template, where $ introduces
+        # special sequences ($1, $&, $_ for the whole input string, etc.).
+        # $Content is arbitrary PowerShell snippet text that legitimately
+        # contains $ (e.g. $_.Trim(), $env:Path) - confirmed as a real risk
+        # once profile-snippet content started including $_ (added for the
+        # fzf.exe Ctrl+r/Ctrl+f fallback), not just a theoretical one. A
+        # MatchEvaluator scriptblock returns its replacement literally, with
+        # no substitution parsing at all.
+        $updated = [regex]::Replace($existing, $pattern, { param($m) $replacement })
     } else {
         $prefix = if ($existing -eq "") { "" } else { "$existing`n`n" }
         $updated = "$prefix$Marker`n$Content`n$EndMarker"

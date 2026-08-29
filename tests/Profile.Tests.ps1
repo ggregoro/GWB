@@ -80,6 +80,23 @@ Describe "Set-GwbManagedBlock" {
         Set-GwbManagedBlock -Marker "# >>> A >>>" -EndMarker "# <<< A <<<" -Content "content-A" -Label "A" -WhatIf
         (Test-Path $global:PROFILE) | Should -Be $false
     }
+
+    It "preserves `$ sequences in Content literally, rather than expanding them as regex substitutions (regression: `$_/`$1/`$& corruption via -replace)" {
+        Set-GwbManagedBlock -Marker "# >>> A >>>" -EndMarker "# <<< A <<<" -Content 'Where-Object { $_.Trim() }' -Label "A"
+        Set-GwbManagedBlock -Marker "# >>> A >>>" -EndMarker "# <<< A <<<" -Content 'Where-Object { $_.Trim() }' -Label "A"
+        $content = Get-Content $global:PROFILE -Raw
+        $content | Should -Match ([regex]::Escape('Where-Object { $_.Trim() }'))
+        $content | Should -Not -Match "content-A"
+    }
+
+    It "fails loudly and leaves `$PROFILE untouched when a start marker has no matching end marker (regression: silent no-op that still reported success)" {
+        Set-Content -Path $global:PROFILE -Value "# >>> A >>>`nstale content`n# <<< A <"
+        $before = Get-Content $global:PROFILE -Raw
+        Set-GwbManagedBlock -Marker "# >>> A >>>" -EndMarker "# <<< A <<<" -Content "new-content" -Label "A"
+        $after = Get-Content $global:PROFILE -Raw
+        $after | Should -Be $before
+        $after | Should -Not -Match "new-content"
+    }
 }
 
 Describe "Install-GwbProfileSnippet" {

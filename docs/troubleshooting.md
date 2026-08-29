@@ -302,6 +302,62 @@ GWB has no part in that decision or process.
 
 ---
 
+## `gwb restore` reports "Profile updated" but `$PROFILE` doesn't actually change
+
+**Confirmed** — hit directly by Greg, root-caused live over several
+rounds of real diagnostic output rather than guessed at.
+
+**Symptom**: `gwb restore <profile>` runs cleanly, prints
+`[OK] Profile updated: ...` (and every other step also reports success),
+but a fresh PowerShell window still shows the *old* `profile-snippet.ps1`
+content — including errors that a just-shipped fix was supposed to have
+silenced.
+
+**Cause**: a real bug in `Set-GwbManagedBlock` (`lib/profile.ps1`, shared
+by both the profile-snippet block and the `gwb` self-registration
+block). It finds the managed block's *start* marker
+(e.g. `# >>> GWB managed block >>>`) and *end* marker
+(`# <<< GWB managed block <<<`) and regex-replaces everything between
+them with fresh content on every restore. If the end marker is
+malformed for any reason — hand-edited, truncated by some other tool, or
+otherwise not byte-for-byte what GWB expects — the replace silently
+matches nothing at all: the file gets written back completely
+unchanged, and `Write-Ok` still prints "updated" regardless, because the
+old code never checked whether anything actually changed. Confirmed
+live on a real machine where the end marker's trailing `<<<` had somehow
+been reduced to a single `<` (`# <<< GWB managed block <` instead of
+`# <<< GWB managed block <<<`) — every restore since then had been a
+complete no-op, invisibly, however many times it ran.
+
+A second, related bug found and fixed alongside it: the replace used a
+plain PowerShell `-replace` with a *string* replacement, which .NET
+parses as a regex substitution template (`$1`, `$&`, `$_` for "the
+entire input string", etc.). Profile-snippet content is arbitrary
+PowerShell that legitimately contains `$` (e.g. `$_.Trim()`,
+`$env:Path`) — once the fzf.exe fallback above added a `$_` to the
+snippet, that became a real corruption risk (a `$_` in the replacement
+text would have gotten expanded to the *entire pre-existing file
+content*), not just a theoretical one.
+
+**Fix**: `Set-GwbManagedBlock` now (1) detects a start marker with no
+matching end marker and fails loudly — `[FAIL] ... has a start marker
+but no matching end marker ... not touching it` — instead of silently
+no-op'ing, and (2) uses a `[regex]::Replace(...)` with a `MatchEvaluator`
+scriptblock instead of a plain string replacement, so `$` in snippet
+content is always treated as literal text, never regex-substitution
+syntax. Re-run `gwb restore <profile>` on an older checkout to pick it
+up.
+
+**If you hit the "no matching end marker" failure**: your `$PROFILE`'s
+GWB block genuinely is malformed and needs a one-time manual repair
+before `restore` can touch it again — inspect the block between its
+start/end marker comments (e.g. `Get-Content $PROFILE`) and either fix
+the malformed marker line by hand or delete the whole block (from the
+`# >>> ... >>>` line through the `# <<< ... <<<` line) and let the next
+`restore` re-add it fresh.
+
+---
+
 ## `eza`/Starship icons render as boxes or blanks
 
 **Anticipated** — the same class of issue GLB documents extensively for
