@@ -396,3 +396,26 @@ This project follows a simple versioning approach:
   not a full reimplementation of PSFzf's own recursive/provider-aware
   search) and inserts the selection at the cursor. Updated
   `docs/troubleshooting.md` accordingly.
+- Fixed a real, previously-undiscovered bug in `Set-GwbManagedBlock`
+  (`lib/profile.ps1`, shared by the profile-snippet block and the `gwb`
+  self-registration block): it never verified that its regex replace
+  actually matched anything before declaring success. Found live when
+  Greg's `gwb restore developer` kept reporting "Profile updated" while
+  his `$PROFILE` visibly never changed - root-caused over several
+  rounds of real diagnostic output to a malformed end marker on his
+  actual machine (`# <<< GWB managed block <` instead of
+  `# <<< GWB managed block <<<`), which made the replace silently match
+  nothing, write the identical content right back, and still print
+  success - meaning every restore since whenever that marker got
+  corrupted had been a complete, invisible no-op. `Set-GwbManagedBlock`
+  now detects a start marker with no matching end marker and fails
+  loudly instead. Also fixed a second, related bug found alongside it:
+  the replace used a plain string as the `-replace` operator's
+  replacement, which .NET parses as a regex substitution template
+  (`$1`, `$&`, `$_` for the entire input string, etc.) - a real
+  corruption risk now that snippet content legitimately contains `$`
+  (the fzf.exe fallback's `$_.Trim()`, `$env:Path`, etc.), not just a
+  theoretical one. Switched to `[regex]::Replace(...)` with a
+  `MatchEvaluator` scriptblock, which treats the replacement as fully
+  literal text. Added two new Pester tests covering both regressions.
+  Documented in `docs/troubleshooting.md`.

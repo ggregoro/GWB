@@ -251,26 +251,64 @@ also **verified for real** — see the Working notes entry below.
     reimplementation) and inserts the selection at the cursor. Updated
     `docs/troubleshooting.md` and `CHANGELOG.md` to describe the
     fallback, not just the quiet-failure fix.
-  - **Not yet verified for real** — still a cloud session with no
-    `pwsh` at all (confirmed: `command -v pwsh` fails), the same
-    limitation this project has hit repeatedly before. All three edited
-    files were brace/paren/bracket-balance-checked after every edit, and
-    the pattern (external interactive program invoked from inside a
-    `Set-PSReadLineKeyHandler` scriptblock) is a well-established
-    community recipe, but this exact code has never run against a real
-    console. **Next session on Greg's real Windows 11 machine should**:
-    run `Invoke-Pester -Path tests/` (should be unaffected - snippet
-    content isn't executed by the suite, only written verbatim), then a
-    real `gwb.ps1 restore developer` and confirm in a fresh window that
-    (1) no more PSFzf/Application-Control errors and normal load speed,
-    and (2) `Ctrl+r` actually opens fzf against real command history and
-    replaces the line correctly, and `Ctrl+f` opens fzf against the
-    current directory and inserts the picked path at the cursor.
+  - **Real verification attempt (same session, PR #1 opened and merged
+    to `master`) surfaced a second, genuinely deeper bug — not in the
+    PSFzf fix at all, in `Set-GwbManagedBlock` itself.** Walked Greg
+    through `git pull origin master` + `gwb.ps1 restore developer` on
+    his real machine; it reported full success (`[OK] Profile updated`)
+    but a fresh window still showed the exact old, unwrapped PSFzf
+    block. Root-caused over several rounds of real diagnostic output
+    (not guessed at) rather than assuming a recurrence of anything
+    already-documented: `Get-Content $PROFILE` dumped the live file and
+    a `-match [regex]::Escape(...)` boolean check (screenshotted, to
+    rule out the chat's own rendering possibly eating `<<<` as an HTML
+    tag) confirmed definitively - his `$PROFILE`'s end marker had been
+    silently corrupted to `# <<< GWB managed block <` (missing its
+    trailing `<<`) at some unknown prior point, same for
+    `# <<< GWB self <`. `Set-GwbManagedBlock`'s regex replace requires
+    finding the *exact* end marker text; with it malformed, the replace
+    matched nothing, silently wrote the identical content straight back,
+    and `Write-Ok` printed "updated" regardless - a bug that had
+    apparently been making every restore on this machine a complete,
+    invisible no-op for an unknown length of time, never caught because
+    nothing ever verified the replace actually changed anything.
+  - **Fixed both bugs this exposed, not just Greg's one broken file**:
+    `Set-GwbManagedBlock` (`lib/profile.ps1`) now detects a start marker
+    with no matching end marker and fails loudly (`[FAIL] ... not
+    touching it`) instead of silently no-op'ing. Also switched its
+    `-replace` from a plain string replacement (which .NET parses as a
+    regex substitution template, where `$1`/`$&`/`$_` etc. are special -
+    a real corruption risk now that snippet content legitimately
+    contains `$` via this session's own `$_.Trim()` fallback code, not
+    hypothetical) to `[regex]::Replace(...)` with a `MatchEvaluator`
+    scriptblock, which treats the replacement as fully literal text.
+    Added two new Pester tests (`tests/Profile.Tests.ps1`) covering both
+    regressions directly. Documented the whole failure mode in a new
+    `docs/troubleshooting.md` entry and in `CHANGELOG.md`.
+  - **Still not fully verified for real** — this remains a cloud session
+    with no `pwsh` (confirmed again this session). All edits were
+    brace/paren-balance-checked; the `MatchEvaluator` pattern is a
+    well-established PowerShell idiom for exactly this .NET substitution
+    problem, but none of it has actually run. **Next session, or later
+    this same conversation on Greg's real machine, needs to**: (1)
+    manually repair the two corrupted marker lines in his live
+    `$PROFILE` (a one-time fix - the new "fail loudly" behavior means
+    `restore` will refuse to touch the block until this is done, by
+    design), (2) pull this fix, (3) run `Invoke-Pester -Path tests/` to
+    confirm the two new tests actually pass (not just parse), (4) run a
+    real `gwb.ps1 restore developer` and confirm this time the block
+    genuinely changes, (5) confirm in a fresh window: no more
+    PSFzf/Application-Control errors, normal load speed, `Ctrl+r`/
+    `Ctrl+f` actually work via the fzf.exe fallback. Also worth
+    wondering, next time there's a chance to investigate: *how* did that
+    end marker get corrupted in the first place? Not root-caused this
+    session - flagged for later if it recurs on either machine.
   - Working tree: `profiles/{default,developer,server}/
-    profile-snippet.ps1`, `docs/troubleshooting.md`, `CHANGELOG.md`,
-    `docs/DOCS_CHANGELOG.md`, and this file. **Queued for next
-    session**: real verification per above, on top of the still-open
-    OneDrive-sync `$PROFILE` design fix from the entry directly below.
+    profile-snippet.ps1`, `lib/profile.ps1`, `tests/Profile.Tests.ps1`,
+    `docs/troubleshooting.md`, `CHANGELOG.md`, `docs/DOCS_CHANGELOG.md`,
+    and this file. **Queued for next session**: real verification per
+    above, on top of the still-open OneDrive-sync `$PROFILE` design fix
+    from the entry directly below.
 
 - **Session (2026-08-23, real Windows 11 machine — `PC-F2C15AL`): the
   exact same stale "GWB self" `$PROFILE` bug from 2026-08-21
