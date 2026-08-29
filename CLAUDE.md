@@ -192,6 +192,55 @@ also **verified for real** — see the Working notes entry below.
 
 ## Working notes
 
+- **Session (2026-08-29, cloud session, no `pwsh` available): fixed a
+  real, user-reported PSFzf load failure — genuinely distinct from the
+  OneDrive-sync `$PROFILE` bug below, not a recurrence of it.** Greg
+  reported new errors on shell startup; the error text (`Import-Module:
+  ... Could not load file or assembly '...\PSFzf.dll'. An Application
+  Control policy has blocked this file. (0x800711C7)`, cascading into
+  `Set-PsFzfOption` also failing, plus "Loading personal and system
+  profiles took 18454ms") is unrelated to the 2026-08-21/23 stale-path
+  bug below — confirmed by reading the actual error rather than
+  assuming a recurrence, since on the surface both are "errors on every
+  new PowerShell window." Root cause here: Windows Defender Application
+  Control / Smart App Control / a similar endpoint-security policy is
+  blocking `PSFzf.dll` itself from loading at the code-integrity level
+  — `PSFzf` installed fine (`Get-Module -ListAvailable` sees it), the
+  policy blocks the *load*, not the install. This is a machine/org
+  security decision, not a GWB or PSFzf bug, and explicitly not GWB's
+  to work around — same stance already established for IPBan in
+  `docs/PROJECT.md`'s Non-Goals.
+  - **Fixed**: wrapped `Import-Module PSFzf` (and the `Set-PsFzfOption`
+    call that depends on it) in a `try`/`catch` in all three profiles'
+    `profile-snippet.ps1`, mirroring the existing PSReadLine guard
+    already in the same files for a similar "can fail in some
+    environments, fail quietly" case. A blocked policy now silently
+    skips `Ctrl+f`/`Ctrl+r` fuzzy search for that session instead of
+    printing errors (and adding load time) on every single startup.
+  - Added a new `docs/troubleshooting.md` entry (Confirmed) with the
+    real error text, root cause, and what to actually do about it (get
+    an exception from whoever manages the Application Control policy —
+    still outside GWB's control). Updated `CHANGELOG.md` and
+    `docs/DOCS_CHANGELOG.md`.
+  - **Not yet verified for real** — this is a cloud session with no
+    `pwsh` at all (confirmed: `command -v pwsh` fails), the same
+    limitation this project has hit repeatedly in prior cloud sessions.
+    All three edited files were brace/paren-balance-checked, and the
+    `try`/`catch` pattern mirrors the existing, already-verified
+    PSReadLine guard in the same files, but this has never actually run
+    against a real blocked-policy machine. **Next session on Greg's
+    real Windows 11 machine should**: run `Invoke-Pester -Path tests/`
+    (should be unaffected — snippet content isn't executed by the
+    suite, only written verbatim), then `gwb.ps1 restore developer` for
+    real (matching his live profile) and confirm a fresh `pwsh` window
+    no longer prints the PSFzf/Application-Control errors and loads at
+    normal speed again.
+  - Working tree: `profiles/{default,developer,server}/
+    profile-snippet.ps1`, `docs/troubleshooting.md`, `CHANGELOG.md`,
+    `docs/DOCS_CHANGELOG.md`, and this file. **Queued for next
+    session**: real verification per above, on top of the still-open
+    OneDrive-sync `$PROFILE` design fix from the entry directly below.
+
 - **Session (2026-08-23, real Windows 11 machine — `PC-F2C15AL`): the
   exact same stale "GWB self" `$PROFILE` bug from 2026-08-21
   recurred, fixed the same way.** Greg reported the identical error

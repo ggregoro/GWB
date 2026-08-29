@@ -37,8 +37,20 @@ if (Get-Command fzf -ErrorAction SilentlyContinue) {
 }
 
 if (Get-Module -ListAvailable -Name PSFzf) {
-    Import-Module PSFzf
-    Set-PsFzfOption -PSReadlineChordProvider 'Ctrl+f' -PSReadlineChordReverseHistory 'Ctrl+r'
+    # An Application Control policy (Windows Defender Application Control,
+    # Smart App Control, or a similar third-party policy) can block
+    # PSFzf.dll from loading (Import-Module fails with 0x800711C7) even
+    # though the module installed fine - a machine security policy GWB
+    # can't and shouldn't work around (same "not GWB's to fix" stance as
+    # IPBan in the server profile). Fail quietly so a blocked policy
+    # doesn't throw errors on every shell startup.
+    try {
+        Import-Module PSFzf -ErrorAction Stop
+        Set-PsFzfOption -PSReadlineChordProvider 'Ctrl+f' -PSReadlineChordReverseHistory 'Ctrl+r'
+    } catch {
+        # Blocked by policy (or some other load failure) - Ctrl+f/Ctrl+r
+        # fuzzy history/provider search just won't be available this session.
+    }
 }
 
 if (Get-Module -ListAvailable -Name Terminal-Icons) {

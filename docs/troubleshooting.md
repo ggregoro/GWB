@@ -249,6 +249,47 @@ the Terminal You Have, Don't Replace It").
 
 ---
 
+## PSFzf fails to load: "An Application Control policy has blocked this file"
+
+**Confirmed** — hit directly by Greg in a real terminal.
+
+**Symptom**: every new PowerShell window prints something like:
+
+```
+Import-Module: ...\Microsoft.PowerShell_profile.ps1:35
+     | Could not load file or assembly '...\Modules\PSFzf\<version>\PSFzf.dll'.
+     | An Application Control policy has blocked this file. (0x800711C7)
+Set-PsFzfOption: ...
+     | The 'Set-PsFzfOption' command was found in the module 'PSFzf', but the module could not be loaded...
+```
+
+optionally followed by a much slower-than-usual "Loading personal and
+system profiles took ...ms." line.
+
+**Cause**: Windows Defender Application Control, Smart App Control, or a
+similar third-party Application Control policy blocked `PSFzf.dll` from
+loading — `PSFzf` installed successfully (`Install-Module` and
+`Get-Module -ListAvailable` both see it fine), but the *.dll* itself
+didn't pass the machine's code-integrity policy at load time. This is a
+machine/organization security policy decision, not a GWB or PSFzf bug —
+the same category as IPBan's Administrator-elevation requirement
+(`docs/PROJECT.md`'s Non-Goals): GWB won't try to work around a security
+control the machine owner (or their org) has deliberately put in place.
+
+**Fix**: as of the `try`/`catch` added around `Import-Module PSFzf` in
+all three `profile-snippet.ps1` files (see `CHANGELOG.md`), a blocked
+policy now fails quietly — `Ctrl+f`/`Ctrl+r` fuzzy search just won't be
+available that session, instead of printing errors (and adding load time)
+on every single shell startup. Re-run `gwb restore <profile>` (or `gwb
+repair <profile>`) on an older checkout to pick it up. To actually get
+PSFzf working again, the policy itself needs to allow it — check with
+whoever manages Application Control on the machine (a home-grown WDAC
+policy, an MDM-pushed Smart App Control setting, or org-wide endpoint
+security software) about adding an exception for `PSFzf.dll`; GWB has no
+part in that decision or process.
+
+---
+
 ## `eza`/Starship icons render as boxes or blanks
 
 **Anticipated** — the same class of issue GLB documents extensively for

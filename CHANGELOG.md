@@ -363,3 +363,20 @@ This project follows a simple versioning approach:
   `gwb.ps1 restore developer` on this machine's actual live profile -
   `$PROFILE` updated with the new PATH guard, yazi config deployed to
   `$env:APPDATA\yazi\config`, confirmed idempotent on a second run.
+- Fixed a real bug: PSFzf could fail to load on every single shell
+  startup with `An Application Control policy has blocked this file.
+  (0x800711C7)` - hit live by Greg, `Import-Module PSFzf` throwing a
+  terminating-looking error (plus a much slower profile load) on every
+  new window even though the module was installed correctly. Root
+  cause: Windows Defender Application Control, Smart App Control, or a
+  similar Application Control policy blocking `PSFzf.dll` at load time
+  - a machine/org security policy decision, not a GWB or PSFzf bug, and
+  not something GWB should try to work around (same "not GWB's to fix"
+  stance already established for IPBan). Wrapped `Import-Module PSFzf`
+  in all three profiles' `profile-snippet.ps1` in a `try`/`catch`
+  (mirroring the existing PSReadLine guard in the same files) so a
+  blocked policy now fails quietly instead of erroring on every
+  startup - `Ctrl+f`/`Ctrl+r` fuzzy search just won't be available that
+  session. Documented in `docs/troubleshooting.md` with the real error
+  text and what to do about it (get an exception from whoever manages
+  the policy - outside GWB's control either way).
