@@ -276,23 +276,47 @@ also **verified for real** — see the Working notes entry below.
     clone needs the SSH access set up in the entry below, so a machine
     without that yet will hit it). Updated `CHANGELOG.md` and
     `docs/design/README.md`'s index.
-  - **Not yet verified for real** - cloud session, no `pwsh` (confirmed
-    again: `command -v pwsh` fails). All edited files
-    brace/paren-balance-checked. **Next session on a real Windows
-    machine (with SSH access to `nvim-config` already set up - see the
-    entry below) needs to**: run `Invoke-Pester -Path tests/` to
-    confirm the new tests actually pass (not just parse), then a real
-    `gwb.ps1 restore <profile>` to confirm Neovim installs,
-    `nvim-config` actually clones to `$env:LOCALAPPDATA\nvim`, and
-    `nvim` genuinely launches into a working LazyVim setup - not just
-    that files landed in the right place.
+  - **Verified for real, same conversation, on both real Windows
+    machines - genuinely closed out.** First Pester run on the Dell
+    Desktop found two real bugs (both unrelated to the core feature): 5
+    new `Install-GwbNvimConfig` tests threw `RuntimeException: No mock
+    for command 'Get-Command' matched the call` (a `Get-Command` mock
+    filtered to `"nvim"` only, but the function also calls `Get-Command
+    git` - Pester needs an explicit match per call once any mock is
+    registered for a command, no implicit fallback to the real cmdlet);
+    and `Repair.Tests.ps1`'s `"cleans up its ephemeral temp directory
+    even when healthy"` test - a genuinely pre-existing, unrelated bug -
+    never actually established healthy state, so it hit real drift and
+    hung Greg's actual terminal on the real, unmocked `Read-Host` for
+    ~2 minutes. Both fixed (PR #8, `43f83b3`): the mock got a default
+    fallback covering both `Get-Command` lookups, and the repair test
+    now sets up the same healthy state its neighbor test uses.
+    Re-ran clean: `Tests Passed: 114, Failed: 0` in 5.26s (down from
+    133.66s on the hung run). Then a real `gwb.ps1 restore developer`
+    reported `[OK] nvim-config updated: C:\Users\ggreg\AppData\Local\nvim`
+    (not "cloned" - it correctly detected Greg's pre-existing manual
+    LazyVim clone at that path and just `git pull`ed it in place,
+    exactly the "already set up" case working as designed), and Greg
+    confirmed `nvim` opens cleanly into a working LazyVim setup.
+    **Independently reconfirmed on the ThinkPad too**, same day - Greg
+    pulled and restored there on his own (not walked through
+    step-by-step) and confirmed Neovim + LazyVim work fine there as
+    well. Both Windows machines verified, not just one.
   - Working tree: `lib/profile.ps1`, `lib/packages.ps1`,
     `profiles/{default,developer,server}/packages.txt`,
     `tests/Profile.Tests.ps1`, `tests/Repair.Tests.ps1`,
     `tests/Dispatcher.Tests.ps1`, `docs/design/nvim-lazyvim.md`,
-    `docs/design/README.md`, `docs/troubleshooting.md`,
-    `CHANGELOG.md`, and this file. **Queued for next session**: real
-    verification per above.
+    `docs/design/README.md`, `docs/troubleshooting.md`, `CHANGELOG.md`,
+    and this file - all merged to `master` via PR #7 and PR #8, both
+    confirmed working live on both machines. **Nothing queued** from
+    this feature. (A separate, cross-session note worth knowing about:
+    `nvim-config` itself is still essentially the stock LazyVim starter
+    template with no real personal customization yet, and there's an
+    open question - not GWB's to resolve alone - about `lazy-lock.json`
+    drift if Greg runs `:Lazy update` on one machine without pushing
+    before the next restore's `git pull` elsewhere; see the
+    `claude-memory` repo's `project_gwb.md` for the full detail if this
+    comes up.)
 
 - **Session (2026-08-29, same conversation as the PSFzf fix below,
   continued on the real ThinkPad): set up SSH auth to GitHub for the
