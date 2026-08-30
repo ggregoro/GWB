@@ -27,6 +27,7 @@ $Script:_GWB_PACKAGE_OVERRIDES = @{
     "file"     = "GnuWin32.File"
     "fastfetch" = "Fastfetch-cli.Fastfetch"
     "cpufetch"  = "Dr-Noob.cpufetch"
+    "nvim"      = "Neovim.Neovim"
 }
 
 function Resolve-GwbPackageId {

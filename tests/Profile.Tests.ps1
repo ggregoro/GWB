@@ -233,6 +233,107 @@ Describe "Install-GwbYaziConfig" {
     }
 }
 
+Describe "Install-GwbNvimConfig" {
+    BeforeEach {
+        $script:configPath = Join-Path $env:TEMP "gwb-pester-nvim-$([guid]::NewGuid())"
+        $script:repoUrl = "git@github.com:ggregoro/nvim-config.git"
+        Mock Get-Command { [pscustomobject]@{ Name = "nvim" } } -ParameterFilter { $Name -eq "nvim" }
+        # `git clone` isn't actually run under test - the mock simulates its
+        # real side effect (a directory containing init.lua) so the
+        # function's own post-clone Test-Path check has something to find.
+        # Both the "is this our clone" probe and the pull call are shaped
+        # `git -C <path> <subcommand> ...`, so dispatch on $args[2], not
+        # $args[0] (which is just "-C" for both).
+        Mock git {
+            if ($args[0] -eq "clone") {
+                $dest = $args[-1]
+                New-Item -ItemType Directory -Path (Join-Path $dest ".git") -Force | Out-Null
+                Set-Content -Path (Join-Path $dest "init.lua") -Value "-- LazyVim bootstrap"
+                return
+            }
+            if ($args[0] -eq "-C" -and $args[2] -eq "remote") {
+                # Simplification: tests that need this to report a real
+                # origin URL set $script:mockOriginUrl first.
+                if ($script:mockOriginUrl) { return $script:mockOriginUrl }
+                return
+            }
+            if ($args[0] -eq "-C" -and $args[2] -eq "pull") {
+                return
+            }
+        }
+    }
+
+    AfterEach {
+        Remove-Item $script:configPath -Recurse -Force -ErrorAction SilentlyContinue
+        Remove-Item "$script:configPath.gwb-backup" -Recurse -Force -ErrorAction SilentlyContinue
+        Remove-Item Variable:script:mockOriginUrl -ErrorAction SilentlyContinue
+    }
+
+    It "does nothing when nvim isn't installed" {
+        Mock Get-Command { $null } -ParameterFilter { $Name -eq "nvim" }
+        Install-GwbNvimConfig -RepoUrl $script:repoUrl -ConfigPath $script:configPath
+        (Test-Path $script:configPath) | Should -Be $false
+        Should -Invoke git -Times 0
+    }
+
+    It "does nothing when git isn't installed" {
+        Mock Get-Command { $null } -ParameterFilter { $Name -eq "git" }
+        Install-GwbNvimConfig -RepoUrl $script:repoUrl -ConfigPath $script:configPath
+        (Test-Path $script:configPath) | Should -Be $false
+    }
+
+    It "clones nvim-config fresh when no existing config is present" {
+        Install-GwbNvimConfig -RepoUrl $script:repoUrl -ConfigPath $script:configPath
+        (Test-Path (Join-Path $script:configPath "init.lua")) | Should -Be $true
+        Should -Invoke git -ParameterFilter { $args[0] -eq "clone" } -Times 1
+    }
+
+    It "pulls instead of re-cloning when the config is already its own clone" {
+        New-Item -ItemType Directory -Path (Join-Path $script:configPath ".git") -Force | Out-Null
+        $script:mockOriginUrl = $script:repoUrl
+
+        Install-GwbNvimConfig -RepoUrl $script:repoUrl -ConfigPath $script:configPath
+
+        Should -Invoke git -ParameterFilter { $args[0] -eq "-C" -and $args[2] -eq "pull" } -Times 1
+        Should -Invoke git -ParameterFilter { $args[0] -eq "clone" } -Times 0
+        (Test-Path "$script:configPath.gwb-backup") | Should -Be $false
+    }
+
+    It "backs up an existing non-clone config exactly once before cloning" {
+        New-Item -ItemType Directory -Path $script:configPath -Force | Out-Null
+        Set-Content -Path (Join-Path $script:configPath "init.vim") -Value "pre-existing user config"
+
+        Install-GwbNvimConfig -RepoUrl $script:repoUrl -ConfigPath $script:configPath
+
+        $backupPath = "$script:configPath.gwb-backup"
+        (Test-Path $backupPath) | Should -Be $true
+        (Get-Content (Join-Path $backupPath "init.vim") -Raw) | Should -Match "pre-existing user config"
+        (Test-Path (Join-Path $script:configPath "init.lua")) | Should -Be $true
+    }
+
+    It "never overwrites an existing backup on a later re-apply (regression: don't clobber the true original)" {
+        New-Item -ItemType Directory -Path $script:configPath -Force | Out-Null
+        Set-Content -Path (Join-Path $script:configPath "init.vim") -Value "the real original config"
+        Install-GwbNvimConfig -RepoUrl $script:repoUrl -ConfigPath $script:configPath
+
+        # Simulate a second, unrelated non-clone directory showing up later
+        # (e.g. a corrupted clone) - the true backup must not be touched.
+        Remove-Item $script:configPath -Recurse -Force
+        New-Item -ItemType Directory -Path $script:configPath -Force | Out-Null
+        Set-Content -Path (Join-Path $script:configPath "init.vim") -Value "intermediate content"
+        Install-GwbNvimConfig -RepoUrl $script:repoUrl -ConfigPath $script:configPath
+
+        $backupPath = "$script:configPath.gwb-backup"
+        (Get-Content (Join-Path $backupPath "init.vim") -Raw) | Should -Match "the real original config"
+    }
+
+    It "does not write anything under -WhatIf" {
+        Install-GwbNvimConfig -RepoUrl $script:repoUrl -ConfigPath $script:configPath -WhatIf
+        (Test-Path $script:configPath) | Should -Be $false
+        Should -Invoke git -Times 0
+    }
+}
+
 Describe "Get-GwbProfileList / Get-GwbProfileDescription" {
     BeforeEach {
         $script:profilesRoot = Join-Path $env:TEMP "gwb-pester-profiles-$([guid]::NewGuid())"
@@ -271,11 +372,12 @@ Describe "Undo-GwbRestore" {
     BeforeEach {
         $script:realProfile = $global:PROFILE
         $global:PROFILE = New-GwbTempProfilePath
-        # Isolated, not the real $env:APPDATA\yazi\config - this machine
-        # may genuinely have a yazi config/backup already (see
-        # Install-GwbYaziConfig tests below), and Undo-GwbRestore must
-        # never touch real user data during a unit test.
+        # Isolated, not the real $env:APPDATA\yazi\config / $env:LOCALAPPDATA\nvim
+        # - this machine may genuinely have those configs/backups already
+        # (see Install-GwbYaziConfig/Install-GwbNvimConfig tests), and
+        # Undo-GwbRestore must never touch real user data during a unit test.
         $script:yaziConfigPath = Join-Path $env:TEMP "gwb-pester-undo-yazi-$([guid]::NewGuid())"
+        $script:nvimConfigPath = Join-Path $env:TEMP "gwb-pester-undo-nvim-$([guid]::NewGuid())"
     }
 
     AfterEach {
@@ -283,17 +385,19 @@ Describe "Undo-GwbRestore" {
         Remove-Item "$global:PROFILE.gwb-backup" -Force -ErrorAction SilentlyContinue
         Remove-Item $script:yaziConfigPath -Recurse -Force -ErrorAction SilentlyContinue
         Remove-Item "$script:yaziConfigPath.gwb-backup" -Recurse -Force -ErrorAction SilentlyContinue
+        Remove-Item $script:nvimConfigPath -Recurse -Force -ErrorAction SilentlyContinue
+        Remove-Item "$script:nvimConfigPath.gwb-backup" -Recurse -Force -ErrorAction SilentlyContinue
         $global:PROFILE = $script:realProfile
     }
 
     It "fails cleanly when no backup exists" {
-        { Undo-GwbRestore -YaziConfigPath $script:yaziConfigPath } | Should -Not -Throw
+        { Undo-GwbRestore -YaziConfigPath $script:yaziConfigPath -NvimConfigPath $script:nvimConfigPath } | Should -Not -Throw
     }
 
     It "restores real backup content" {
         Set-Content -Path "$global:PROFILE.gwb-backup" -Value "original content"
         Set-Content -Path $global:PROFILE -Value "modified content"
-        Undo-GwbRestore -YaziConfigPath $script:yaziConfigPath
+        Undo-GwbRestore -YaziConfigPath $script:yaziConfigPath -NvimConfigPath $script:nvimConfigPath
         (Get-Content $global:PROFILE -Raw) | Should -Match "original content"
     }
 
@@ -303,20 +407,35 @@ Describe "Undo-GwbRestore" {
         New-Item -ItemType Directory -Path $script:yaziConfigPath -Force | Out-Null
         Set-Content -Path (Join-Path $script:yaziConfigPath "yazi.toml") -Value "modified yazi config"
 
-        Undo-GwbRestore -YaziConfigPath $script:yaziConfigPath
+        Undo-GwbRestore -YaziConfigPath $script:yaziConfigPath -NvimConfigPath $script:nvimConfigPath
 
         (Get-Content (Join-Path $script:yaziConfigPath "yazi.toml") -Raw) | Should -Match "original yazi config"
     }
 
-    It "restores both `$PROFILE and the yazi config when both have backups" {
+    It "restores the nvim config from its backup, replacing whatever is currently there" {
+        New-Item -ItemType Directory -Path "$script:nvimConfigPath.gwb-backup" -Force | Out-Null
+        Set-Content -Path (Join-Path "$script:nvimConfigPath.gwb-backup" "init.vim") -Value "original nvim config"
+        New-Item -ItemType Directory -Path $script:nvimConfigPath -Force | Out-Null
+        Set-Content -Path (Join-Path $script:nvimConfigPath "init.lua") -Value "cloned lazyvim config"
+
+        Undo-GwbRestore -YaziConfigPath $script:yaziConfigPath -NvimConfigPath $script:nvimConfigPath
+
+        (Get-Content (Join-Path $script:nvimConfigPath "init.vim") -Raw) | Should -Match "original nvim config"
+        (Test-Path (Join-Path $script:nvimConfigPath "init.lua")) | Should -Be $false
+    }
+
+    It "restores `$PROFILE, the yazi config, and the nvim config when all three have backups" {
         Set-Content -Path "$global:PROFILE.gwb-backup" -Value "original profile"
         New-Item -ItemType Directory -Path "$script:yaziConfigPath.gwb-backup" -Force | Out-Null
         Set-Content -Path (Join-Path "$script:yaziConfigPath.gwb-backup" "yazi.toml") -Value "original yazi config"
+        New-Item -ItemType Directory -Path "$script:nvimConfigPath.gwb-backup" -Force | Out-Null
+        Set-Content -Path (Join-Path "$script:nvimConfigPath.gwb-backup" "init.vim") -Value "original nvim config"
 
-        Undo-GwbRestore -YaziConfigPath $script:yaziConfigPath
+        Undo-GwbRestore -YaziConfigPath $script:yaziConfigPath -NvimConfigPath $script:nvimConfigPath
 
         (Get-Content $global:PROFILE -Raw) | Should -Match "original profile"
         (Get-Content (Join-Path $script:yaziConfigPath "yazi.toml") -Raw) | Should -Match "original yazi config"
+        (Get-Content (Join-Path $script:nvimConfigPath "init.vim") -Raw) | Should -Match "original nvim config"
     }
 }
 
@@ -338,6 +457,13 @@ Describe "Invoke-GwbApplyProfile" {
         # Same reasoning, for $env:APPDATA\yazi\config - real behavior is
         # covered by its own Describe block above with an explicit -DestDir.
         Mock Install-GwbYaziConfig { }
+        # Same reasoning again, for $env:LOCALAPPDATA\nvim - real behavior
+        # is covered by its own Describe block above with an explicit
+        # -ConfigPath. Unlike yazi, this is called unconditionally (it
+        # self-gates on `Get-Command nvim`), so leaving it unmocked here
+        # would touch the real host machine's nvim config on every one of
+        # these tests.
+        Mock Install-GwbNvimConfig { }
     }
 
     AfterEach {
@@ -383,5 +509,10 @@ Describe "Invoke-GwbApplyProfile" {
         Invoke-GwbApplyProfile -ProfileDir $script:profileDir -ProfileName "test"
 
         Should -Invoke Install-GwbYaziConfig -Times 1 -ParameterFilter { $SourceDir -eq $yaziConfigSource }
+    }
+
+    It "always configures nvim (unconditionally, unlike yazi - it self-gates on Get-Command nvim)" {
+        Invoke-GwbApplyProfile -ProfileDir $script:profileDir -ProfileName "test"
+        Should -Invoke Install-GwbNvimConfig -Times 1
     }
 }

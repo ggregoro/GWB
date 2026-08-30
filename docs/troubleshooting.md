@@ -358,6 +358,38 @@ the malformed marker line by hand or delete the whole block (from the
 
 ---
 
+## Neovim installs but LazyVim never appears, or `restore` reports "Failed to clone nvim-config"
+
+**Anticipated** — not yet personally hit (built the same session SSH
+access was set up, so it's never actually failed against a machine that
+lacked it).
+
+**Symptom**: `gwb restore <profile>` installs Neovim successfully, but
+`$env:LOCALAPPDATA\nvim` is missing or empty, and/or the "Configuring
+Neovim (LazyVim)" step prints `[FAIL] Failed to clone nvim-config to
+... - check SSH access to the private repo`.
+
+**Cause**: `Install-GwbNvimConfig` clones Greg's `nvim-config` repo
+(`git@github.com:ggregoro/nvim-config.git`) over SSH — it's private, so
+this fails on any machine that doesn't have working SSH access to
+GitHub for Greg's account yet. See `CLAUDE.md`'s Working notes for the
+real SSH setup steps (generating a key, `ssh-agent`, registering it at
+github.com/settings/keys) if a new machine needs this done for the
+first time.
+
+**Fix**: get SSH working first (`ssh -T git@github.com` should print
+`Hi ggregoro! You've successfully authenticated...`), then re-run `gwb
+restore <profile>` — `Install-GwbNvimConfig` will retry the clone on
+the next restore. If there was a real pre-existing nvim config on this
+machine before the failed clone, it's safe either way: the
+backup-on-first-touch step runs *before* the clone attempt, so it's
+sitting untouched at `$env:LOCALAPPDATA\nvim.gwb-backup` (or restorable
+via `gwb restore --undo`) even though the clone itself failed - nothing
+is lost, `$env:LOCALAPPDATA\nvim` is just empty/missing until the next
+successful restore.
+
+---
+
 ## `eza`/Starship icons render as boxes or blanks
 
 **Anticipated** — the same class of issue GLB documents extensively for

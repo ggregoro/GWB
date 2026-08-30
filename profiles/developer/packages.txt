@@ -28,3 +28,9 @@ yazi
 # directory to PATH explicitly, same "winget doesn't PATH-shim this"
 # pattern already handled for Far Manager.
 file
+
+# Neovim, configured below via Install-GwbNvimConfig with Greg's own
+# LazyVim setup (github.com/ggregoro/nvim-config, private) - live-cloned/
+# pulled at restore time rather than vendored into this repo, since it's
+# an actively-changing personal config, not a static plugin bundle.
+nvim

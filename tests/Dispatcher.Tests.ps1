@@ -66,19 +66,23 @@ Describe "gwb.ps1 dispatcher" {
     }
 
     It "restore --undo fails cleanly with no backup present" {
-        # Undo-GwbRestore also checks $env:APPDATA\yazi\config.gwb-backup,
-        # which the dispatcher calls with no override - isolate it here so
-        # this test doesn't pick up a real yazi backup left on the host
-        # machine by an actual restore (regression: false pass/fail
-        # depending on host state, caught by running this for real on a
-        # machine that had genuinely used yazi).
+        # Undo-GwbRestore also checks $env:APPDATA\yazi\config.gwb-backup
+        # and $env:LOCALAPPDATA\nvim.gwb-backup, which the dispatcher calls
+        # with no override - isolate both here so this test doesn't pick up
+        # a real backup left on the host machine by an actual restore
+        # (regression: false pass/fail depending on host state, caught by
+        # running this for real on a machine that had genuinely used yazi -
+        # the same class of leak is possible for nvim now too).
         $realAppData = $env:APPDATA
+        $realLocalAppData = $env:LOCALAPPDATA
         $env:APPDATA = Join-Path $env:TEMP "gwb-pester-appdata-$([guid]::NewGuid())"
+        $env:LOCALAPPDATA = Join-Path $env:TEMP "gwb-pester-localappdata-$([guid]::NewGuid())"
         try {
             $output = . $Script:GwbScript restore --undo *>&1 | Out-String
             $output | Should -Match "nothing to undo"
         } finally {
             $env:APPDATA = $realAppData
+            $env:LOCALAPPDATA = $realLocalAppData
         }
     }
 

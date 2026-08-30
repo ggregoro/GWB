@@ -25,6 +25,13 @@ Describe "Invoke-GwbRepair" {
         # Invoke-GwbRepair goes through the real Invoke-GwbApplyProfile path -
         # mocked so this suite never touches the real ~/.config/starship.toml.
         Mock Install-GwbStarshipConfig { }
+        # Same reasoning: Install-GwbNvimConfig is called unconditionally
+        # (self-gated on Get-Command nvim, not a per-profile directory like
+        # yazi's), so on a machine that actually has nvim installed this
+        # would otherwise touch the real $env:LOCALAPPDATA\nvim on every
+        # test in this suite - the exact class of leak Install-GwbStarshipConfig
+        # itself caused here before it was mocked (see CHANGELOG.md).
+        Mock Install-GwbNvimConfig { }
     }
 
     AfterEach {
