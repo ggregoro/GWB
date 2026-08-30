@@ -419,3 +419,25 @@ This project follows a simple versioning approach:
   `MatchEvaluator` scriptblock, which treats the replacement as fully
   literal text. Added two new Pester tests covering both regressions.
   Documented in `docs/troubleshooting.md`.
+- Added Neovim + LazyVim to all three profiles - Greg's own LazyVim
+  setup, live-cloned/pulled from his separate private
+  `nvim-config` repo rather than vendored into this one (see
+  `docs/design/nvim-lazyvim.md` for the real fork this decided between).
+  `nvim` -> `Neovim.Neovim` added to `_GWB_PACKAGE_OVERRIDES` and all
+  three `packages.txt`. New `Install-GwbNvimConfig` (`lib/profile.ps1`)
+  self-gates on `Get-Command nvim` (same idiom as
+  `Install-GwbStarshipConfig`) and clones/pulls
+  `git@github.com:ggregoro/nvim-config.git` to
+  `$env:LOCALAPPDATA\nvim`, backing up any real pre-existing config
+  exactly once first (same rule every other GWB-managed config
+  follows). `gwb restore --undo` and `Undo-GwbRestore` extended to
+  restore that backup too, mirroring the yazi config's own undo
+  support. Added a full Pester `Describe` block for the new function
+  (mocking `git`/`Get-Command`, following this suite's existing
+  conventions) plus regression coverage for the exact class of
+  real-machine-state leak this project has hit before with
+  `Install-GwbStarshipConfig` (`Invoke-GwbApplyProfile`/
+  `Invoke-GwbRepair`'s test suites now mock `Install-GwbNvimConfig`
+  too, and the dispatcher-level `restore --undo` test isolates
+  `$env:LOCALAPPDATA` the same way it already isolated `$env:APPDATA`
+  for yazi).

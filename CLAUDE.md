@@ -224,6 +224,76 @@ also **verified for real** — see the Working notes entry below.
 
 ## Working notes
 
+- **Session (2026-08-30, cloud session, no `pwsh` available - same
+  conversation as the Desktop pull/CI-cleanup and the ThinkPad SSH
+  setup below): built Neovim + LazyVim support at Greg's request** -
+  "being novice, I can't use Neovim without LazyVim." Two real design
+  decisions asked and confirmed directly before building (not assumed):
+  (1) all three profiles, not just `developer`; (2) live-clone/pull
+  Greg's own private `nvim-config` repo at restore time, rather than
+  vendoring a static copy into GWB the way `yazi-config/` works - his
+  LazyVim setup is an actively-changing personal config, and a vendored
+  snapshot would go stale the moment he tweaked it. Full reasoning in
+  the new `docs/design/nvim-lazyvim.md`.
+  - Added `nvim` -> `Neovim.Neovim` to `_GWB_PACKAGE_OVERRIDES` and all
+    three `packages.txt`. New `Install-GwbNvimConfig`
+    (`lib/profile.ps1`): self-gates on `Get-Command nvim` (same idiom
+    as `Install-GwbStarshipConfig`, so it's called unconditionally from
+    `Invoke-GwbApplyProfile` rather than `Test-Path`-gated on a
+    per-profile directory), clones/pulls
+    `git@github.com:ggregoro/nvim-config.git` to
+    `$env:LOCALAPPDATA\nvim`, and backs up any real pre-existing config
+    exactly once (a *move*, not a copy, since `git clone` needs an
+    empty/nonexistent destination) before taking the directory over -
+    same backup-on-first-touch rule every other GWB-managed config
+    follows. `Undo-GwbRestore`/`gwb restore --undo` extended to restore
+    that backup too.
+  - **Real test-isolation care taken up front, not found the hard way
+    this time**: since `Install-GwbNvimConfig` is called
+    unconditionally (unlike yazi's per-profile-directory gate), it
+    would touch the real `$env:LOCALAPPDATA\nvim` on any machine that
+    actually has `nvim` installed unless mocked - the exact class of
+    leak that bit `Install-GwbStarshipConfig` for real early in this
+    project (see `CHANGELOG.md`). Mocked it in both
+    `Invoke-GwbApplyProfile`'s and `Invoke-GwbRepair`'s test suites
+    up front, and extended `Dispatcher.Tests.ps1`'s real
+    `restore --undo` test to isolate `$env:LOCALAPPDATA` the same way
+    it already isolated `$env:APPDATA` for yazi's backup path.
+  - Added a full Pester `Describe` block for `Install-GwbNvimConfig`
+    (8 tests: not-installed gates for `nvim`/`git`, fresh clone,
+    pull-not-reclone for an existing own-clone, backup-on-first-touch,
+    never-re-backup, `-WhatIf`), mocking `git`/`Get-Command` following
+    this suite's existing `winget`-mocking conventions - `git`'s mock
+    dispatches on `$args[2]` rather than `$args[0]` for the `-C <path>
+    <subcommand>` invocations (`remote`/`pull` both start with the
+    literal `-C`, so dispatching on `$args[0]` alone can't tell them
+    apart - caught and fixed while writing the mock itself, not left as
+    a latent bug). Extended `Undo-GwbRestore`'s existing Pester block
+    with nvim-backup cases too.
+  - Added `docs/design/nvim-lazyvim.md` (the real vendor-vs-live-clone
+    fork and why it was decided the way it was) and a
+    `docs/troubleshooting.md` entry (Anticipated - the private-repo
+    clone needs the SSH access set up in the entry below, so a machine
+    without that yet will hit it). Updated `CHANGELOG.md` and
+    `docs/design/README.md`'s index.
+  - **Not yet verified for real** - cloud session, no `pwsh` (confirmed
+    again: `command -v pwsh` fails). All edited files
+    brace/paren-balance-checked. **Next session on a real Windows
+    machine (with SSH access to `nvim-config` already set up - see the
+    entry below) needs to**: run `Invoke-Pester -Path tests/` to
+    confirm the new tests actually pass (not just parse), then a real
+    `gwb.ps1 restore <profile>` to confirm Neovim installs,
+    `nvim-config` actually clones to `$env:LOCALAPPDATA\nvim`, and
+    `nvim` genuinely launches into a working LazyVim setup - not just
+    that files landed in the right place.
+  - Working tree: `lib/profile.ps1`, `lib/packages.ps1`,
+    `profiles/{default,developer,server}/packages.txt`,
+    `tests/Profile.Tests.ps1`, `tests/Repair.Tests.ps1`,
+    `tests/Dispatcher.Tests.ps1`, `docs/design/nvim-lazyvim.md`,
+    `docs/design/README.md`, `docs/troubleshooting.md`,
+    `CHANGELOG.md`, and this file. **Queued for next session**: real
+    verification per above.
+
 - **Session (2026-08-29, same conversation as the PSFzf fix below,
   continued on the real ThinkPad): set up SSH auth to GitHub for the
   first time on this machine, and moved the dev checkout from

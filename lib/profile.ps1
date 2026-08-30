@@ -190,12 +190,73 @@ function Install-GwbYaziConfig {
     Write-Ok "Yazi config installed: $DestDir"
 }
 
+# Unlike Install-GwbYaziConfig (a static config vendored into this repo),
+# Greg's LazyVim setup (github.com/ggregoro/nvim-config, private) is his
+# own actively-changing personal config - vendoring a copy here would go
+# stale the moment he tweaks it. Instead this treats that repo as the
+# living source of truth: clone it fresh on first restore, `git pull` it
+# on every restore after that. Needs SSH access to the private repo,
+# which restore/repair doesn't set up - see docs/troubleshooting.md if
+# the clone/pull fails.
+function Install-GwbNvimConfig {
+    param(
+        [string]$RepoUrl = $(if ($env:GWB_NVIM_CONFIG_REPO) { $env:GWB_NVIM_CONFIG_REPO } else { "git@github.com:ggregoro/nvim-config.git" }),
+        [string]$ConfigPath = (Join-Path $env:LOCALAPPDATA "nvim"),
+        [switch]$WhatIf
+    )
+
+    if (-not (Get-Command nvim -ErrorAction SilentlyContinue)) { return }
+    if (-not (Get-Command git -ErrorAction SilentlyContinue)) { return }
+
+    $backupPath = "$ConfigPath.gwb-backup"
+    $isOwnClone = $false
+    if (Test-Path (Join-Path $ConfigPath ".git")) {
+        $isOwnClone = ((git -C $ConfigPath remote get-url origin 2>$null).Trim() -eq $RepoUrl)
+    }
+
+    if ($WhatIf) {
+        if ($isOwnClone) {
+            Write-Info "[WhatIf] Would pull latest nvim-config into $ConfigPath"
+        } else {
+            Write-Info "[WhatIf] Would back up $ConfigPath (if it has content) and clone nvim-config there"
+        }
+        return
+    }
+
+    if ($isOwnClone) {
+        git -C $ConfigPath pull --ff-only --quiet 2>$null
+        Write-Ok "nvim-config updated: $ConfigPath"
+        return
+    }
+
+    # Preserve any real pre-existing nvim config exactly once - same
+    # backup-on-first-touch rule Set-GwbManagedBlock/Install-GwbYaziConfig
+    # already follow - before this function takes the directory over as
+    # its own git clone. A move, not a copy, since `git clone` needs an
+    # empty/nonexistent destination.
+    if ((Test-Path $ConfigPath) -and -not (Test-Path $backupPath)) {
+        Move-Item -Path $ConfigPath -Destination $backupPath -Force
+        Write-Info "Backed up existing nvim config to $backupPath"
+    } elseif (Test-Path $ConfigPath) {
+        Remove-Item -Path $ConfigPath -Recurse -Force
+    }
+
+    git clone --quiet $RepoUrl $ConfigPath 2>$null
+    if (Test-Path (Join-Path $ConfigPath "init.lua")) {
+        Write-Ok "nvim-config cloned: $ConfigPath"
+    } else {
+        Write-Fail "Failed to clone nvim-config to $ConfigPath - check SSH access to the private repo"
+    }
+}
+
 function Undo-GwbRestore {
     param(
-        [string]$YaziConfigPath = (Join-Path $env:APPDATA "yazi\config")
+        [string]$YaziConfigPath = (Join-Path $env:APPDATA "yazi\config"),
+        [string]$NvimConfigPath = (Join-Path $env:LOCALAPPDATA "nvim")
     )
     $profileBackupPath = "$PROFILE.gwb-backup"
     $yaziBackupPath = "$YaziConfigPath.gwb-backup"
+    $nvimBackupPath = "$NvimConfigPath.gwb-backup"
     $restoredAny = $false
 
     if (Test-Path $profileBackupPath) {
@@ -210,6 +271,15 @@ function Undo-GwbRestore {
         }
         Copy-Item -Path $yaziBackupPath -Destination $YaziConfigPath -Recurse -Force
         Write-Ok "Restored yazi config from $yaziBackupPath"
+        $restoredAny = $true
+    }
+
+    if (Test-Path $nvimBackupPath) {
+        if (Test-Path $NvimConfigPath) {
+            Remove-Item -Path $NvimConfigPath -Recurse -Force
+        }
+        Copy-Item -Path $nvimBackupPath -Destination $NvimConfigPath -Recurse -Force
+        Write-Ok "Restored nvim config from $nvimBackupPath"
         $restoredAny = $true
     }
 
@@ -245,6 +315,9 @@ function Invoke-GwbApplyProfile {
 
     Write-Step "Configuring Starship"
     Install-GwbStarshipConfig -WhatIf:$WhatIf
+
+    Write-Step "Configuring Neovim (LazyVim)"
+    Install-GwbNvimConfig -WhatIf:$WhatIf
 
     $yaziConfig = Join-Path $ProfileDir "yazi-config"
     if (Test-Path $yaziConfig) {

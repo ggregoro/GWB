@@ -77,6 +77,15 @@ up shaped the way it did, even after the feature ships.
   capture bug in the test file (not `install.ps1` itself) was found
   and fixed.
 
+- [`nvim-lazyvim.md`](nvim-lazyvim.md) — **Decided and built,**
+  2026-08-30, **not yet verified for real.** The real fork: vendor a
+  static copy of Greg's LazyVim setup (the `yazi-config/` approach), or
+  have GWB live-clone/pull his separate, private `nvim-config` repo at
+  restore time so it stays the actively-changing personal config it
+  really is? Decided on the live-clone approach — a new pattern for GWB
+  (restore reaching into a *second* GitHub repo, not just installing a
+  package or writing a static file). All three profiles.
+
 Everything else built so far (packages, `restore`/`--dry-run`/`--undo`,
 the interactive picker) was small enough to build directly, without a
 design doc. **Version 1.0 (Stable Release) is now fully complete** —
