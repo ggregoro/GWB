@@ -60,8 +60,26 @@ Describe "Invoke-GwbRepair" {
     }
 
     It "cleans up its ephemeral temp directory even when healthy" {
+        # Regression: this test's name promised "even when healthy" but
+        # never actually established a healthy $PROFILE the way "reports
+        # healthy (0)" above does - $global:PROFILE is just BeforeEach's
+        # fresh temp path, which doesn't match the test profile's real
+        # snippet, so real drift was found every time this ran. That took
+        # it into Invoke-GwbRepair's real (unmocked) Read-Host prompt -
+        # confirmed live: this hung a real interactive `Invoke-Pester` run
+        # waiting for actual keyboard input, harmless in a piped/CI context
+        # (Read-Host throws there instead) but a real hazard here. Set up
+        # the same genuinely-healthy state "reports healthy (0)" uses so
+        # this test exercises the branch its name claims to.
+        Mock winget { $global:LASTEXITCODE = 0 }
+        Set-Content -Path $global:PROFILE -Value @(
+            "# >>> GWB managed block >>>"
+            "# test snippet"
+            "Write-Host 'test'"
+            "# <<< GWB managed block <<<"
+        )
         $before = @(Get-ChildItem $env:TEMP -Filter "gwb-repair-*" -Directory -ErrorAction SilentlyContinue).Count
-        Invoke-GwbRepair -ProfileName "test" -ProfilesRoot $script:profilesRoot | Out-Null
+        Invoke-GwbRepair -ProfileName "test" -ProfilesRoot $script:profilesRoot | Should -Be 0
         $after = @(Get-ChildItem $env:TEMP -Filter "gwb-repair-*" -Directory -ErrorAction SilentlyContinue).Count
         $after | Should -Be $before
     }

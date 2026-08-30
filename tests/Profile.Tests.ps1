@@ -237,7 +237,21 @@ Describe "Install-GwbNvimConfig" {
     BeforeEach {
         $script:configPath = Join-Path $env:TEMP "gwb-pester-nvim-$([guid]::NewGuid())"
         $script:repoUrl = "git@github.com:ggregoro/nvim-config.git"
-        Mock Get-Command { [pscustomobject]@{ Name = "nvim" } } -ParameterFilter { $Name -eq "nvim" }
+        # A single default (no -ParameterFilter) mock covering both
+        # Get-Command lookups the function makes, nvim and git - confirmed
+        # live that this is required, not just tidy: Pester requires an
+        # explicit match for every call once *any* mock is registered for
+        # a command, so a filtered mock for "nvim" alone left "git" lookups
+        # completely unhandled and threw ("RuntimeException: No mock for
+        # command 'Get-Command' matched the call"). Per-test overrides
+        # below (e.g. "does nothing when nvim isn't installed") layer a
+        # more specific -ParameterFilter mock on top - Pester prefers the
+        # most-recently-registered matching mock, so those still work.
+        Mock Get-Command {
+            if ($Name -eq "nvim") { return [pscustomobject]@{ Name = "nvim" } }
+            if ($Name -eq "git") { return [pscustomobject]@{ Name = "git" } }
+            return $null
+        }
         # `git clone` isn't actually run under test - the mock simulates its
         # real side effect (a directory containing init.lua) so the
         # function's own post-clone Test-Path check has something to find.
