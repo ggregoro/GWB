@@ -37,7 +37,32 @@ shape and its `default`-profile-first approach.
   this section used to claim OneDrive redirection was unique to the
   second machine below; that was true when written but is stale now.
   Don't assume a plain `C:\Users\ggreg\Documents` path on either
-  machine going forward.
+  machine going forward. **Dev checkout path changed 2026-08-29**: was
+  `C:\Users\ggreg\GWB` throughout every session up to and including the
+  PSFzf/marker-corruption fixes earlier in this same file - moved to
+  `C:\Users\ggreg\Projects\GWB` (Greg's general Projects folder, already
+  home to the `proj` shortcut) as part of setting up SSH auth to GitHub
+  for the first time on this machine. Verified for real: `gwb version`,
+  `Get-Command gwb -All` (a single clean `Function` registration, no
+  stale duplicate), and a fresh terminal all confirmed working from the
+  new path. **Any future session/doc reference to `C:\Users\ggreg\GWB`
+  below this point is historical** (accurate for when it was written,
+  stale now) - don't assume that path still exists on this machine.
+  `origin` also now uses an SSH remote (`git@github.com:ggregoro/GWB.git`)
+  instead of HTTPS, authenticated via an ed25519 key
+  (`ggregoro@gmail.com`) added to both the OpenSSH `ssh-agent` service
+  (enabled/started - was disabled by default, needed an elevated
+  PowerShell window) and https://github.com/settings/keys. Real gotchas
+  hit setting this up, in case they recur: this machine's `ssh-keyscan.exe`
+  is too old to negotiate GitHub's preferred KEX algorithm
+  (`sntrup761x25519-sha512@openssh.com`) and fails silently with no
+  fallback (unrelated `ssh.exe` itself connects fine); the interactive
+  host-key-confirmation prompt from a plain `ssh -T git@github.com`
+  didn't reliably accept typed input in this terminal, worked around
+  with `ssh -o StrictHostKeyChecking=accept-new` instead of relying on
+  `ssh-keyscan` or the interactive prompt; and `Move-Item` on the
+  checkout folder fails with "item is in use" if run from a shell whose
+  current directory is inside it - `cd` to the parent first.
 - Greg's second Windows 11 Pro machine (build 26100) — a **Dell
   Desktop** (confirmed directly by Greg, 2026-08-29; this section
   previously called it "a new laptop," which was wrong - corrected
@@ -198,6 +223,69 @@ also **verified for real** — see the Working notes entry below.
   re-derive context.
 
 ## Working notes
+
+- **Session (2026-08-29, same conversation as the PSFzf fix below,
+  continued on the real ThinkPad): set up SSH auth to GitHub for the
+  first time on this machine, and moved the dev checkout from
+  `C:\Users\ggreg\GWB` to `C:\Users\ggreg\Projects\GWB` at Greg's
+  request.** Not a bug session - a real infrastructure change, verified
+  end to end on real hardware.
+  - **SSH key setup**: generated an ed25519 key for `ggregoro@gmail.com`
+    (`ssh-keygen -t ed25519`), registered it at
+    https://github.com/settings/keys. Two real snags along the way,
+    both resolved without guessing: (1) `Set-Service`/`Start-Service` on
+    `ssh-agent` needs an elevated PowerShell window - the service is
+    disabled by default on a stock Windows 11 install and a non-admin
+    shell just gets "Access is denied"; (2) the plain interactive
+    `ssh -T git@github.com` host-key-confirmation prompt
+    (`(yes/no/[fingerprint])`) didn't reliably accept typed input in
+    this terminal - chased down via `ssh-keyscan.exe` first (a dead
+    end: this machine's copy is too old to negotiate GitHub's preferred
+    `sntrup761x25519-sha512@openssh.com` KEX algorithm and fails
+    silently with no fallback, confirmed via `-v` verbose output, even
+    though the *real* `ssh.exe` binary connects fine), then fixed
+    directly with `ssh -o StrictHostKeyChecking=accept-new` instead,
+    which accepts-and-records a first-time host key without needing the
+    interactive prompt at all. Confirmed genuinely working via a live
+    `Hi ggregoro! You've successfully authenticated...` response - not
+    just "should work."
+  - **Moved the checkout**: `git status` confirmed a clean tree first,
+    then `Move-Item C:\Users\ggreg\GWB -> C:\Users\ggreg\Projects\GWB`
+    (Greg's call, to live alongside other projects under the existing
+    `proj` shortcut's folder rather than directly under the user
+    profile). One real gotcha hit live: the first `Move-Item` attempt
+    failed with "item is in use" because the shell's current directory
+    was still inside the folder being moved (a normal Windows file-lock
+    behavior, not a GWB bug) - fixed by `cd`-ing to the parent first.
+    Switched `origin` from HTTPS to the SSH URL
+    (`git@github.com:ggregoro/GWB.git`) before the move, so it came
+    along automatically as part of the folder's own `.git` config.
+  - **Re-ran `gwb.ps1 restore developer` from the new location** -
+    critical, and directly informed by this same session's earlier
+    `Set-GwbManagedBlock` bug hunt: this is exactly the self-registration
+    path problem documented at length in the entries below (whichever
+    location `restore` runs from gets baked into the `# >>> GWB self >>>`
+    block), so skipping this step would have left `gwb`/tab-completion
+    silently pointing at the now-nonexistent `C:\Users\ggreg\GWB`.
+    **Verified for real, not just trusted the "OK" message** (the same
+    healthy skepticism this session's earlier `Set-GwbManagedBlock` bug
+    now warrants permanently) - `Select-String -Path $PROFILE -Pattern
+    "GWB self"` confirmed the block genuinely rewrote to
+    `C:\Users\ggreg\Projects\GWB` in all three places (completions
+    dot-source path, `Register-GwbCompletions -GwbRoot`, and the `gwb`
+    function itself), then a **fresh** PowerShell window confirmed
+    `gwb version` and `Get-Command gwb -All` (a single clean `Function`
+    registration, no stale duplicate) both work correctly from the new
+    path.
+  - Updated the Test environments section above with the new path, the
+    SSH remote, and the real gotchas hit, so a future session doesn't
+    assume `C:\Users\ggreg\GWB` still exists on this machine. Nothing in
+    `lib/`/`profiles/` needed to change - this was a pure
+    infrastructure/location change, no code involved. **Nothing
+    queued** from this part of the session; the still-open OneDrive-sync
+    self-registration design fix (entry below) remains open and is now
+    *more* relevant given the path just changed again - worth keeping in
+    mind next time that's picked up.
 
 - **Session (2026-08-29, cloud session, no `pwsh` available): fixed a
   real, user-reported PSFzf load failure — genuinely distinct from the
