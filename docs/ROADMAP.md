@@ -127,13 +127,17 @@ modules that aren't installed via winget at all.
 
 ### Deliberately not planned
 
-- Managing a terminal emulator (Windows
+- Vendor-managing a terminal emulator's configuration (Windows
   Terminal, WezTerm, etc.). `lib/terminal.ps1` exists as an unused stub
-  only. GLB tried managing WezTerm, hit enough real trouble (Flatpak
-  sandbox permissions, a shadowing config file, hard-to-diagnose
-  crashes) that it was removed from GLB's scope entirely — see GLB's
-  `docs/PHILOSOPHY.md` ("Enhance the Terminal You Have, Don't Replace
-  It"). GWB starts from that same boundary rather than relearning it.
+  only, and no shipped profile wires it up. GLB tried *managing*
+  WezTerm — a vendored config file — and hit enough real trouble
+  (Flatpak sandbox permissions, a shadowing config file,
+  hard-to-diagnose crashes) that it walked it back; the lesson that
+  survived is **install, don't vendor-manage** (see GLB's
+  `docs/PHILOSOPHY.md`, "Terminal-First, Not Terminal-Only"). GWB
+  starts from that boundary. Installing a terminal-adjacent GUI tool
+  because it complements the CLI mission (as GLB now does with Ghostty
+  for Yazi image preview) isn't ruled out — owning its full config is.
 
 ---
 
@@ -270,7 +274,9 @@ is for a Linux one: a curated, reproducible, one-command setup for a
 modern, pleasant command-line environment — built by integrating mature
 existing tools (`eza`, `bat`, `fzf`, `ripgrep`, `fd`, `lf`, Starship)
 rather than reinventing them, and consciously avoiding the scope creep
-(managing terminal emulators, GUI apps) that GLB tried and walked back.
+GLB tried and walked back — vendor-managing a GUI app's full config, or
+turning into a general app store. A curated GUI pick that complements
+the CLI mission is fine; owning its configuration is not.
 
 ---
 
@@ -283,7 +289,7 @@ Inherited directly from GLB:
 - Modular by Design
 - Profiles Over Package Lists
 - Idempotent and Safe to Re-run
-- Enhance the Terminal You Have, Don't Replace It
+- Terminal-First, Not Terminal-Only
 
 ---
 

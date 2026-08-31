@@ -15,8 +15,11 @@ fast search (`ripgrep`, `fd`), two terminal file managers (`lf` and
 clean prompt (Starship), applied in one pass as a reusable **profile**: a
 package list plus a `$PROFILE` snippet.
 
-GWB enhances the terminal you already have — it doesn't install or
-replace it. See [`docs/PHILOSOPHY.md`](docs/PHILOSOPHY.md) for why.
+GWB is terminal-first: it enhances whatever terminal you already have
+rather than replacing it, and its focus stays the shell and CLI. GUI
+apps are added only when they're a deliberate pick that complements that
+focus — never a general app menu. See
+[`docs/PHILOSOPHY.md`](docs/PHILOSOPHY.md) for the reasoning.
 
 ## Screenshots
 

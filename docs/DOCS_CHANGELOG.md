@@ -7,6 +7,19 @@ feature/code changes. Mirrors GLB's own `docs/DOCS_CHANGELOG.md`.
 
 ## [Unreleased]
 
+- Dropped the "no GUI applications, terminal emulators included" rule,
+  in step with GLB dropping its own the same day (2026-08-30).
+  `docs/PHILOSOPHY.md`'s "Enhance the Terminal You Have, Don't Replace
+  It" section retitled to "Terminal-First, Not Terminal-Only" and
+  rewritten to the new boundary — a GUI app is in scope when it's a
+  deliberate, opinionated pick that complements the terminal-first
+  mission, installed and lightly configured, never vendor-managed,
+  never a general app menu. `docs/PROJECT.md` Non-Goals bullet is now
+  "Not a general app store"; `docs/ROADMAP.md` ("Deliberately not
+  planned", Long-Term Vision, Guiding Philosophy list) and `README.md`
+  updated to match. The WezTerm / `new-to-linux` history is kept and
+  reframed as "install, don't vendor-manage" guidance rather than a
+  prohibition.
 - Added `docs/troubleshooting.md`'s new entry, "PSFzf fails to load:
   'An Application Control policy has blocked this file'" — a real bug
   Greg hit and reported live (`Import-Module PSFzf` failing with

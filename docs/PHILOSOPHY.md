@@ -44,28 +44,40 @@ GWB provides the framework that brings these projects together into a
 cohesive terminal setup, installed via winget and wired into `$PROFILE`
 — it doesn't reimplement any of them.
 
-## Enhance the Terminal You Have, Don't Replace It
+## Terminal-First, Not Terminal-Only
 
-**GWB does not install terminal emulators or other GUI applications —
-inherited directly from GLB, not relearned the hard way a second time.**
-GLB tried managing WezTerm as part of its `default` profile and reversed
-it after real, wasted time chasing Flatpak-sandbox and
-desktop-compositor issues that had nothing to do with shell/prompt
-configuration — see GLB's own `docs/PHILOSOPHY.md` for the full account.
-GWB starts from that conclusion rather than re-discovering it: `lib/
-terminal.ps1` exists only as an unused, opt-in stub (see `docs/
-ROADMAP.md` Version 0.4), not something any shipped profile wires up.
+GWB's mission is the terminal: making the shell, prompt, and CLI tooling
+of a fresh Windows install pleasant in one pass. The default move is to
+**enhance whatever terminal you already have** (Windows Terminal,
+ConHost, VS Code's integrated terminal) rather than replace it — none of
+GWB's `$PROFILE` configuration assumes a particular terminal.
 
-**The line is GUI vs. terminal, not "simple" vs. "complex."** A
-full-screen console application — `lf`, a TUI file manager, even
-something as involved as the Claude Code CLI itself — is fully in
-scope, because it never opens a window of its own; it runs entirely
-inside whatever terminal (Windows Terminal, ConHost, VS Code's
-integrated terminal) is already there. Windows Terminal itself, PowerToys,
-VS Code, or any other application with its own window is out of scope —
-someone who wants one is free to install it themselves; GWB just needs
-whatever they land on to keep working, which "enhance whatever terminal
-is already there" already guarantees.
+**GUI applications are in scope when they're a deliberate, opinionated
+pick that complements that mission** — installed via `winget` and
+lightly configured the same way as any other tool, not deeply managed.
+What stays out of scope is GWB behaving like a general app store (a menu
+of browsers, editors, utilities anyone can install themselves), and
+sinking real effort into owning a GUI app's full configuration. Install
+it, set the handful of options that make it useful for GWB's purpose,
+and stop there.
+
+This boundary is inherited from GLB, including the history that produced
+it. GLB briefly *managed* WezTerm as part of its `default` profile
+(2026-08-09) and removed it after real time lost to Flatpak-sandbox and
+window-decoration issues that had nothing to do with shell/prompt setup.
+The lesson that survived isn't "never install a terminal" — it's
+**install, don't vendor-manage**. GLB dropped its own outright "no GUI
+apps" rule on 2026-08-30, replacing it with exactly that boundary (its
+first pick under the relaxed stance: Ghostty, so Yazi's image preview
+works where a distro's default terminal can't draw one). GWB follows the
+same stance. `lib/terminal.ps1` remains an unused, opt-in stub (see
+`docs/ROADMAP.md` Version 0.4) — no shipped profile wires it up, and
+that's the right default, not a prohibition.
+
+Terminal-based tools were never in question and remain the core: a
+full-screen console application — `lf`, `yazi`, the Claude Code CLI — is
+in scope no matter how involved it is, because it runs inside whatever
+terminal is already there.
 
 ## Opinionated but Customizable
 

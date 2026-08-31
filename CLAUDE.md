@@ -224,6 +224,47 @@ also **verified for real** — see the Working notes entry below.
 
 ## Working notes
 
+- **Session (2026-08-30, cloud session, no `pwsh` available): the
+  "no GUI applications, terminal emulators included" rule was dropped
+  from both GLB and GWB.** Originated in a GLB session — a real Yazi
+  image-preview failure on Greg's Pop!_OS laptop led to adding Ghostty
+  to GLB's `default`, first as a one-off exception, then Greg decided
+  the rule itself was the limitation: "as we move forward the no GUI
+  rule is going to limit the capabilities of the GLB and GWB projects...
+  we should remove that rule from the projects." What replaces it
+  (chosen via `AskUserQuestion`, "curated & opinionated,
+  install-not-manage"): a GUI app is in scope when it's a deliberate,
+  opinionated pick that complements the terminal-first mission —
+  installed and lightly configured like any other tool, never
+  vendor-managed, never a general app menu. The WezTerm /
+  `new-to-linux` history stays as the "install, don't vendor-manage"
+  guidance the old rule produced.
+  - **GWB doc changes (this session, branch `claude/drop-no-gui-rule`,
+    PR pending):** `docs/PHILOSOPHY.md`'s section retitled "Enhance the
+    Terminal You Have, Don't Replace It" → "Terminal-First, Not
+    Terminal-Only" and rewritten to the new stance (WezTerm history
+    kept, reframed as guidance); `docs/PROJECT.md` Non-Goals bullet is
+    now "Not a general app store"; `docs/ROADMAP.md` ("Deliberately not
+    planned" reworded to *vendor-managing* a terminal's config,
+    Long-Term Vision + Guiding Philosophy list updated); `README.md`
+    terminal-first framing; `CHANGELOG.md` / `docs/DOCS_CHANGELOG.md`.
+    The historical 2026-08-21 Working-notes reference to the old
+    "Enhance the Terminal You Have" boundary is left untouched as an
+    accurate record of the time.
+  - **GWB does not get Ghostty itself.** No official native Windows
+    build — only community ports (`Thr45hx/ghostty-windows`) and
+    third-party terminals built on `libghostty` (Wintty, Noctty), none
+    mature enough to be an opinionated GWB pick. If GWB ever wants the
+    same "Yazi image preview works" win, the Windows-native options are
+    Windows Terminal (Sixel) or WezTerm — a separate future call.
+  - **GLB side (for cross-reference):** `feat/ghostty-yazi` branch,
+    two commits — `feat(profile): install Ghostty in default for yazi
+    image preview` + `docs(scope): drop the no-GUI-apps rule`. Full
+    bats suite 223/227 (the 4 failures pre-existing). Not merged/pushed
+    as of this note; GLB uses fast-forward-to-`main`, GWB uses PRs.
+  - No `lib/`/`profiles/` changes here — docs-only. Pester suite
+    unaffected (not run this session; no `pwsh`).
+
 - **Session (2026-08-30, cloud session, no `pwsh` available - same
   conversation as the Desktop pull/CI-cleanup and the ThinkPad SSH
   setup below): built Neovim + LazyVim support at Greg's request** -

@@ -93,14 +93,17 @@ detection/abstraction layer to build.
 - **Not a fork or replacement of the tools it curates.** GWB brings
   together existing, mature open-source projects rather than
   reimplementing what they already do well.
-- **Not a GUI application or terminal-emulator installer.** GWB installs
-  and configures things that run inside whatever terminal is already
-  there. It does not install Windows Terminal, browsers, editors with
-  their own window, or any other application with a window of its own.
-  See `PHILOSOPHY.md` ("Enhance the Terminal You Have, Don't Replace
-  It") — this is inherited directly from a real lesson GLB learned
-  (a WezTerm-management detour it built and then reversed), not
-  something GWB needs to relearn on its own.
+- **Not a general app store.** GWB's mission is the terminal: shell,
+  prompt, CLI tooling. A GUI application is in scope only when it's a
+  deliberate, opinionated pick that complements that mission —
+  installed via `winget` and lightly configured like any other tool,
+  not deeply managed. GWB does not offer a menu of browsers, editors,
+  or utilities anyone can install themselves, and does not vendor-manage
+  a GUI app's full configuration. See `PHILOSOPHY.md` ("Terminal-First,
+  Not Terminal-Only") for the history behind this line — inherited from
+  GLB, including GLB's WezTerm-management detour and its 2026-08-30
+  decision to drop the outright "no GUI apps" rule in favour of the
+  "install, don't vendor-manage" boundary.
 - **Not an installer for Administrator-elevated, persistent background
   services.** Every package/module `gwb restore` installs is
   user-scoped and inert until invoked. Something that needs elevation

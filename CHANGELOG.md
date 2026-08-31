@@ -441,3 +441,18 @@ This project follows a simple versioning approach:
   too, and the dispatcher-level `restore --undo` test isolates
   `$env:LOCALAPPDATA` the same way it already isolated `$env:APPDATA`
   for yazi).
+- Dropped the "no GUI applications, terminal emulators included" rule
+  (inherited from GLB, which dropped it the same day). A GUI app is now
+  in scope when it's a deliberate, opinionated pick that complements
+  the terminal-first mission — installed and lightly configured like
+  any other tool, never vendor-managed, never a general app menu. The
+  WezTerm / `new-to-linux` history stays as the "install, don't
+  vendor-manage" guidance the old rule produced. `docs/PHILOSOPHY.md`'s
+  section retitled "Enhance the Terminal You Have, Don't Replace It" →
+  "Terminal-First, Not Terminal-Only"; `docs/PROJECT.md` Non-Goals
+  ("Not a general app store"), `docs/ROADMAP.md`, and `README.md`
+  updated to match. GWB gains no GUI app from this on its own — Ghostty
+  (GLB's first pick under the relaxed stance) has no official native
+  Windows build; a Windows equivalent for Yazi image preview (Windows
+  Terminal's Sixel, or WezTerm) is a separate future call. Docs-only,
+  no `lib/`/`profiles/` changes.
