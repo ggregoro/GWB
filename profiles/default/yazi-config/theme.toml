@@ -1,0 +1,28 @@
+# GWB — Yazi theme override: git status signs
+#
+# Yazi core has no VCS awareness; it comes entirely from the vendored
+# yazi-rs/plugins:git plugin (plugins/git.yazi/). The plugin's own
+# defaults use Nerd Font glyphs and show *nothing* for clean/tracked
+# files, so in a repo full of committed files it looks like nothing is
+# happening. This override switches to plain-text signs (no Nerd Font
+# dependency) and marks clean files too, so a project's file list reads
+# like a VCS-aware column. Mirrors GLB's own default-profile choice
+# (GLB CLAUDE.md, 2026-08-30). A partial theme.toml only overrides these
+# keys; Yazi's default theme still applies to everything else.
+
+[git]
+clean_sign     = "✓"
+modified_sign  = "M"
+added_sign     = "A"
+untracked_sign = "?"
+deleted_sign   = "D"
+updated_sign   = "U"
+ignored_sign   = ""
+unknown_sign   = ""
+
+clean     = { fg = "green" }
+modified  = { fg = "yellow" }
+added     = { fg = "green" }
+untracked = { fg = "magenta" }
+deleted   = { fg = "red" }
+updated   = { fg = "yellow" }

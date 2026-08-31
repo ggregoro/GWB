@@ -456,3 +456,12 @@ This project follows a simple versioning approach:
   Windows build; a Windows equivalent for Yazi image preview (Windows
   Terminal's Sixel, or WezTerm) is a separate future call. Docs-only,
   no `lib/`/`profiles/` changes.
+- All three profiles' `yazi-config/` gained `theme.toml` with a `[git]`
+  override for the vendored `yazi-rs/plugins:git` plugin: plain-text
+  signs (green `✓` for clean/tracked files, `M`/`A`/`?`/`D`/`U` for
+  changes) instead of the plugin's default Nerd Font glyphs, and clean
+  files get a mark too — so a repo's file list reads like a VCS-aware
+  column instead of looking empty. Deployed by the existing
+  `Install-GwbYaziConfig` (copies the whole `yazi-config/` dir), no
+  `lib/` change. Mirrors GLB's same-day `default`-profile change.
+  Byte-identical across all three profiles.

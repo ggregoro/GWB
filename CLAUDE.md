@@ -262,8 +262,25 @@ also **verified for real** — see the Working notes entry below.
     image preview` + `docs(scope): drop the no-GUI-apps rule`. Full
     bats suite 223/227 (the 4 failures pre-existing). Not merged/pushed
     as of this note; GLB uses fast-forward-to-`main`, GWB uses PRs.
-  - No `lib/`/`profiles/` changes here — docs-only. Pester suite
-    unaffected (not run this session; no `pwsh`).
+  - **Also on this branch (added 2026-08-31, same conversation):
+    ranger-like Yazi git-status signs, mirroring a GLB `default` change
+    from the same thread.** Greg noticed Yazi wasn't showing per-file
+    git status the way his ranger does. Cause: Yazi core has no VCS
+    awareness — it's all `yazi-rs/plugins:git` (vendored in every
+    profile's `yazi-config/`, already wired up), and the plugin's
+    defaults render *nothing* for clean files and use Nerd Font glyphs
+    for changes. Fix: added `profiles/{default,developer,server}/
+    yazi-config/theme.toml` with a `[git]` section — `clean_sign = "✓"`
+    (plain Unicode, green) + `M`/`A`/`?`/`D`/`U` letters, ignored/
+    unknown hidden. Plain-text, no Nerd Font dependency. Byte-identical
+    across all three (`md5sum` checked). No `lib/` change —
+    `Install-GwbYaziConfig` already copies the whole `yazi-config/`
+    dir. TOML parses; **not** Pester-run or Windows-verified (no
+    `pwsh` this session) — next session on Windows should run
+    `Invoke-Pester -Path tests/` and eyeball Yazi in a repo.
+  - `docs/PHILOSOPHY.md`/`PROJECT.md`/`ROADMAP.md`/`README.md` scope
+    edits are docs-only; the `yazi-config/theme.toml` files are the
+    only `profiles/` change. Pester suite otherwise unaffected.
 
 - **Session (2026-08-30, cloud session, no `pwsh` available - same
   conversation as the Desktop pull/CI-cleanup and the ThinkPad SSH
