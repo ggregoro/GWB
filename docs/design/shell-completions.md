@@ -66,7 +66,7 @@ real gap worth closing by default), rather than a separate opt-in
 
 ## Verification
 
-Built and verified for real on Greg's Windows 11 machine: dry-run
+Built and verified for real on a real Windows 11 machine: dry-run
 correctly reports both blocks; a real `restore server` adds the new
 self-registration block cleanly (confirmed via direct file inspection);
 three consecutive restores produce a byte-stable file length

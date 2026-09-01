@@ -91,7 +91,7 @@ plus a guarded `mise activate pwsh` block.
 
 ## Verification
 
-Built and verified for real on Greg's Windows 11 machine (not just
+Built and verified for real on a real Windows 11 machine (not just
 parsed): all 5 new packages (`jq`, `gh`, `mise`, `fresh` — already
 present — and `mingw`) installed cleanly via `gwb.ps1 restore
 developer`, confirmed idempotent on a second restore, and `gcc`/`gh`/

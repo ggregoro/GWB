@@ -76,7 +76,7 @@ directly).
 
 ## Verification
 
-Built and verified for real on Greg's Windows 11 machine: `Install-
+Built and verified for real on a real Windows 11 machine: `Install-
 Module -Force` for PSFzf and Terminal-Icons both completed cleanly with
 no prompt; a real `restore server` installed both modules and the
 `modules.txt` step correctly reports "already installed" on rerun;

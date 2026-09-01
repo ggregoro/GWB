@@ -133,6 +133,6 @@ to add.
 
 ## Verification
 
-Built and verified for real on Greg's Windows 11 machine: `restic`
+Built and verified for real on a real Windows 11 machine: `restic`
 installed cleanly via `gwb.ps1 restore server`, confirmed idempotent on
 a second restore, and `restic version` confirmed functional afterward.

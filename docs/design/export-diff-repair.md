@@ -134,7 +134,7 @@ via `gwb diff`.
 
 ## Verification
 
-Built and verified for real on Greg's Windows 11 machine: `gwb export`
+Built and verified for real on a real Windows 11 machine: `gwb export`
 produces a real snapshot (verified `packages.txt`/`modules.txt`/
 `profile-snippet.ps1`/`metadata.yaml` content by hand); `gwb diff`
 correctly reports real package drift between `default`/`developer` and

@@ -72,7 +72,7 @@ up shaped the way it did, even after the feature ships.
   subshell: no `exit` calls anywhere, and the whole script wrapped in
   `& { ... }` so its variables don't leak into the interactive session.
   Built in a cloud session with no `pwsh` at all, so genuinely never
-  executed until verified for real afterward on Greg's Windows
+  executed until verified for real afterward on a real Windows
   machine — which is where a real `Invoke-Expression`/`*>&1`
   capture bug in the test file (not `install.ps1` itself) was found
   and fixed.
