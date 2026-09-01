@@ -114,7 +114,7 @@ clone` reporting cleanly, and the scope-isolation property itself.
 
 ## Verification
 
-Run for real on Greg's Windows 11 machine, both the automated suite and
+Run for real on a real Windows 11 machine, both the automated suite and
 the live one-liner against the now-public repo:
 
 - **`Invoke-Pester -Path tests/Install.Tests.ps1`**, executed for the

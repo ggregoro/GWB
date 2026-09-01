@@ -73,7 +73,7 @@ developer/server split.
   `git`, `jq`, `gh`, `mise`, Fresh (editor), MinGW/gcc (build
   toolchain). **No container tooling** — Docker Desktop/Podman Desktop
   both need WSL2 (or Hyper-V), a hard "never install" constraint on
-  Greg's machines (breaks VirtualBox). No resource monitor either —
+  the maintainer's machines (breaks VirtualBox). No resource monitor either —
   Task Manager already covers it. See
   [`docs/design/developer-profile.md`](design/developer-profile.md)
   for the full scoping and real-machine verification, including a real

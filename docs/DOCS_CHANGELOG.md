@@ -399,6 +399,6 @@ feature/code changes. Mirrors GLB's own `docs/DOCS_CHANGELOG.md`.
 
 ### Development Environment
 
-- Verified the whole build for real on Greg's Windows 11 Pro machine
+- Verified the whole build for real on a real Windows 11 machine
   (PowerShell 7.6.4, winget present) — the only environment GWB has
   been tested on so far, unlike GLB's many real machines/VMs.

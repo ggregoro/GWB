@@ -147,7 +147,7 @@ GWB now handles the most common cause of that automatically.
 
 ## PowerShell always starts in `C:\Windows\System32`
 
-**Confirmed** — hit directly by Greg via a taskbar-pinned icon.
+**Confirmed** — hit directly via a taskbar-pinned icon.
 
 **Symptom**: every new shell starts in `C:\Windows\System32` instead of
 your home directory, regardless of any shortcut "Start in" field or
