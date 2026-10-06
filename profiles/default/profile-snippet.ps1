@@ -117,6 +117,99 @@ if ((Test-Path (Join-Path $GwbFileBin "file.exe")) -and ($env:Path -notlike "*$G
 }
 Remove-Variable -Name GwbFileBin -ErrorAction SilentlyContinue
 
+if (Get-Command git -ErrorAction SilentlyContinue) {
+    # Show the state of every git repo under ~\Projects as a colored
+    # table: branch, clean or has changes, and whether it is in sync with
+    # its remote. It fetches but never pulls, so running it changes
+    # nothing. Ported from GLB's default profile (.local/bin/repo-status)
+    # - same columns, colors and wording.
+    function repo-status {
+        param([string]$Path = (Join-Path $HOME "Projects"))
+
+        # Colors. They use the terminal's own palette, so they follow
+        # the theme.
+        $bold = "`e[1m"
+        $dim = "`e[2m"
+        $red = "`e[31m"
+        $green = "`e[32m"
+        $yellow = "`e[33m"
+        $blue = "`e[34m"
+        $cyan = "`e[36m"
+        $reset = "`e[0m"
+
+        # The box. The lines are exactly as wide as the columns below:
+        # 30, 10, 14 and 11 characters, plus one space of padding on
+        # each side.
+        $widths = 32, 12, 16, 13
+        $segments = $widths | ForEach-Object { "─" * $_ }
+        $top = "┌" + ($segments -join "┬") + "┐"
+        $mid = "├" + ($segments -join "┼") + "┤"
+        $bot = "└" + ($segments -join "┴") + "┘"
+        $bar = "$dim│$reset"
+        $head = "$bold$blue"
+
+        ""
+        "  $dim$top$reset"
+        "  $bar $head$("REPO".PadRight(30))$reset $bar $head$("BRANCH".PadRight(10))$reset $bar $head$("STATE".PadRight(14))$reset $bar $head$("SYNC".PadRight(11))$reset $bar"
+        "  $dim$mid$reset"
+
+        $total = 0
+        $dirty = 0
+
+        foreach ($dir in Get-ChildItem -Path $Path -Directory -ErrorAction SilentlyContinue) {
+            if (-not (Test-Path (Join-Path $dir.FullName ".git") -PathType Container)) {
+                continue
+            }
+
+            [string]$branch = git -C $dir.FullName branch --show-current
+            $changes = git -C $dir.FullName status --porcelain
+
+            # 2>$null hides git's error text. With no network the fetch
+            # fails, and a branch that was never pushed has no upstream
+            # ("@{u}") to compare with; in that case $ahead stays empty.
+            git -C $dir.FullName fetch --quiet 2>$null
+            $ahead = git -C $dir.FullName rev-list --count '@{u}..HEAD' 2>$null
+            $behind = git -C $dir.FullName rev-list --count 'HEAD..@{u}' 2>$null
+
+            if ($changes) {
+                $mark = "●"
+                $state = "has changes"
+                $stateColor = $yellow
+                $dirty++
+            } else {
+                $mark = "✓"
+                $state = "clean"
+                $stateColor = $green
+            }
+
+            if (-not $ahead) {
+                $sync = "no upstream"
+                $syncColor = $yellow
+            } elseif ($ahead -eq 0 -and $behind -eq 0) {
+                $sync = "in sync"
+                $syncColor = $dim
+            } else {
+                $sync = "↑$ahead ↓$behind"
+                $syncColor = $red
+            }
+
+            # Pad each cell to its column width first, then color it -
+            # the color codes are invisible but would count as characters.
+            "  $bar $bold$($dir.Name.PadRight(30))$reset $bar $cyan$($branch.PadRight(10))$reset $bar $stateColor$mark $($state.PadRight(12))$reset $bar $syncColor$($sync.PadRight(11))$reset $bar"
+
+            $total++
+        }
+
+        "  $dim$bot$reset"
+        "  $dim$total repos, $dirty with changes$reset"
+        ""
+
+        # A repo with no upstream leaves git's failure code behind; the
+        # table itself printed fine, so don't report that as an error.
+        $global:LASTEXITCODE = 0
+    }
+}
+
 if (Get-Command starship -ErrorAction SilentlyContinue) {
     Invoke-Expression ((&starship init powershell) -join "`n")
 }

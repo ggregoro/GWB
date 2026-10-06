@@ -13,6 +13,18 @@ This project follows a simple versioning approach:
 ## [Unreleased]
 
 ### Added
+- **`repo-status` (`default` and `developer` profiles)** — a command
+  that prints a colored, boxed table of every git repo under
+  `~\Projects`: branch, clean or has changes, and whether it is in sync
+  with its remote (`↑`ahead `↓`behind, or "no upstream" for a branch
+  never pushed), with a one-line count underneath. It fetches but never
+  pulls, so running it changes nothing. A PowerShell port of GLB's
+  `repo-status` (same columns, colors and wording), shipped as a
+  function in `profile-snippet.ps1` and defined only when `git` is
+  installed; `repo-status -Path <folder>` looks somewhere else. GLB has
+  it in `default` only; here it is in `developer` too, since that is
+  the profile that installs `git`. Covered by
+  `tests/RepoStatus.Tests.ps1`; `server` is unaffected.
 - Created the GWB project as the PowerShell/Windows sibling to
   [GLB](https://github.com/ggregoro/GLB), mirroring its dispatcher +
   `lib/` modules + `profiles/` architecture.
