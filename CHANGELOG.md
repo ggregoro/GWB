@@ -12,6 +12,12 @@ This project follows a simple versioning approach:
 
 ## [Unreleased]
 
+### Docs
+- **"How this was made" in the README** — says plainly that the code
+  and most of the docs were written by Claude (Anthropic's AI
+  assistant) with Claude Code, tested by me on real machines, and how
+  third-party material is credited.
+
 ### Added
 - **`repo-status` (`default` and `developer` profiles)** — a command
   that prints a colored, boxed table of every git repo under
