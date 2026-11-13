@@ -42,7 +42,8 @@ Step-by-step guides. None written yet — candidate topics:
 # Reference
 
 Quick command references — see [`reference/`](reference/), including
-[`ipban-manual-install.md`](reference/ipban-manual-install.md).
+[`ipban-manual-install.md`](reference/ipban-manual-install.md) and
+[`windows-anti-nag.md`](reference/windows-anti-nag.md).
 
 ---
 

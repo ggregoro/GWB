@@ -13,6 +13,9 @@ This project follows a simple versioning approach:
 ## [Unreleased]
 
 ### Docs
+- **Windows anti-nag reference** — `docs/reference/windows-anti-nag.md`:
+  manual steps (with undo) to stop the new-Outlook, Edge default-browser
+  and Windows tips prompts. Not part of `gwb restore`; you run it by hand.
 - **"How this was made" in the README** — says plainly that the code
   and most of the docs were written by Claude (Anthropic's AI
   assistant) with Claude Code, tested by me on real machines, and how
