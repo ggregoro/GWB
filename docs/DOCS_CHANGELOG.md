@@ -7,6 +7,16 @@ feature/code changes. Mirrors GLB's own `docs/DOCS_CHANGELOG.md`.
 
 ## [Unreleased]
 
+- Added `docs/reference/windows-anti-nag.md`: manual, copy-paste
+  steps for the Windows 11 settings that stop the new-Outlook migration
+  prompts, Edge's "make Edge your default" prompts and campaigns, and
+  Windows' tips / "finish setting up" screens, plus how to set and
+  check the default browser by hand and how to undo each one. Kept out of
+  `gwb restore` on purpose (needs Administrator, not terminal-related,
+  same stance as IPBan). Every block was run on a real Windows 11 machine;
+  that run caught `New-Item -Force` wiping an existing registry key's
+  values, so the blocks now create a key only when it's missing, and the
+  doc warns about it.
 - Added `docs/troubleshooting.md`'s new entry, "PSFzf fails to load:
   'An Application Control policy has blocked this file'" — a real bug
   Greg hit and reported live (`Import-Module PSFzf` failing with

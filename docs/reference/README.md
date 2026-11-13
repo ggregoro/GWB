@@ -10,6 +10,11 @@ docs one level up.
   verify/uninstall commands for IPBan (`server`'s fail2ban equivalent),
   deliberately not automated by `gwb restore` — see
   [`../design/server-profile.md`](../design/server-profile.md) for why.
+- [`windows-anti-nag.md`](windows-anti-nag.md) — Windows 11 settings
+  that stop the new-Outlook migration, Edge "make me default" and
+  Windows tips prompts, with copy-paste blocks and undo steps.
+  Deliberately manual too: part of it needs Administrator elevation and
+  none of it is about the terminal.
 
 Other plausible candidates, not written yet: a winget cheat sheet
 (search/list/upgrade syntax), a Starship config reference for
