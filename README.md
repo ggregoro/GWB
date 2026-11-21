@@ -22,8 +22,7 @@ replace it. See [`docs/PHILOSOPHY.md`](docs/PHILOSOPHY.md) for why.
 
 **A real `fastfetch` system-info banner**, captured on Greg's own
 Windows 11 machine, with the GWB-configured Starship `pwsh` prompt
-visible below it (`fastfetch` itself isn't a GWB package — Greg
-installed it separately):
+visible below it (`fastfetch` is installed by every GWB profile):
 
 ![fastfetch banner](docs/images/fastfetch-banner.png)
 

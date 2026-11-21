@@ -15,6 +15,11 @@ fresh
 mingw
 farmanager
 
+# System-info banner tools, ported from GLB's default profile (same as
+# `default`). Neither runs at startup; type `fastfetch` or `cpufetch`.
+fastfetch
+cpufetch
+
 # File manager alternative to lf (kept, not replaced) - stronger plugin
 # support (git status, configured below via Install-GwbYaziConfig).
 # Ported from GLB's default profile, then to GWB's developer/server too.
