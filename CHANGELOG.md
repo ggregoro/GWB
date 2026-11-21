@@ -22,6 +22,10 @@ This project follows a simple versioning approach:
   third-party material is credited.
 
 ### Added
+- **`fastfetch` and `cpufetch` in the `developer` and `server`
+  profiles** — they were only in `default`, though both say they share
+  its CLI foundation. Type `fastfetch` for a system summary or
+  `cpufetch` for a CPU summary.
 - **`repo-status` (`default` and `developer` profiles)** — a command
   that prints a colored, boxed table of every git repo under
   `~\Projects`: branch, clean or has changes, and whether it is in sync
